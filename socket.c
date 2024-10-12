@@ -9,7 +9,13 @@ Socket Create_TCP_Socket(Hostname_T *ip_t, String *ip, int port) {
 		.IP 		= ip,
 		.Port 		= (!port ? 1337 : port),
 		.SockFD	 	= -1,
-		.BufferLen 	= 1024
+		.BufferLen 	= 1024,
+
+		.Bind		= BindSocket,
+		.Connect	= Connect,
+		.Listen 	= Listen,
+		.Accept		= Accept,
+		.Destruct	= DestroySocket		
 	};
 
 	s.SockFD = socket(AF_INET, SOCK_STREAM, 0);

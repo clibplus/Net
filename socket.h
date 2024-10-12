@@ -26,9 +26,38 @@ typedef struct Socket {
 	void				(*Destruct)	(struct Socket *s);
 } Socket;
 
+//
+//
+//
+//
 Socket Create_TCP_Socket(Hostname_T *ip_t, String *ip, int port);
+
+//
+//
+//
+//
 static int BindSocket(Socket *s);
+
+//
+//
+//
+//
 static int Connect(Socket *s);
+
+//
+//
+//
+//
 static int Listen(Socket *s, int concurrent);
+
+//
+//
+//
+//
 static Socket Accept(Socket *s);
+
+//
+//
+//
+//
 static void DestroySocket(String *s);
