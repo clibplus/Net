@@ -24,7 +24,7 @@ Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 
 	bzero(&s.SockAddr, sizeof(s.SockAddr));
 	s.SockAddr.sin_family = AF_INET;
-	if(!ip)
+	if(ip)
 		inet_aton(ip->data, &s.SockAddr.sin_addr);
 
 	int reuse = 1;
