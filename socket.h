@@ -21,8 +21,8 @@ typedef struct Socket {
 
 	int					(*Bind)		(struct Socket *s);
 	int					(*Connect)	(struct Socket *s);
-	int					(*Listen)	(struct Socket *s);
-	Socket				(*Accept)	(struct Socket *s);
+	int					(*Listen)	(struct Socket *s, int concurrent);
+	struct Socket		(*Accept)	(struct Socket *s);
 	void				(*Destruct)	(struct Socket *s);
 } Socket;
 
@@ -30,7 +30,7 @@ typedef struct Socket {
 //
 //
 //
-Socket Create_TCP_Socket(Hostname_T *ip_t, String *ip, int port);
+Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port);
 
 //
 //
@@ -60,4 +60,4 @@ static Socket Accept(Socket *s);
 //
 //
 //
-static void DestroySocket(String *s);
+static void DestroySocket(Socket *s);

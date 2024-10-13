@@ -4,7 +4,7 @@
 
 #include "socket.h"
 
-Socket Create_TCP_Socket(Hostname_T *ip_t, String *ip, int port) {
+Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 	Socket s = {
 		.IP 		= ip,
 		.Port 		= (!port ? 1337 : port),
@@ -68,7 +68,7 @@ static Socket Accept(Socket *s) {
 	return client;
 }
 
-static void DestroySocket(String *s) {
+static void DestroySocket(Socket *s) {
 	if(s->IP)
 		free(s->IP);
 
