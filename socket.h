@@ -22,41 +22,57 @@ typedef struct Socket {
 	int					(*Bind)		(struct Socket *s);
 	int					(*Connect)	(struct Socket *s);
 	int					(*Listen)	(struct Socket *s, int concurrent);
+	struct String		*(*Read)	(struct Socket *s);
+	int					(*Write)	(struct Socket *s, const char *data);
 	struct Socket		(*Accept)	(struct Socket *s);
 	void				(*Destruct)	(struct Socket *s);
 } Socket;
 
-//
-//			| - > Create a new intanse of a TCP Socket
-//			| - > Returns an empty struct with SOcket info upon success or struct with 0s/NULL upon failure
-//
-Socket 		Create_TCP_Socket(Hostname_T ip_t, String *ip, int port);
+extern int 		MAX_BUFFER_SIZE = 1024;
 
 //
-//			| - > Bind a socket to a port
-//			| - > Returns 1 upon success or 0 upon failure
+//				| - > Create a new intanse of a TCP Socket
+//				| - > Returns an empty struct with SOcket info upon success or struct with 0s/NULL upon failure
 //
-static int 	BindSocket(Socket *s);
+Socket 			Create_TCP_Socket(Hostname_T ip_t, String *ip, int port);
 
 //
-//			| - > Connect to a server
-//			| - > Returns 1 upon success or 0 upon failure
+//				| - > Bind a socket to a port
+//				| - > Returns 1 upon success or 0 upon failure
 //
-static int 	Connect(Socket *s);
+static int 		BindSocket(Socket *s);
 
 //
-//			| - > Concurrent count of sockets to listen to
-//			| - > Returns 1 upon success or 0 upon failure
+//				| - > Connect to a server
+//				| - > Returns 1 upon success or 0 upon failure
 //
-static int 	Listen(Socket *s, int concurrent);
+static int 		Connect(Socket *s);
 
 //
-//			| - > Accept a pending socket
-//			| - > Returns a struct with socket info upon success or empty struct with 0s/NULL upon failure
+//				| - > Concurrent count of sockets to listen to
+//				| - > Returns 1 upon success or 0 upon failure
 //
-static Socket Accept(Socket *s);
+static int 		Listen(Socket *s, int concurrent);
 
 //
-//			| - > Destroy the socket struct
+//				| - > Read the socket for data
+//				| - > Returns the data upon success or NULL upon failure
 //
-static void DestroySocket(Socket *s);
+static String 	*Read(Socket *s);
+
+//
+//				| - > Write to socket
+//				| - > Returns 1 upon success or 0 upon failure
+//
+static int 		Write(Socket *s, const char *data);
+
+//
+//				| - > Accept a pending socket
+//				| - > Returns a struct with socket info upon success or empty struct with 0s/NULL upon failure
+//
+static Socket 	Accept(Socket *s);
+
+//
+//				| - > Destroy the socket struct
+//
+static void 	DestroySocket(Socket *s);

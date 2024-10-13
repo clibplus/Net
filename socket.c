@@ -4,6 +4,8 @@
 
 #include "socket.h"
 
+inline void SetBufferSize(int c) { int MAX_BUFFER_SIZE = c; }
+
 Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 	Socket s = {
 		.IP 		= ip,
@@ -14,6 +16,8 @@ Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 		.Bind		= BindSocket,
 		.Connect	= Connect,
 		.Listen 	= Listen,
+		.Read		= Read,
+		.Write		= Write,
 		.Accept		= Accept,
 		.Destruct	= DestroySocket		
 	};
@@ -22,7 +26,7 @@ Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 	if(s.SockFD == -1)
 		return (Socket){.IP = NULL, .Port = 0, .SockFD = 0, .BufferLen = 0};
 
-	bzero(&s.SockAddr, sizeof(s.SockAddr));
+	memset(&s.SockAddr, 0, sizeof(s.SockAddr));
 	s.SockAddr.sin_family = AF_INET;
 	if(ip)
 		inet_aton(ip->data, &s.SockAddr.sin_addr);
@@ -51,6 +55,29 @@ static int Listen(Socket *s, int concurrent) {
 		return 0;
 
 	if(listen(s->SockFD, concurrent) != 0)
+		return 0;
+
+	return 1;
+}
+
+static String *Read(Socket *s) {
+	if(!s || !s->SockFD)
+		return NULL;
+
+	char BUFFER[MAX_BUFFER_SIZE] = {0};
+	int bytes = read(s->SockFD, BUFFER, MAX_BUFFER_SIZE);
+	if(!bytes)
+		return NULL;
+
+	return String(BUFFER);
+}
+
+static int Write(Socket *s, const char *data) {
+	if(!s || !s->SockFD)
+		return 0;
+
+	int bytes_sent = write(s->SockFD, data, strlen(data), MSG_NOSIGNAL);
+	if(bytes_sent == -1)
 		return 0;
 
 	return 1;
