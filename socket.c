@@ -8,18 +8,20 @@ inline void SetBufferSize(int c) { int MAX_BUFFER_SIZE = c; }
 
 Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 	Socket s = {
-		.IP 		= ip,
-		.Port 		= (!port ? 1337 : port),
-		.SockFD	 	= -1,
-		.BufferLen 	= 1024,
+		.IP 				= ip,
+		.Port 				= (!port ? 1337 : port),
+		.SockFD	 			= -1,
+		.BufferLen 			= 1024,
 
-		.Bind		= BindSocket,
-		.Connect	= Connect,
-		.Listen 	= Listen,
-		.Read		= Read,
-		.Write		= Write,
-		.Accept		= Accept,
-		.Destruct	= DestroySocket		
+		.Bind				= BindSocket,
+		.Connect			= Connect,
+		.Listen 			= Listen,
+		.Read				= Read,
+		.Write				= Write,
+		.Accept				= Accept,
+
+		.SetReadTimeout		= SetReadTimeOut,
+		.Destruct			= DestroySocket		
 	};
 
 	s.SockFD = socket(AF_INET, SOCK_STREAM, 0);
@@ -37,6 +39,30 @@ Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 
 	s.SockAddr.sin_port = htons(s.Port);
 	return s;
+}
+
+static int SetSocketReadTimeOut(Socket *s, int timeout_len) {
+	struct timeval timeout = {
+		.tv_sec 	= timeout_len,
+		.tv_usec 	= timeout_len,
+	};
+
+	if(setsockopt(s->SockFD, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 1)
+		return 1;
+
+	return 0;
+}
+
+static int SetSocketWriteTimeOut(Socket *s, int timeout_len) {
+	struct timeval timeout = {
+		.tv_sec 	= timeout_len,
+		.tv_usec 	= timeout_len,
+	};
+
+	if(setsockopt(s->SockFD, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) < 1)
+		return 1;
+
+	return 0;
 }
 
 static int BindSocket(Socket *s) {

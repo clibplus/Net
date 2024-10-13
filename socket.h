@@ -19,13 +19,16 @@ typedef struct Socket {
 	struct sockaddr_in	SockAddr;
 	int					BufferLen;
 
-	int					(*Bind)		(struct Socket *s);
-	int					(*Connect)	(struct Socket *s);
-	int					(*Listen)	(struct Socket *s, int concurrent);
-	struct String		*(*Read)	(struct Socket *s);
-	int					(*Write)	(struct Socket *s, const char *data);
-	struct Socket		(*Accept)	(struct Socket *s);
-	void				(*Destruct)	(struct Socket *s);
+	int					(*Bind)				(struct Socket *s);
+	int					(*Connect)			(struct Socket *s);
+	int					(*Listen)			(struct Socket *s, int concurrent);
+	struct String		*(*Read)			(struct Socket *s);
+	int					(*Write)			(struct Socket *s, const char *data);
+	struct Socket		(*Accept)			(struct Socket *s);
+
+	int					(*SetReadTimeout)	(struct Socket *s, int timeout_len);
+	int 				(*SetWriteTimeout)	(struct Socket *s, int timeout_len);
+	void				(*Destruct)			(struct Socket *s);
 } Socket;
 
 extern int 		MAX_BUFFER_SIZE = 1024;
@@ -36,6 +39,17 @@ extern int 		MAX_BUFFER_SIZE = 1024;
 //
 Socket 			Create_TCP_Socket(Hostname_T ip_t, String *ip, int port);
 
+//
+//				| - > Set a socket read timeout
+//				| - > Returns 1 upon success or 0 upon failure
+//
+static int 		SetSocketReadTimeOut(Socket *s, int timeout_len);
+
+//
+//				| - > Set a socket write timeout
+//				| - > Returns 1 upon success or 0 upon failure
+//
+static int 		SetSocketWriteTimeOut(Socket *s, int timeout_len);
 //
 //				| - > Bind a socket to a port
 //				| - > Returns 1 upon success or 0 upon failure
