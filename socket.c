@@ -4,6 +4,7 @@
 
 #include "socket.h"
 
+int MAX_BUFFER_SIZE = 1024;
 inline void SetBufferSize(int c) { int MAX_BUFFER_SIZE = c; }
 
 Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
@@ -20,7 +21,7 @@ Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 		.Write				= Write,
 		.Accept				= Accept,
 
-		.SetReadTimeout		= SetReadTimeOut,
+		.SetReadTimeout		= SetSocketReadTimeOut,
 		.Destruct			= DestroySocket		
 	};
 
@@ -86,23 +87,24 @@ static int Listen(Socket *s, int concurrent) {
 	return 1;
 }
 
-static String *Read(Socket *s) {
+static String Read(Socket *s) {
 	if(!s || !s->SockFD)
-		return NULL;
+		return ((String){});
 
-	char BUFFER[MAX_BUFFER_SIZE] = {0};
+	char *BUFFER = (char *)malloc(MAX_BUFFER_SIZE);
+	memset(BUFFER, '\0', MAX_BUFFER_SIZE);
 	int bytes = read(s->SockFD, BUFFER, MAX_BUFFER_SIZE);
 	if(!bytes)
-		return NULL;
+		return ((String){});
 
-	return String(BUFFER);
+	return NewString(BUFFER);
 }
 
 static int Write(Socket *s, const char *data) {
 	if(!s || !s->SockFD)
 		return 0;
 
-	int bytes_sent = write(s->SockFD, data, strlen(data), MSG_NOSIGNAL);
+	int bytes_sent = send(s->SockFD, data, strlen(data), MSG_NOSIGNAL);
 	if(bytes_sent == -1)
 		return 0;
 

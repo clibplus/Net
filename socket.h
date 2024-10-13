@@ -22,7 +22,7 @@ typedef struct Socket {
 	int					(*Bind)				(struct Socket *s);
 	int					(*Connect)			(struct Socket *s);
 	int					(*Listen)			(struct Socket *s, int concurrent);
-	struct String		*(*Read)			(struct Socket *s);
+	struct String		(*Read)				(struct Socket *s);
 	int					(*Write)			(struct Socket *s, const char *data);
 	struct Socket		(*Accept)			(struct Socket *s);
 
@@ -31,7 +31,7 @@ typedef struct Socket {
 	void				(*Destruct)			(struct Socket *s);
 } Socket;
 
-extern int 		MAX_BUFFER_SIZE = 1024;
+extern int 		MAX_BUFFER_SIZE;
 
 //
 //				| - > Create a new intanse of a TCP Socket
@@ -72,7 +72,7 @@ static int 		Listen(Socket *s, int concurrent);
 //				| - > Read the socket for data
 //				| - > Returns the data upon success or NULL upon failure
 //
-static String 	*Read(Socket *s);
+static String 	Read(Socket *s);
 
 //
 //				| - > Write to socket
