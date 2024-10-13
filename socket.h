@@ -27,37 +27,36 @@ typedef struct Socket {
 } Socket;
 
 //
+//			| - > Create a new intanse of a TCP Socket
+//			| - > Returns an empty struct with SOcket info upon success or struct with 0s/NULL upon failure
 //
-//
-//
-Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port);
+Socket 		Create_TCP_Socket(Hostname_T ip_t, String *ip, int port);
 
 //
+//			| - > Bind a socket to a port
+//			| - > Returns 1 upon success or 0 upon failure
 //
-//
-//
-static int BindSocket(Socket *s);
+static int 	BindSocket(Socket *s);
 
 //
+//			| - > Connect to a server
+//			| - > Returns 1 upon success or 0 upon failure
 //
-//
-//
-static int Connect(Socket *s);
+static int 	Connect(Socket *s);
 
 //
+//			| - > Concurrent count of sockets to listen to
+//			| - > Returns 1 upon success or 0 upon failure
 //
-//
-//
-static int Listen(Socket *s, int concurrent);
+static int 	Listen(Socket *s, int concurrent);
 
 //
-//
-//
+//			| - > Accept a pending socket
+//			| - > Returns a struct with socket info upon success or empty struct with 0s/NULL upon failure
 //
 static Socket Accept(Socket *s);
 
 //
-//
-//
+//			| - > Destroy the socket struct
 //
 static void DestroySocket(Socket *s);
