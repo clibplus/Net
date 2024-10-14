@@ -31,7 +31,7 @@ Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 
 	memset(&s.SockAddr, 0, sizeof(s.SockAddr));
 	s.SockAddr.sin_family = AF_INET;
-	if(ip)
+	if(ip_t == IPv4 && ip)
 		inet_aton(ip->data, &s.SockAddr.sin_addr);
 
 	int reuse = 1;
@@ -130,15 +130,17 @@ static Socket Accept(Socket *s) {
 	Socket client;
 
 	int len = sizeof(client.SockAddr);
-	client.SockFD = accept(s->SockFD, (struct sockaddr *)&client.SockAddr, &len);
+	client.SockFD = accept(s->SockFD, (struct sockaddr *)&client.SockAddr, (socklen_t *)&len);
 	
 	return client;
 }
 
 static void DestroySocket(Socket *s) {
-	if(s->IP)
-		free(s->IP);
+	if(s) {
+		if(s->IP)
+			free(s->IP);
 
-	if(s->SockFD > 0)
-		close(s->SockFD);
+		if(s->SockFD > 0)
+			close(s->SockFD);
+	}
 }
