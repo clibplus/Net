@@ -43,6 +43,9 @@ Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 }
 
 static int SetSocketReadTimeOut(Socket *s, int timeout_len) {
+	if(!s || s->SockFD)
+		return 0;
+
 	struct timeval timeout = {
 		.tv_sec 	= timeout_len,
 		.tv_usec 	= timeout_len,
@@ -55,6 +58,9 @@ static int SetSocketReadTimeOut(Socket *s, int timeout_len) {
 }
 
 static int SetSocketWriteTimeOut(Socket *s, int timeout_len) {
+	if(!s || s->SockFD)
+		return 0;
+
 	struct timeval timeout = {
 		.tv_sec 	= timeout_len,
 		.tv_usec 	= timeout_len,
@@ -67,6 +73,9 @@ static int SetSocketWriteTimeOut(Socket *s, int timeout_len) {
 }
 
 static int BindSocket(Socket *s) {
+	if(!s || s->SockFD)
+		return 0;
+
 	if(bind(s->SockFD, (struct sockaddr *)&s->SockAddr, sizeof(s->SockAddr)) != 0)
 		return 0;
 
@@ -74,6 +83,9 @@ static int BindSocket(Socket *s) {
 }
 
 static int Connect(Socket *s) {
+	if(!s || s->SockFD)
+		return 0;
+
 	return connect(s->SockFD, (struct sockaddr *)&s->SockAddr, (socklen_t)sizeof(s->SockAddr));
 }
 
@@ -127,5 +139,6 @@ static void DestroySocket(Socket *s) {
 	if(s->IP)
 		free(s->IP);
 
-	close(s->SockFD);
+	if(s->SockFD > 0)
+		close(s->SockFD);
 }
