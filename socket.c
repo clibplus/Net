@@ -7,7 +7,7 @@
 int MAX_BUFFER_SIZE = 1024;
 inline void SetBufferSize(int c) { int MAX_BUFFER_SIZE = c; }
 
-Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
+Socket Create_TCP_Socket(Hostname_T ip_t, String ip, int port) {
 	Socket s = {
 		.IP 				= ip,
 		.Port 				= (!port ? 1337 : port),
@@ -32,8 +32,8 @@ Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 
 	memset(&s.SockAddr, 0, sizeof(s.SockAddr));
 	s.SockAddr.sin_family = AF_INET;
-	if(ip_t == IPv4 && ip)
-		inet_aton(ip->data, &s.SockAddr.sin_addr);
+	if(ip_t == IPv4 && ip.data)
+		inet_aton(ip.data, &s.SockAddr.sin_addr);
 
 	int reuse = 1;
 	if(setsockopt(s.SockFD, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse, sizeof(reuse)) < 0)
@@ -138,7 +138,7 @@ static Socket Accept(Socket *s) {
 
 void Net__GetSocketIP(Socket *s) {
 	socklen_t addr_sz = sizeof(s->SockAddr);
-	if(getpeername(s->SockFD, (struct addr *)&s->SockAdddr, &addr_sz))
+	if(getpeername(s->SockFD, (struct sockaddr *)&s->SockAddr, &addr_sz))
 		return;
 
 	char ip[INET_ADDRSTRLEN];
@@ -149,8 +149,8 @@ void Net__GetSocketIP(Socket *s) {
 
 static void DestroySocket(Socket *s) {
 	if(s) {
-		if(s->IP)
-			free(s->IP);
+		if(s->IP.data)
+			s->IP.Destruct(&s->IP);
 
 		if(s->SockFD > 0)
 			close(s->SockFD);

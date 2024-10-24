@@ -13,7 +13,7 @@ typedef enum Hostname_T {
 } Hostname_T;
 
 typedef struct Socket {
-	String 				*IP;
+	String 				IP;
 	int					Port;
 	int					SockFD;
 	struct sockaddr_in	SockAddr;
@@ -38,7 +38,7 @@ extern int 		MAX_BUFFER_SIZE;
 //				| - > Create a new intanse of a TCP Socket
 //				| - > Returns an empty struct with SOcket info upon success or struct with 0s/NULL upon failure
 //
-Socket 			Create_TCP_Socket(Hostname_T ip_t, String *ip, int port);
+Socket 			Create_TCP_Socket(Hostname_T ip_t, String ip, int port);
 
 //
 //				| - > Set a socket read timeout
