@@ -141,7 +141,7 @@ void Net__GetSocketIP(Socket *s) {
 	if(getpeername(s->SockFD, (struct sockaddr *)&s->SockAddr, &addr_sz))
 		return;
 
-	char ip[INET_ADDRSTRLEN];
+	char ip[INET_ADDRSTRLEN] = {0};
 	inet_ntop(AF_INET, &(s->SockAddr.sin_addr), ip, INET_ADDRSTRLEN);
 	s->IP = NewString(ip);
 	s->Port = ntohs(s->SockAddr.sin_port);
