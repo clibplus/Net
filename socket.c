@@ -32,7 +32,7 @@ Socket Create_TCP_Socket(Hostname_T ip_t, String ip, int port) {
 
 	memset(&s.SockAddr, 0, sizeof(s.SockAddr));
 	s.SockAddr.sin_family = AF_INET;
-	if(ip_t == IPv4 && ip.data)
+	if(ip_t == IPv4 && strlen(ip.data) > 1)
 		inet_aton(ip.data, &s.SockAddr.sin_addr);
 
 	int reuse = 1;
