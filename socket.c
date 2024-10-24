@@ -21,8 +21,9 @@ Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 		.Write				= Write,
 		.Accept				= Accept,
 
+		.GetSocketIP		= Net__GetSocketIP,
 		.SetReadTimeout		= SetSocketReadTimeOut,
-		.Destruct			= DestroySocket		
+		.Destruct			= DestroySocket
 	};
 
 	s.SockFD = socket(AF_INET, SOCK_STREAM, 0);
@@ -131,8 +132,19 @@ static Socket Accept(Socket *s) {
 
 	int len = sizeof(client.SockAddr);
 	client.SockFD = accept(s->SockFD, (struct sockaddr *)&client.SockAddr, (socklen_t *)&len);
-	
+
 	return client;
+}
+
+void Net__GetSocketIP(Socket *s) {
+	socklen_t addr_sz = sizeof(s->SockAddr);
+	if(getpeername(s->SockFD, (struct addr *)&s->SockAdddr, &addr_sz))
+		return;
+
+	char ip[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(s->SockAddr.sin_addr), ip, INET_ADDRSTRLEN);
+	s->IP = NewString(ip);
+	s->Port = ntohs(s->SockAddr.sin_port);
 }
 
 static void DestroySocket(Socket *s) {
@@ -144,3 +156,4 @@ static void DestroySocket(Socket *s) {
 			close(s->SockFD);
 	}
 }
+

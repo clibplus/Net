@@ -26,6 +26,7 @@ typedef struct Socket {
 	int					(*Write)			(struct Socket *s, const char *data);
 	struct Socket		(*Accept)			(struct Socket *s);
 
+	void				(*GetSocketIP)		(struct Socket *s);
 	int					(*SetReadTimeout)	(struct Socket *s, int timeout_len);
 	int 				(*SetWriteTimeout)	(struct Socket *s, int timeout_len);
 	void				(*Destruct)			(struct Socket *s);
@@ -85,6 +86,12 @@ static int 		Write(Socket *s, const char *data);
 //				| - > Returns a struct with socket info upon success or empty struct with 0s/NULL upon failure
 //
 static Socket 	Accept(Socket *s);
+
+//
+//
+//
+//
+void 			Net__GetSocketIP(Socket *s);
 
 //
 //				| - > Destroy the socket struct
