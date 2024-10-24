@@ -44,48 +44,48 @@ Socket 			Create_TCP_Socket(Hostname_T ip_t, String ip, int port);
 //				| - > Set a socket read timeout
 //				| - > Returns 1 upon success or 0 upon failure
 //
-static int 		SetSocketReadTimeOut(Socket *s, int timeout_len);
+int 		SetSocketReadTimeOut(Socket *s, int timeout_len);
 
 //
 //				| - > Set a socket write timeout
 //				| - > Returns 1 upon success or 0 upon failure
 //
-static int 		SetSocketWriteTimeOut(Socket *s, int timeout_len);
+int 		SetSocketWriteTimeOut(Socket *s, int timeout_len);
 //
 //				| - > Bind a socket to a port
 //				| - > Returns 1 upon success or 0 upon failure
 //
-static int 		BindSocket(Socket *s);
+int 		BindSocket(Socket *s);
 
 //
 //				| - > Connect to a server
 //				| - > Returns 1 upon success or 0 upon failure
 //
-static int 		Connect(Socket *s);
+int 		Connect(Socket *s);
 
 //
 //				| - > Concurrent count of sockets to listen to
 //				| - > Returns 1 upon success or 0 upon failure
 //
-static int 		Listen(Socket *s, int concurrent);
+int 		Listen(Socket *s, int concurrent);
 
 //
 //				| - > Read the socket for data
 //				| - > Returns the data upon success or NULL upon failure
 //
-static String 	Read(Socket *s);
+String 	Read(Socket *s);
 
 //
 //				| - > Write to socket
 //				| - > Returns 1 upon success or 0 upon failure
 //
-static int 		Write(Socket *s, const char *data);
+int 		Write(Socket *s, const char *data);
 
 //
 //				| - > Accept a pending socket
 //				| - > Returns a struct with socket info upon success or empty struct with 0s/NULL upon failure
 //
-static Socket 	Accept(Socket *s);
+Socket 	Accept(Socket *s);
 
 //
 //
@@ -96,4 +96,4 @@ void 			Net__GetSocketIP(Socket *s);
 //
 //				| - > Destroy the socket struct
 //
-static void 	DestroySocket(Socket *s);
+void 	DestroySocket(Socket *s);

@@ -43,7 +43,7 @@ Socket Create_TCP_Socket(Hostname_T ip_t, String ip, int port) {
 	return s;
 }
 
-static int SetSocketReadTimeOut(Socket *s, int timeout_len) {
+int SetSocketReadTimeOut(Socket *s, int timeout_len) {
 	if(!s || s->SockFD <= 0)
 		return 0;
 
@@ -58,7 +58,7 @@ static int SetSocketReadTimeOut(Socket *s, int timeout_len) {
 	return 0;
 }
 
-static int SetSocketWriteTimeOut(Socket *s, int timeout_len) {
+int SetSocketWriteTimeOut(Socket *s, int timeout_len) {
 	if(!s || s->SockFD <= 0)
 		return 0;
 
@@ -73,7 +73,7 @@ static int SetSocketWriteTimeOut(Socket *s, int timeout_len) {
 	return 0;
 }
 
-static int BindSocket(Socket *s) {
+int BindSocket(Socket *s) {
 	if(!s || s->SockFD <= 0)
 		return 0;
 
@@ -83,14 +83,14 @@ static int BindSocket(Socket *s) {
 	return 1;
 }
 
-static int Connect(Socket *s) {
+int Connect(Socket *s) {
 	if(!s || s->SockFD <= 0)
 		return 0;
 
 	return connect(s->SockFD, (struct sockaddr *)&s->SockAddr, (socklen_t)sizeof(s->SockAddr));
 }
 
-static int Listen(Socket *s, int concurrent) {
+int Listen(Socket *s, int concurrent) {
 	if(!s || s->SockFD <= 0)
 		return 0;
 
@@ -100,20 +100,20 @@ static int Listen(Socket *s, int concurrent) {
 	return 1;
 }
 
-static String Read(Socket *s) {
+String Read(Socket *s) {
 	if(!s || s->SockFD <= 0)
 		return ((String){});
 
 	char *BUFFER = (char *)malloc(MAX_BUFFER_SIZE);
 	memset(BUFFER, '\0', MAX_BUFFER_SIZE);
-	int bytes = read(s->SockFD, BUFFER, MAX_BUFFER_SIZE);
+	int bytes = read(s->SockFD, BUFFER, MAX_BUFFER_SIZE - 1);
 	if(!bytes)
 		return ((String){});
 
 	return NewString(BUFFER);
 }
 
-static int Write(Socket *s, const char *data) {
+int Write(Socket *s, const char *data) {
 	if(!s || s->SockFD <= 0)
 		return 0;
 
@@ -124,7 +124,7 @@ static int Write(Socket *s, const char *data) {
 	return 1;
 }
 
-static Socket Accept(Socket *s) {
+Socket Accept(Socket *s) {
 	if(!s || s->SockFD <= 0)
 		return ((Socket){.IP = NULL, .Port = 0, .SockFD = 0, .BufferLen = 0});
 
@@ -147,7 +147,7 @@ void Net__GetSocketIP(Socket *s) {
 	s->Port = ntohs(s->SockAddr.sin_port);
 }
 
-static void DestroySocket(Socket *s) {
+void DestroySocket(Socket *s) {
 	if(s) {
 		if(s->IP.data)
 			s->IP.Destruct(&s->IP);
