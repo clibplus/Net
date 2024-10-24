@@ -44,7 +44,7 @@ Socket Create_TCP_Socket(Hostname_T ip_t, String ip, int port) {
 }
 
 static int SetSocketReadTimeOut(Socket *s, int timeout_len) {
-	if(!s || s->SockFD)
+	if(!s || s->SockFD <= 0)
 		return 0;
 
 	struct timeval timeout = {
@@ -59,7 +59,7 @@ static int SetSocketReadTimeOut(Socket *s, int timeout_len) {
 }
 
 static int SetSocketWriteTimeOut(Socket *s, int timeout_len) {
-	if(!s || s->SockFD)
+	if(!s || s->SockFD <= 0)
 		return 0;
 
 	struct timeval timeout = {
@@ -74,7 +74,7 @@ static int SetSocketWriteTimeOut(Socket *s, int timeout_len) {
 }
 
 static int BindSocket(Socket *s) {
-	if(!s || s->SockFD)
+	if(!s || s->SockFD <= 0)
 		return 0;
 
 	if(bind(s->SockFD, (struct sockaddr *)&s->SockAddr, sizeof(s->SockAddr)) != 0)
@@ -84,14 +84,14 @@ static int BindSocket(Socket *s) {
 }
 
 static int Connect(Socket *s) {
-	if(!s || s->SockFD)
+	if(!s || s->SockFD <= 0)
 		return 0;
 
 	return connect(s->SockFD, (struct sockaddr *)&s->SockAddr, (socklen_t)sizeof(s->SockAddr));
 }
 
 static int Listen(Socket *s, int concurrent) {
-	if(!s || s->SockFD == -1)
+	if(!s || s->SockFD <= 0)
 		return 0;
 
 	if(listen(s->SockFD, concurrent) != 0)
@@ -101,7 +101,7 @@ static int Listen(Socket *s, int concurrent) {
 }
 
 static String Read(Socket *s) {
-	if(!s || !s->SockFD)
+	if(!s || s->SockFD <= 0)
 		return ((String){});
 
 	char *BUFFER = (char *)malloc(MAX_BUFFER_SIZE);
@@ -114,7 +114,7 @@ static String Read(Socket *s) {
 }
 
 static int Write(Socket *s, const char *data) {
-	if(!s || !s->SockFD)
+	if(!s || s->SockFD <= 0)
 		return 0;
 
 	int bytes_sent = send(s->SockFD, data, strlen(data), MSG_NOSIGNAL);
@@ -125,7 +125,7 @@ static int Write(Socket *s, const char *data) {
 }
 
 static Socket Accept(Socket *s) {
-	if(!s || s->SockFD == -1)
+	if(!s || s->SockFD <= 0)
 		return ((Socket){.IP = NULL, .Port = 0, .SockFD = 0, .BufferLen = 0});
 
 	Socket client;
