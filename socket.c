@@ -48,11 +48,11 @@ int SetSocketReadTimeOut(Socket *s, int timeout_len) {
 		return 0;
 
 	struct timeval timeout = {
-		.tv_sec 	= timeout_len,
-		.tv_usec 	= timeout_len,
+		.tv_sec 	= timeout_len / 1000000,
+		.tv_usec 	= timeout_len % 1000000
 	};
 
-	if(setsockopt(s->SockFD, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 1)
+	if(setsockopt(s->SockFD, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0)
 		return 1;
 
 	return 0;
@@ -63,11 +63,11 @@ int SetSocketWriteTimeOut(Socket *s, int timeout_len) {
 		return 0;
 
 	struct timeval timeout = {
-		.tv_sec 	= timeout_len,
-		.tv_usec 	= timeout_len,
+		.tv_sec 	= timeout_len / 1000000,
+		.tv_usec 	= timeout_len % 1000000
 	};
 
-	if(setsockopt(s->SockFD, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) < 1)
+	if(setsockopt(s->SockFD, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) < 0)
 		return 1;
 
 	return 0;
