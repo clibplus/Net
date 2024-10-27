@@ -133,18 +133,14 @@ Socket Accept(Socket *s) {
 	int len = sizeof(client.SockAddr);
 	client = (Client){
 		.SockFD 			= accept(s->SockFD, (struct sockaddr *)&client.SockAddr, (socklen_t *)&len),
-		.Bind				= BindSocket,
-		.Connect			= Connect,
-		.Listen 			= Listen,
 		.Read				= Read,
 		.Write				= Write,
-		.Accept				= Accept,
 
 		.GetSocketIP		= Net__GetSocketIP,
 		.SetReadTimeout		= SetSocketReadTimeOut,
 		.Destruct			= DestroySocket
 	};
-	
+
 	return client;
 }
 
