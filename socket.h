@@ -6,6 +6,8 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <errno.h>
 
 typedef enum Hostname_T {
 	IPv4		= 0x038001,
