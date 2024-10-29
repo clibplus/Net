@@ -34,7 +34,8 @@ Socket Create_TCP_Socket(Hostname_T ip_t, String ip, int port) {
 	s.SockAddr.sin_family = AF_INET;
 	s.SockAddr.sin_port = htons(s.Port);
 	if(ip_t == IPv4 && strlen(ip.data) > 2)
-		inet_aton(ip.data, &s.SockAddr.sin_addr);
+		if(!inet_aton(ip.data, &s.SockAddr.sin_addr))
+			return (Socket){.IP = NULL, .Port = 0, .SockFD = 0, .BufferLen = 0};
 
 	int reuse = 1;
 	if(setsockopt(s.SockFD, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse, sizeof(reuse)) < 0)
