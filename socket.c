@@ -132,7 +132,15 @@ Socket Accept(Socket *s) {
 	Socket client;
 
 	int len = sizeof(client.SockAddr);
-	client.SockFD = accept(s->SockFD, (struct sockaddr *)&client.SockAddr, (socklen_t *)&len);
+	client = (Socket){
+		.SockFD 			= accept(s->SockFD, (struct sockaddr *)&client.SockAddr, (socklen_t *)&len),
+		.Read				= Read,
+		.Write				= Write,
+
+		.GetSocketIP		= Net__GetSocketIP,
+		.SetReadTimeout		= SetSocketReadTimeOut,
+		.Destruct			= DestroySocket
+	};
 
 	return client;
 }
