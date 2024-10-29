@@ -2,6 +2,13 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <errno.h>
+
 #include "socket.h"
 
 int MAX_BUFFER_SIZE = 1024;
