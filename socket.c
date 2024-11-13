@@ -14,7 +14,7 @@
 int MAX_BUFFER_SIZE = 1024;
 inline void SetBufferSize(int c) { int MAX_BUFFER_SIZE = c; }
 
-Socket Create_TCP_Socket(Hostname_T ip_t, String ip, int port) {
+Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 	Socket s = {
 		.IP 				= ip,
 		.Port 				= (!port ? 1337 : port),
