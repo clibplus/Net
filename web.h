@@ -17,7 +17,7 @@ typedef struct WebRoute {
     char    *Path;
     char    *Output;
 
-    int    *GenOutput;
+    int     *GenOutput;
 } WebRoute;
 
 typedef struct WebServerConfig {
@@ -52,11 +52,11 @@ typedef struct cWR {
     String              Body;
 } cWR;
 
-cWS *StartWebServer(const string IP, int port, int auto_search);
-void RunServer(HTTPServer *web, int concurrents, const char *search_path);
-void ParseAndCheckRoute(cWS *web, int request_socket);
-cWR *ParseRequest(const char *data);
-void GetPostQueries(cWS *web, cWR *r);
-int RetrieveGetParameters(cWS *web, cWR *r);
-void SendResponse(cWS *web, int request_socket, StatusCode_T code, Map headers, Map vars, const char *body);
-void *DestroyServer(cWS *web);
+cWS     *StartWebServer(const string IP, int port, int auto_search);
+void    RunServer(HTTPServer *web, int concurrents, const char *search_path);
+void    ParseAndCheckRoute(cWS *web, int request_socket);
+cWR     *ParseRequest(const char *data);
+void    GetPostQueries(cWS *web, cWR *r);
+int     RetrieveGetParameters(cWS *web, cWR *r);
+void    SendResponse(cWS *web, int request_socket, StatusCode_T code, Map headers, Map vars, const char *body);
+void    *DestroyServer(cWS *web);

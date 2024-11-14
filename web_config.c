@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-void AddRoute(WebServerConfig *cfg) {
+#include "web.h"
 
+void AddRoute(cWS *web, WebRoute *route) {
+    
 }
