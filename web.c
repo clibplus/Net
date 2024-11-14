@@ -18,7 +18,9 @@ cWS *StartWebServer(const string ip, int port, int auto_search) {
         .CFG        = (WebServerConfig){
             .DirRouteSearch = auto_search
         },
-        .Routes     = NewMap()
+
+        .Run        = RunServer,
+        .Destruct   = DestroyServer
     };
 
     if(web->Socket <= 0)
@@ -41,7 +43,7 @@ cWS *StartWebServer(const string ip, int port, int auto_search) {
     return web;
 }
 
-void RunServer(HTTPServer *web, int concurrents, const char *search_path) {
+void RunServer(cWS *web, int concurrents, const char *search_path) {
     if(listen(web->Socket, concurrents) < 0)
         return;
 
@@ -61,13 +63,13 @@ void RunServer(HTTPServer *web, int concurrents, const char *search_path) {
     }
 }
 
-void ParseAndCheckRoute(HTTPServer *web, int request_socket) {
+void ParseAndCheckRoute(cWS *web, int request_socket) {
     char BUFFER[4096] = {0};
     read(request_socket, buffer, 4095);
 
     cWR *r = ParseRequest(&buffer);
     if(!r || !r->Route) {
-        SendRawResponse(s, request_socket, OK, headers, s->err_404_filepath, NULL);
+        SendResponse(s, request_socket, OK, headers, NULL, s->err_404_filepath);
         return;
     }
 
@@ -77,12 +79,12 @@ void ParseAndCheckRoute(HTTPServer *web, int request_socket) {
 
     int chk = isRouteValid(web, r->Route.data);
     if(!strcmp(r->RequestType.data, "POST"))
-        get_post_queries(web, r);
+        GetPostQueries(web, r);
 
-    if(chk)
-        web->Routes->Keys[chk]->Value(web, r, request_socket);
+    if(strstr(r->Route, "?"))
+        RetrieveGetParameters(web, r);
 
-    
+    (chk ? web->Routes->Keys[chk]->Value(web, r, request_socket) : SendResponse(s, request_socket, OK, headers, s->err_404_filepath, NULL) );
 }
 
 cWR *ParseRequest(const char *data) {
@@ -140,4 +142,94 @@ cWR *ParseRequest(const char *data) {
     ver_args.Destruct(&ver_args);
 
     return r;
+}
+
+void GetPostQueries(cWS *web, cWR *r) {
+    Map Queries = NewMap();
+    Array args = NewArray(NULL);
+
+    args.Merge(&args, r->Body.Split(&r->Body, "&"));
+
+    if(args.idx < 1)
+        return ((Map){});
+
+    for(int i = 0; i < args.idx; i++) {
+        String query = NewString(args.arr[i]);
+        Array query_args = NewArray(NULL);
+        query_args.Merge(&query_args, (void **)query.Split(&query, "="));
+
+        if(query_args.idx > 1)
+            Queries.Append(&Queries, query_args.arr[0], query_args.arr[1]);
+
+        query.Destruct(&query);
+        query_args.Destruct(&query_args);
+    }
+    
+    r->Queries = Queries;
+}
+
+int RetrieveGetParameters(cWS *web, cWR *r) {
+    if(!strstr(r->Route.data, "?"))
+        return 0;
+
+    Map *queries = NewMap();
+    Array link_args = NewArray(NULL);
+    link_args.Merge(&link_args, (void **)r->Route.Split(&r->Route, "?"));
+
+    String parameters(args.arr[1]);
+    Array args = NewArray(NULL);
+    args.Merge(&args, (void **)parameters.Split(&parameters, "&"));
+
+    if(args.idx < 1)
+        return 0;
+
+    for(int i = 0; i < args.idx; i++) {
+        String para = NewString(args.arr[i]);
+        Array para_args = NewArray(NULL);
+        para_args.Merge(&para_args, (void **)para.Split(&para, "="));
+
+        queries.Append(&queries, para_args.arr[0], para_args.arr[1]);
+
+        para.Destruct(&para);
+        para_args.Destruct(&para_args);
+    }
+
+    r->Queries = Queries;
+
+    link_args.Destruct(&link_args);
+    args.Destruct(&args);
+
+    return 1;
+}
+
+void SendResponse(cWS *web, int request_socket, StatusCode_T code, Map headers, Map vars, const char *body) {
+    String _resp = NewString("HTTP/1.1 ");
+
+    switch(code) {
+        case OK: { 
+            _resp.AppendNum(&_resp, (int)OK); 
+            _resp.AppendString(&_resp, " OK");
+            break; 
+        };
+    }
+
+    for(int i = 0; i < headers.idx; i++)
+        _resp.AppendArray(&_resp, ((const char *[]){headers.arr[i]->key, ": ", headers.arr[i]->value, "\r\n"}));
+
+    if(body)
+        _resp.AppendString(&_resp, body);
+    
+    _resp.AppendString(&_resp, "\r\n\r\n");
+    write(request_socket, _resp.data, _resp.idx);
+    _resp.Destruct(&_resp);
+}
+
+void *DestroyServer(cWS *web) {
+    if(web->IP.data)
+        web->IP.Destruct(&web-IP);
+
+    if(web->Routes.arr)
+        web->Routes.Destruct(&web->Routes);
+    
+    free(web);
 }
