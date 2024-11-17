@@ -35,6 +35,7 @@ typedef struct WebRoute {
     int                 GenOutput;
     Control             **Controls;
     long                ControlCount;
+    void                (*Destruct)     (struct WebRoute *r);
 } WebRoute;
 
 typedef struct WebServerConfig {
@@ -45,6 +46,7 @@ typedef struct WebServerConfig {
 
     WebRoute            *Index;
     char                *Err404;
+    void                (*Destruct)     (struct WebServerConfig *cfg);
 } WebServerConfig;
 
 /* C Web Server */

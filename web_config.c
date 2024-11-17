@@ -41,7 +41,7 @@ void DestroyCfg(WebServerConfig *cfg) {
             free(cfg->Routes[i]);
             cfg->Routes[i] = NULL;
         }
-        free(r->Routes);
+        free(cfg->Routes);
     }
 
     if(cfg->Index)

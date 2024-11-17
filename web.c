@@ -17,7 +17,8 @@ cWS *StartWebServer(String ip, int port, int auto_search) {
         .Socket     = socket(AF_INET, SOCK_STREAM, 0),
         .CFG        = (WebServerConfig){
             .DirRouteSearch     = auto_search,
-            .Routes             = (WebRoute **)malloc(sizeof(WebRoute *) * 1)
+            .Routes             = (WebRoute **)malloc(sizeof(WebRoute *) * 1),
+            .Destruct           = DestroyCfg
         },
 
         .Run        = RunServer,
@@ -112,7 +113,6 @@ cWR *ParseRequest(const char *data) {
     *r = (cWR){
         .Headers = NewMap(),
         .Body = NewString(NULL),
-        .Destruct = DestroyRoute
     };
 
     String traffic = NewString(data);
@@ -238,7 +238,7 @@ void DestroyServer(cWS *web) {
         web->IP.Destruct(&web->IP);
 
     if(web->CFG.Routes)
-        web->CFG.Destruct(web->CFG);
+        web->CFG.Destruct(&web->CFG);
         
     free(web);
 }
