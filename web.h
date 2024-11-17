@@ -34,6 +34,7 @@ typedef struct WebRoute {
 
     int                 GenOutput;
     Control             **Controls;
+    long                ControlCount;
 } WebRoute;
 
 typedef struct WebServerConfig {

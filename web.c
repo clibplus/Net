@@ -118,8 +118,11 @@ cWR *ParseRequest(const char *data) {
     Array lines = NewArray(NULL);
     lines.Merge(&lines, (void **)traffic.Split(&traffic, "\n"));
 
-    if(lines.idx < 1)
+    if(lines.idx < 1) {
+        traffic.Destruct(&traffic);
+        lines.Destruct(&lines);
         return NULL;
+    }
 
     String request_type = NewString(lines.arr[0]);
     Array argz = NewArray(NULL);
@@ -152,6 +155,7 @@ cWR *ParseRequest(const char *data) {
         line.Destruct(&line);
     }
 
+    traffic.Destruct(&traffic);
     lines.Destruct(&lines);
 
     return r;
@@ -178,6 +182,7 @@ void GetPostQueries(cWS *web, cWR *r) {
     }
     
     r->Queries = Queries;
+    args.Destruct(&args);
 }
 
 int RetrieveGetParameters(cWS *web, cWR *r) {
@@ -232,8 +237,7 @@ void DestroyServer(cWS *web) {
         web->IP.Destruct(&web->IP);
 
     if(web->CFG.Routes)
-        for(int i = 0; i < web->CFG.RouteCount; i++)
-            free(web->CFG.Routes[i]);
-    
+        web->CFG.Destruct(web->CFG);
+        
     free(web);
 }

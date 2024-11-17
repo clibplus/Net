@@ -34,3 +34,41 @@ int AddRoute(cWS *web, WebRoute route) {
     web->CFG.Routes = (WebRoute **)realloc(web->CFG.Routes, sizeof(WebRoute *) * (web->CFG.RouteCount + 1));
     return 1;
 }
+
+void DestroyCfg(WebServerConfig *cfg) {
+    if(cfg->Routes) {
+        for(int i = 0; i < cfg->RouteCount; i++) {
+            free(cfg->Routes[i]);
+            cfg->Routes[i] = NULL;
+        }
+        free(r->Routes);
+    }
+
+    if(cfg->Index)
+        free(cfg->Index);
+
+    if(cfg->Err404)
+        free(cfg->Err404);
+}
+
+void DestroyRoute(WebRoute *r) {
+    if(r->Name)
+        free(r->Name);
+
+    if(r->Path)
+        free(r->Path);
+
+    if(r->Output)
+        free(r->Output);
+
+    if(r->Controls) {
+        for(int i = 0; i < r->ControlCount; i++) {
+            free(r->Controls[i]);
+            r->Controls[i] = NULL; // No dangling pointers
+        }
+
+        free(r->Controls);
+    }
+
+    free(r);
+}
