@@ -6,7 +6,7 @@
 
 #include "web.h"
 
-cWS *StartWebServer(const string ip, int port, int auto_search) {
+cWS *StartWebServer(String ip, int port, int auto_search) {
     if(!ip.data || port <= 0)
         return NULL;
 
@@ -16,7 +16,8 @@ cWS *StartWebServer(const string ip, int port, int auto_search) {
         .Port       = port,
         .Socket     = socket(AF_INET, SOCK_STREAM, 0),
         .CFG        = (WebServerConfig){
-            .DirRouteSearch = auto_search
+            .DirRouteSearch     = auto_search,
+            .Routes             = (WebRoute **)malloc(sizeof(WebRoute *) * 1)
         },
 
         .Run        = RunServer,
@@ -37,7 +38,7 @@ cWS *StartWebServer(const string ip, int port, int auto_search) {
     if(setsockopt(web->Socket, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse, sizeof(reuse)) < 0)
         return NULL;
 
-    if(bind(web->Socket, (struct sockaddr *)web->Address, sizeof(web->Address)) < 0)
+    if(bind(web->Socket, (struct sockaddr *)&web->Address, sizeof(web->Address)) < 0)
         return NULL;
 
     return web;
@@ -51,95 +52,107 @@ void RunServer(cWS *web, int concurrents, const char *search_path) {
 
     int request_socket = 0, addrlen = sizeof(web->Address);
     while(1) {
-        if((request_socket = accept(web->Socket, (struct sockaddr *)web->Address, (socklen_t *)&addrlen)) < 0)
+        if((request_socket = accept(web->Socket, (struct sockaddr *)&web->Address, (socklen_t *)&addrlen)) < 0)
             continue;
 
         pthread_t tid;
         void **arr = (void **)malloc(sizeof(void *) * 2);
-        arr[0] = web;
-        arr[1] = request_socket;
+        arr[0] = (void *)web;
+        arr[1] = (void *)&request_socket;
 
-        pthread_create(&tid, NULL, (void *)thread_req, (void *)arr);
+        pthread_create(&tid, NULL, (void *)ParseAndCheckRoute, (void *)arr);
     }
 }
 
-void ParseAndCheckRoute(cWS *web, int request_socket) {
-    char BUFFER[4096] = {0};
-    read(request_socket, buffer, 4095);
+void ParseAndCheckRoute(void **args) {
+    cWS *web = (cWS *)args[0];
+    int request_socket = *(int *)args[1];
 
-    cWR *r = ParseRequest(&buffer);
-    if(!r || !r->Route) {
-        SendResponse(s, request_socket, OK, headers, NULL, s->err_404_filepath);
-        return;
-    }
-
+    char *BUFFER = (char *)calloc(4096, sizeof(char));
+    int bytes = read(request_socket, BUFFER, 4096);
+    BUFFER[bytes + 1] = '\0';
+    
     Map new_headers = NewMap();
     new_headers.Append(&new_headers, "Content-Type", "text/html; charset=UTF-8");
     new_headers.Append(&new_headers, "Connection", "close");
 
-    int chk = isRouteValid(web, r->Route.data);
+    cWR *r = ParseRequest(BUFFER);
+    if(!r || !r->Route.data) {
+        SendResponse(web, request_socket, OK, new_headers, ((Map){}), web->CFG.Err404);
+        close(request_socket);
+        return;
+    }
+
+    int chk = SearchRoute(web, r->Route.data);
+    if(chk == -1) {
+        free(BUFFER);
+        close(request_socket);
+        return;
+    }
+
     if(!strcmp(r->RequestType.data, "POST"))
         GetPostQueries(web, r);
 
-    if(strstr(r->Route, "?"))
+    if(strstr(r->Route.data, "?"))
         RetrieveGetParameters(web, r);
 
-    (chk ? web->Routes->Keys[chk]->Value(web, r, request_socket) : SendResponse(s, request_socket, OK, headers, s->err_404_filepath, NULL) );
+    printf("[ NEW REQUEST ] %s\n", web->CFG.Routes[chk]->Path);
+    (void)(chk > -1 ? ((void (*)(cWS *, cWR *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, request_socket) : SendResponse(web, request_socket, OK, new_headers, ((Map){}), NULL));
+
+    free(BUFFER);
+    close(request_socket);
+    pthread_exit(NULL);
 }
 
 cWR *ParseRequest(const char *data) {
     if(!data)
         return NULL;
 
-    String raw_data = NewString(data);
-    Array lines = NewArray(NULL);
-    lines.Merge(&lines, (void **)raw_data.Split(&raw_data, "\n"));
-
-    cWR *r = (cWR *)malloc(sizeof(cWR *));
+    cWR *r = (cWR *)malloc(sizeof(cWR));
     *r = (cWR){
         .Headers = NewMap(),
         .Body = NewString(NULL)
     };
 
-    String HTTP_VERSION = NewString(lines.arr[0]);
-    Array ver_args = NewArray(NULL);
-    ver_args.Merge(&ver_args, HTTP_VERSION.Split(&HTTP_VERSION, " "));
+    String traffic = NewString(data);
+    Array lines = NewArray(NULL);
+    lines.Merge(&lines, (void **)traffic.Split(&traffic, "\n"));
 
-    if(ver_args.idx < 1)
+    if(lines.idx < 1)
         return NULL;
 
-    r->Route = NewString(ver_args.arr[1]);
-    HTTP_VERSION.Destruct(&HTTP_VERSION);
+    String request_type = NewString(lines.arr[0]);
+    Array argz = NewArray(NULL);
+    argz.Merge(&argz, (void **)request_type.Split(&request_type, " "));
 
-    for(int i = 1; i < lines.idx; i++) {
-        if(!strcmp(lines.arr[i], "") || !strcmp(lines.arr[i], "2be") || !strcmp(lines.arr[i], "0"))
+    r->RequestType = NewString(argz.arr[0]);
+    r->Route = NewString(argz.arr[1]);
+
+    argz.Destruct(&argz);
+    request_type.Destruct(&request_type);
+
+    for(int i = 0; i < lines.idx; i++) {
+        if(!lines.arr[i])
             break;
 
         String line = NewString(lines.arr[i]);
-        Array args = NewArray(NULL);
-        args.Merge(&args, line.Split(&line, ":"));
-
-        line.Strip(&line);
-        if(!strcmp(line.data, ""))
+        if(line.isEmpty(&line) || line.Is(&line, " "))
             break;
 
-        if(args.idx >= 2) {
-            String value = NewString(lines.arr[i]);
-            value.Replace(&value, args[0], "");
+        if(line.Contains(&line, ":")) {
+            Array args = NewArray(NULL);
+            args.Merge(&args, (void **)line.Split(&line, ":"));
 
-            r->Headers.Append(r->Headers, args[0], value.data);
-            value.Destruct(&value);
+            r->Headers.Append(&r->Headers, args.arr[0], args.arr[1]);
+            args.Destruct(&args);
         } else {
-            r->Body.AppendString(r->Body, lines.arr[i]);
+            r->Body.AppendString(&r->Body, line.data);
         }
 
         line.Destruct(&line);
-        args.Destruct(&args);
     }
 
-    raw_data.Destruct(&raw_data);
     lines.Destruct(&lines);
-    ver_args.Destruct(&ver_args);
 
     return r;
 }
@@ -148,10 +161,9 @@ void GetPostQueries(cWS *web, cWR *r) {
     Map Queries = NewMap();
     Array args = NewArray(NULL);
 
-    args.Merge(&args, r->Body.Split(&r->Body, "&"));
-
+    args.Merge(&args, (void **)r->Body.Split(&r->Body, "&"));
     if(args.idx < 1)
-        return ((Map){});
+        return;
 
     for(int i = 0; i < args.idx; i++) {
         String query = NewString(args.arr[i]);
@@ -172,11 +184,11 @@ int RetrieveGetParameters(cWS *web, cWR *r) {
     if(!strstr(r->Route.data, "?"))
         return 0;
 
-    Map *queries = NewMap();
+    Map queries = NewMap();
     Array link_args = NewArray(NULL);
     link_args.Merge(&link_args, (void **)r->Route.Split(&r->Route, "?"));
 
-    String parameters(args.arr[1]);
+    String parameters = NewString(link_args.arr[1]);
     Array args = NewArray(NULL);
     args.Merge(&args, (void **)parameters.Split(&parameters, "&"));
 
@@ -194,7 +206,7 @@ int RetrieveGetParameters(cWS *web, cWR *r) {
         para_args.Destruct(&para_args);
     }
 
-    r->Queries = Queries;
+    r->Queries = queries;
 
     link_args.Destruct(&link_args);
     args.Destruct(&args);
@@ -202,34 +214,26 @@ int RetrieveGetParameters(cWS *web, cWR *r) {
     return 1;
 }
 
-void SendResponse(cWS *web, int request_socket, StatusCode_T code, Map headers, Map vars, const char *body) {
-    String _resp = NewString("HTTP/1.1 ");
+void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map vars, const char *body) {
+    String resp = NewString("HTTP/1.1 200 OK\r\n");
 
-    switch(code) {
-        case OK: { 
-            _resp.AppendNum(&_resp, (int)OK); 
-            _resp.AppendString(&_resp, " OK");
-            break; 
-        };
-    }
+    if(headers.idx > 0)
+        for(int i = 0; i < headers.idx; i++)
+            resp.AppendArray(&resp, ((const char *[]){(char *)((Key *)headers.arr[i])->key, ": ", (char *)((Key *)headers.arr[i])->value, "\r\n", NULL}));
 
-    for(int i = 0; i < headers.idx; i++)
-        _resp.AppendArray(&_resp, ((const char *[]){headers.arr[i]->key, ": ", headers.arr[i]->value, "\r\n"}));
+    resp.AppendArray(&resp, ((const char *[]){"\r\n", body, "0\r\n", NULL}));
+    write(request_socket, resp.data, resp.idx - 1);
 
-    if(body)
-        _resp.AppendString(&_resp, body);
-    
-    _resp.AppendString(&_resp, "\r\n\r\n");
-    write(request_socket, _resp.data, _resp.idx);
-    _resp.Destruct(&_resp);
+    resp.Destruct(&resp);
 }
 
-void *DestroyServer(cWS *web) {
+void DestroyServer(cWS *web) {
     if(web->IP.data)
-        web->IP.Destruct(&web-IP);
+        web->IP.Destruct(&web->IP);
 
-    if(web->Routes.arr)
-        web->Routes.Destruct(&web->Routes);
+    if(web->CFG.Routes)
+        for(int i = 0; i < web->CFG.RouteCount; i++)
+            free(web->CFG.Routes[i]);
     
     free(web);
 }

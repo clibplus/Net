@@ -12,16 +12,35 @@
 
 #include "request.h"
 
-typedef struct WebRoute {
-    char    *Name;
-    char    *Path;
-    char    *Output;
+typedef enum ControlTag {
+    NO_TAG              = 8490,
+    TITLE_TAG           = 8491,
+    H1_TAG              = 8492,
+    INPUT_TAG           = 8493
+} ControlTag;
 
-    int     *GenOutput;
+typedef struct Control {
+    ControlTag          Tag;        // ControlTag
+    char                *Text;      // For tags like <p> <h1> <h2> <h3>
+    char                *Type;      // For <input type="submit"> Tag
+    char                **CSS;
+} Control;
+
+typedef struct WebRoute {
+    char                *Name;
+    char                *Path;
+    char                *Output;
+    void                *Handler;
+
+    int                 GenOutput;
+    Control             **Controls;
 } WebRoute;
 
 typedef struct WebServerConfig {
     int                 DirRouteSearch;     // Search for new route pages in a directory
+
+    WebRoute            **Routes;
+    long                RouteCount;
 
     WebRoute            *Index;
     char                *Err404;
@@ -32,7 +51,6 @@ typedef struct cWS {
     String              IP;
     int                 Port;
     int                 Socket;
-    Map                 *Routes;
     struct sockaddr_in  Address;
     SSL                 *SSL;
     SSL_CTX             *CTX;
@@ -52,11 +70,14 @@ typedef struct cWR {
     String              Body;
 } cWR;
 
-cWS     *StartWebServer(const string IP, int port, int auto_search);
-void    RunServer(HTTPServer *web, int concurrents, const char *search_path);
-void    ParseAndCheckRoute(cWS *web, int request_socket);
+cWS     *StartWebServer(const String IP, int port, int auto_search);
+void    RunServer(cWS *web, int concurrents, const char *search_path);
+void    ParseAndCheckRoute(void **args);
 cWR     *ParseRequest(const char *data);
 void    GetPostQueries(cWS *web, cWR *r);
 int     RetrieveGetParameters(cWS *web, cWR *r);
-void    SendResponse(cWS *web, int request_socket, StatusCode_T code, Map headers, Map vars, const char *body);
-void    *DestroyServer(cWS *web);
+void    SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map vars, const char *body);
+void    DestroyServer(cWS *web);
+
+int SearchRoute(cWS *web, const char *data);
+int AddRoute(cWS *web, WebRoute route);
