@@ -111,7 +111,8 @@ cWR *ParseRequest(const char *data) {
     cWR *r = (cWR *)malloc(sizeof(cWR));
     *r = (cWR){
         .Headers = NewMap(),
-        .Body = NewString(NULL)
+        .Body = NewString(NULL),
+        .Destruct = DestroyRoute
     };
 
     String traffic = NewString(data);

@@ -69,6 +69,8 @@ typedef struct cWR {
     Map                 Headers;
     Map                 Queries;
     String              Body;
+    
+    void                (*Destruct)     (struct cWS *r);
 } cWR;
 
 cWS     *StartWebServer(const String IP, int port, int auto_search);
@@ -80,5 +82,8 @@ int     RetrieveGetParameters(cWS *web, cWR *r);
 void    SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map vars, const char *body);
 void    DestroyServer(cWS *web);
 
-int SearchRoute(cWS *web, const char *data);
-int AddRoute(cWS *web, WebRoute route);
+int     SearchRoute(cWS *web, const char *data);
+int     AddRoute(cWS *web, WebRoute route);
+
+void DestroyCfg(WebServerConfig *cfg);
+void DestroyRoute(WebRoute *r);
