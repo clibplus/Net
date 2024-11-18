@@ -4,14 +4,15 @@
 
 #include "web.h"
 
-const char **BODY_CSS = {
+const char *BODY_CSS[] = {
 	"background-color: #000",
-	"color: #fff"
+	"color: #fff",
+	NULL
 };
 
 int main() {
-	Control header = (Control){ .Tag = HEAD_TAG, .CSS = BODY_CSS};
-	
+	Control header = (Control){ .Tag = HEAD_TAG, .CSS = (char **)BODY_CSS};
+
 	Control text1 = (Control){ .Tag = P_TAG, .Text = "Test\0", .Data = "id=\"no\" name=\"no\""};
 	Control text2 = (Control){ .Tag = P_TAG, .Text = "Test\0", .Data = "id=\"no1\" name=\"no1\""};
 	Control text3 = (Control){ .Tag = P_TAG, .Text = "Test\0", .Data = "id=\"no2\" name=\"no2\""};
@@ -23,7 +24,9 @@ int main() {
 		&text3,
 		NULL
 	};
+
 	String resp = ConstructDesign(design);
+
 	printf("%s\n", resp.data);
 	return 0;
 }
