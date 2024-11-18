@@ -4,8 +4,14 @@
 
 #include "web.h"
 
+const char **BODY_CSS = {
+	"background-color: #000",
+	"color: #fff"
+};
+
 int main() {
-	Control header = (Control){ .Tag = HEAD_TAG };
+	Control header = (Control){ .Tag = HEAD_TAG, .CSS = BODY_CSS};
+	
 	Control text1 = (Control){ .Tag = P_TAG, .Text = "Test\0", .Data = "id=\"no\" name=\"no\""};
 	Control text2 = (Control){ .Tag = P_TAG, .Text = "Test\0", .Data = "id=\"no1\" name=\"no1\""};
 	Control text3 = (Control){ .Tag = P_TAG, .Text = "Test\0", .Data = "id=\"no2\" name=\"no2\""};
