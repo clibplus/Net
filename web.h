@@ -14,9 +14,14 @@
 
 typedef enum ControlTag {
     NO_TAG              = 8490,
-    TITLE_TAG           = 8491,
-    H1_TAG              = 8492,
-    INPUT_TAG           = 8493
+
+    HEAD_TAG            = 8491,
+    BODY_TAG            = 8492,
+
+    TITLE_TAG           = 8493,
+    H1_TAG              = 8494,
+    INPUT_TAG           = 8495,
+    P_TAG               = 8496
 } ControlTag;
 
 typedef struct Control {
@@ -24,15 +29,17 @@ typedef struct Control {
     char                *Text;      // For tags like <p> <h1> <h2> <h3>
     char                *Type;      // For <input type="submit"> Tag
     char                **CSS;
+    Control             Parent;
 } Control;
 
 typedef struct WebRoute {
     char                *Name;
     char                *Path;
     char                *Output;
+    
     void                *Handler;
+    void                *Generator;
 
-    int                 GenOutput;
     Control             **Controls;
     long                ControlCount;
     void                (*Destruct)     (struct WebRoute *r);
@@ -74,6 +81,10 @@ typedef struct cWR {
     
     void                (*Destruct)     (struct cWS *r);
 } cWR;
+
+typedef Control Textbox;
+typedef Control Button;
+typedef Control Div;
 
 cWS     *StartWebServer(const String IP, int port, int auto_search);
 void    RunServer(cWS *web, int concurrents, const char *search_path);

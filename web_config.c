@@ -25,9 +25,10 @@ int AddRoute(cWS *web, WebRoute route) {
     if(!web || !route.Name)
         return 0;
 
-    printf("Adding route...!\n");
     WebRoute *neww = (WebRoute *)malloc(sizeof(WebRoute));
     *neww = route;
+
+    neww->Destruct = DestroyRoute;
 
     web->CFG.Routes[web->CFG.RouteCount] = neww;
     web->CFG.RouteCount++;
