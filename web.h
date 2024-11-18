@@ -87,7 +87,7 @@ typedef Control Textbox;
 typedef Control Button;
 typedef Control Div;
 
-extern void *HTML_TAGS[][3];
+extern void *HTML_TAGS[][2];
 
 cWS     *StartWebServer(const String IP, int port, int auto_search);
 void    RunServer(cWS *web, int concurrents, const char *search_path);

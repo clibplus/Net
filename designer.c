@@ -4,9 +4,10 @@
 
 #include "web.h"
 
-#define HTML_TAGS_COUNT 3
-void *HTML_TAGS[][3] = {
+#define HTML_TAGS_COUNT 4
+void *HTML_TAGS[][2] = {
     { (void *)HEAD_TAG, "head"},
+    { (void *)TITLE_TAG, "title" },
     { (void *)BODY_TAG, "body" },
     { (void *)P_TAG, "p" },
 };
@@ -64,6 +65,7 @@ String ConstructDesign(Control **controls) {
             continue;
 
         design.AppendArray(&design, (const char *[]){data, NULL});
+        controls[i]->Parent = controls[0];
         i++;
     }
 
