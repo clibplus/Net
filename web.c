@@ -145,7 +145,7 @@ cWR *ParseRequest(const char *data) {
 
         if(line.Contains(&line, ":")) {
             Array args = NewArray(NULL);
-            args.Merge(&args, (void **)line.Split(&line, ":"));
+            args.Merge(&args, (void **)line.Split(&line, ": "));
 
             r->Headers.Append(&r->Headers, args.arr[0], args.arr[1]);
             args.Destruct(&args);

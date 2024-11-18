@@ -20,23 +20,24 @@ typedef enum ControlTag {
 
     TITLE_TAG           = 8493,
     H1_TAG              = 8494,
-    INPUT_TAG           = 8495,
-    P_TAG               = 8496
+    TEXT_INPUT_TAG      = 8495,
+    BUTTON_INPUT_TAG    = 8496,
+    P_TAG               = 8497
 } ControlTag;
 
 typedef struct Control {
     ControlTag          Tag;        // ControlTag
-    char                *Text;      // For tags like <p> <h1> <h2> <h3>
-    char                *Type;      // For <input type="submit"> Tag
-    char                **CSS;
-    Control             Parent;
+    char                *Text;      // text for tags: <p> <h1> <h2> <h3>
+    char                *Data;      // For Any Other Data In the Opening Tag <div Data... > </div>
+    char                **CSS;      // CSS Function Generator for the tag <div style="CSS FUNCTION"></div>
+    void                *Parent;    // If you want this in a div or any other control, Set the parent here
 } Control;
 
 typedef struct WebRoute {
     char                *Name;
     char                *Path;
     char                *Output;
-    
+
     void                *Handler;
     void                *Generator;
 
@@ -86,6 +87,8 @@ typedef Control Textbox;
 typedef Control Button;
 typedef Control Div;
 
+extern void *HTML_TAGS[][3];
+
 cWS     *StartWebServer(const String IP, int port, int auto_search);
 void    RunServer(cWS *web, int concurrents, const char *search_path);
 void    ParseAndCheckRoute(void **args);
@@ -97,6 +100,9 @@ void    DestroyServer(cWS *web);
 
 int     SearchRoute(cWS *web, const char *data);
 int     AddRoute(cWS *web, WebRoute route);
+void    DestroyCfg(WebServerConfig *cfg);
+void    DestroyRoute(WebRoute *r);
 
-void DestroyCfg(WebServerConfig *cfg);
-void DestroyRoute(WebRoute *r);
+char *ExecuteConstructor(Control *control);
+String ConstructDesign(Control **controls);
+char *ConstructTag(Control *header);
