@@ -117,7 +117,7 @@ Array ParseURL(const char *u);
 //
 //
 //
-HTTPClientResponse ReqGET_URL(const String URL, const Map h, const Req_T reqt);
+HTTPClientResponse RequestURL(const String URL, const Map h, const Req_T reqt);
 
 //
 //

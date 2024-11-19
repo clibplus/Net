@@ -98,7 +98,7 @@ void ParseAndCheckRoute(void **args) {
         RetrieveGetParameters(web, r);
 
     printf("[ NEW REQUEST ] %s\n", web->CFG.Routes[chk]->Path);
-    (void)(chk > -1 ? ((void (*)(cWS *, cWR *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, request_socket) : SendResponse(web, request_socket, OK, new_headers, ((Map){}), NULL));
+    (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, new_headers, ((Map){}), NULL));
 
     free(BUFFER);
     close(request_socket);

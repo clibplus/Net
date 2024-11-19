@@ -8,17 +8,21 @@
 Array ParseURL(const char *u) {
 	String hostname = NewString(u);
 	Array args = NewArray(NULL);
+	hostname.data[hostname.idx] = '\0';
 
-	if(strstr(hostname.data, "https://"))
-		hostname.RemoveSubstr(&hostname, 0, 7);
+	/* Check for substring to remove */
+	char *CheckArgs[] = {"https://", "http://", "www.", NULL};
+	for(int i = 0 ; CheckArgs[i] != NULL; i++) {
+		int chars = 0;
+		if(!hostname.Contains(&hostname, CheckArgs[i]))
+			continue;
 
-	if(strstr(hostname.data, "http://"))
-		hostname.RemoveSubstr(&hostname, 0, 6);
+		chars = strlen(CheckArgs[i]); 
+		for(int i = 0; i < chars; i++)
+			hostname.TrimAt(&hostname, 0);
+	}
 
-	if(strstr(hostname.data, "www."))
-		hostname.RemoveSubstr(&hostname, 0, 4);
-
-	if(strstr(hostname.data, "/")) {
+	if(hostname.Contains(&hostname, "/")) {
 		if(hostname.data[hostname.idx - 1] == '/') {
 			hostname.Trim(&hostname, '/');
 			args.Append(&args, hostname.data);
@@ -41,8 +45,9 @@ Array ParseURL(const char *u) {
 	return args;
 }
 
-HTTPClientResponse ReqGET_URL(const String URL, const Map h, const Req_T reqt) {
+HTTPClientResponse RequestURL(const String URL, const Map h, const Req_T reqt) {
 	Array hostname = ParseURL(URL.data);
+	printf("%ld\n", hostname.idx);
 	HTTPClient c = {
 		.Hostname	= NewString(hostname.arr[0]),
 		.URL_Route 	= NewString(hostname.arr[1]),
@@ -50,14 +55,15 @@ HTTPClientResponse ReqGET_URL(const String URL, const Map h, const Req_T reqt) {
 		.Port 		= NewString((strstr(URL.data, "https://") ? "443" : "80"))
 	};
 
+	printf("%s %s\r\n\r\n", c.Hostname.data, c.Port.data);
+	printf("%s\r\n\r\n", c.URL_Route.data);
 	c.ServerFD = CreateHTTPSocket(&c);
 	int check = 0;
 	HTTPClientResponse Response;
 
 	if(!strcmp(c.Port.data, "443")) {
 		InitOpenSSL();
-		c.CTX = CreateSSLContext();
-		c.SSL = SSL_new(c.CTX);
+
 		SSL_set_fd(c.SSL, c.ServerFD);
 
 		if(SSL_connect(c.SSL) <= 0)
@@ -168,7 +174,8 @@ int ExtractRawTraffic(HTTPClient *c, HTTPClientResponse *r) {
 		return 0;
 
 	String copy 		= NewString(r->Body.data);
-	Array lines 		= NewArray((const void **)copy.Split(&copy, "/"));
+	Array lines 		= NewArray(NULL);
+	lines.Merge(&lines, (void **)copy.Split(&copy, "/"));
 	int line_count 		= copy.CountChar(&copy, '\n');
 
 	Map headers 		= NewMap();
@@ -179,8 +186,9 @@ int ExtractRawTraffic(HTTPClient *c, HTTPClientResponse *r) {
 
 	/* Grab Status Code And HTTP Version (1.1) */
 	String version 		= NewString(lines.arr[0]);
-	Array status 		= NewArray((const void **)version.Split(&version, " "));
-	version.Replace(&version, status.arr[0], "");
+	Array status 		= NewArray(NULL);
+	status.Merge(&status, (void **)version.Split(&version, " "));
+	version.RmSubstr(&version, 0, strlen(status.arr[0]) + 1);
 
 	for(int i = 0; i < status.idx; i++) {
 		version.AppendString(&version, status.arr[i]);
@@ -203,7 +211,8 @@ int ExtractRawTraffic(HTTPClient *c, HTTPClientResponse *r) {
 		}
 
 		String line		= NewString(lines.arr[i]);
-		Array args 		= NewArray((const void **)line.Split(&line, (const char *)":"));
+		Array args 		= NewArray(NULL);
+		args.Merge(&args, (void **)line.Split(&line, (const char *)":"));
 		int arg_count 	= line.CountChar(&line, ':');
 		line.Strip(&line);
 		if(!strcmp(line.data, "")) {
