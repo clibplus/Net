@@ -84,6 +84,7 @@ void ParseAndCheckRoute(void **args) {
         return;
     }
 
+    printf("[ NEW REQUEST ATTEMPT ] %s\n", r->Route.data);
     int chk = SearchRoute(web, r->Route.data);
     if(chk == -1) {
         free(BUFFER);
@@ -97,7 +98,7 @@ void ParseAndCheckRoute(void **args) {
     if(strstr(r->Route.data, "?"))
         RetrieveGetParameters(web, r);
 
-    printf("[ NEW REQUEST ] %s\n", web->CFG.Routes[chk]->Path);
+    printf("[ NEW REQUEST ] %s = > %s\n", web->CFG.Routes[chk]->Name, web->CFG.Routes[chk]->Path);
     (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, new_headers, ((Map){}), NULL));
 
     free(BUFFER);

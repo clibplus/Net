@@ -15,22 +15,27 @@
 typedef enum ControlTag {
     NO_TAG              = 8490,
 
-    HEAD_TAG            = 8491,
-    BODY_TAG            = 8492,
+    HTML_TAG            = 8491,
+    HEAD_TAG            = 8492,
+    BODY_TAG            = 8493,
 
-    TITLE_TAG           = 8493,
-    H1_TAG              = 8494,
-    TEXT_INPUT_TAG      = 8495,
-    BUTTON_INPUT_TAG    = 8496,
-    P_TAG               = 8497
+    TITLE_TAG           = 8494,
+    H1_TAG              = 8495,
+    INPUT_TAG           = 8496,
+    P_TAG               = 8497,
+    DIV_TAG             = 8498,
+    A_TAG               = 8499
 } ControlTag;
 
 typedef struct Control {
+    void                *Parent;
     ControlTag          Tag;        // ControlTag
+    char                *Type;      // Type for <input> <button> <select> <script>
     char                *Text;      // text for tags: <p> <h1> <h2> <h3>
     char                *Data;      // For Any Other Data In the Opening Tag <div Data... > </div>
+    char                *href;      // href for <a>
     char                **CSS;      // CSS Function Generator for the tag <div style="CSS FUNCTION"></div>
-    void                *Parent;    // If you want this in a div or any other control, Set the parent here
+    void                **SubControls;
 } Control;
 
 typedef struct WebRoute {
@@ -105,4 +110,6 @@ void    DestroyRoute(WebRoute *r);
 
 char *ExecuteConstructor(Control *control);
 String ConstructDesign(Control **controls);
+String ConstructControl(Control *control);
 char *ConstructTag(Control *header);
+String ConstructParent(Control *p);
