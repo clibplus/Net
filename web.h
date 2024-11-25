@@ -1,3 +1,8 @@
+/*
+    Compile:
+        gcc -c web.c web_config.c designer.c -lstr -larr -lmap -lpthread -g -g1
+        ar rcs websign.a *.o; rm *.o; mv websign.a /usr/local/lib/libwebsign.a
+*/
 #pragma once
 
 #include <pthread.h>
@@ -42,6 +47,7 @@ typedef struct WebRoute {
     char                *Name;
     char                *Path;
     char                *Output;
+    int                 InlineCSS;
 
     void                *Handler;
     void                *Generator;

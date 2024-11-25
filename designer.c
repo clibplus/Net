@@ -57,7 +57,7 @@ String ConstructDesign(Control **controls) {
         if(controls[0]->Data)
             design.AppendArray(&design, (const char *[]){" ", controls[0]->Data, NULL});
         
-        if(controls[0]->CSS) {
+        if(controls[0]->InlineCSS && controls[0]->CSS) {
             design.AppendString(&design, " style=\"");
             design.AppendArray(&design, (const char **)controls[0]->CSS);
             design.AppendString(&design, "\"");
@@ -107,7 +107,7 @@ String ConstructControl(Control *control) {
         if(control->Data)
             design.AppendArray(&design, (const char *[]){" ", control->Data, NULL});
         
-        if(control->CSS) {
+        if(control->InlineCSS && control->CSS) {
             design.AppendString(&design, " style=\"");
             design.AppendArray(&design, (const char **)control->CSS);
             design.AppendString(&design, "\"");
@@ -157,7 +157,7 @@ String ConstructParent(Control *p) {
         if(p->Data)
             design.AppendArray(&design, (const char *[]){" ", p->Data, NULL});
         
-        if(p->CSS) {
+        if(p->InlineCSS && p->CSS) {
             design.AppendString(&design, " style=\"");
             design.AppendArray(&design, (const char **)p->CSS);
             design.AppendString(&design, "\"");
@@ -172,35 +172,32 @@ String ConstructParent(Control *p) {
             Control *subControl = (Control *)p->SubControls[i];
             design.AppendString(&design, "<");
             char *sub_tag = FindTag(subControl);
-            if (!sub_tag) continue;  // Skip invalid tags.
+            if (!sub_tag) continue; 
 
             design.AppendString(&design, sub_tag);
 
-            // Add attributes for sub-controls
             if (subControl->Type)
                 design.AppendArray(&design, (const char *[]){" type=\"", subControl->Type, "\"", NULL});
 
             if (subControl->Data)
                 design.AppendArray(&design, (const char *[]){" ", subControl->Data, NULL});
 
-            if (subControl->CSS) {
+            if (subControl->InlineCSS && subControl->CSS) {
                 design.AppendString(&design, " style=\"");
                 design.AppendArray(&design, (const char **)subControl->CSS);
                 design.AppendString(&design, "\"");
             }
             design.AppendString(&design, ">");
 
-            // Add text or recurse
             if (subControl->Text)
                 design.AppendArray(&design, (const char *[]){"\n", subControl->Text, "\n", NULL});
             if (subControl->SubControls != NULL) {
                 String n = ConstructParent(subControl);
                 design.AppendArray(&design, (const char *[]){n.data, NULL});
-                n.Destruct(&n);  // Free memory for the temporary String.
+                n.Destruct(&n);
             }
         }
 
-        // Close sub-tags
         for (int i = 0; p->SubControls[i] != NULL; i++) {
             char *sub_tag = FindTag(p->SubControls[i]);
             if (sub_tag)
@@ -227,7 +224,7 @@ char *ConstructTag(Control *control) {
     if(control->Data)
         buffer.AppendArray(&buffer, (const char *[]){" ", control->Data, NULL});
     
-    if(control->CSS) {
+    if(control->InlineCSS && control->CSS) {
         buffer.AppendString(&buffer, " style=\"");
         buffer.AppendArray(&buffer, (const char **)control->CSS);
         buffer.AppendString(&buffer, "\"");
