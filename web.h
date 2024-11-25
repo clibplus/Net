@@ -2,6 +2,9 @@
     Compile:
         gcc -c web.c web_config.c designer.c -lstr -larr -lmap -lpthread -g -g1
         ar rcs websign.a *.o; rm *.o; mv websign.a /usr/local/lib/libwebsign.a
+
+    Use:
+        -lwebsign -lstr -larr -lmap -lpthread
 */
 #pragma once
 
