@@ -60,7 +60,7 @@ String ConstructDesign(Control **controls) {
         if(controls[0]->Class) 
             design.AppendArray(&design, (const char *[]){" class=\"", controls[0]->Class, "\"", NULL});
         
-        if(controls[0]->InlineCSS && controls[0]->CSS) {
+        if(controls[0]->CSS) {
             design.AppendString(&design, " style=\"");
             design.AppendArray(&design, (const char **)controls[0]->CSS);
             design.AppendString(&design, "\"");
@@ -113,7 +113,7 @@ String ConstructControl(Control *control) {
         if(control->Class) 
             design.AppendArray(&design, (const char *[]){" class=\"", control->Class, "\"", NULL});
         
-        if(control->InlineCSS && control->CSS) {
+        if(control->CSS) {
             design.AppendString(&design, " style=\"");
             design.AppendArray(&design, (const char **)control->CSS);
             design.AppendString(&design, "\"");
@@ -166,7 +166,7 @@ String ConstructParent(Control *p) {
         if(p->Class) 
             design.AppendArray(&design, (const char *[]){" class=\"", p->Class, "\"", NULL});
         
-        if(p->InlineCSS && p->CSS) {
+        if(p->CSS) {
             design.AppendString(&design, " style=\"");
             design.AppendArray(&design, (const char **)p->CSS);
             design.AppendString(&design, "\"");
@@ -194,7 +194,7 @@ String ConstructParent(Control *p) {
             if(subControl->Class) 
                 design.AppendArray(&design, (const char *[]){" class=\"", subControl->Class, "\"", NULL});
 
-            if (subControl->InlineCSS && subControl->CSS) {
+            if (subControl->CSS) {
                 design.AppendString(&design, " style=\"");
                 design.AppendArray(&design, (const char **)subControl->CSS);
                 design.AppendString(&design, "\"");
@@ -239,7 +239,7 @@ char *ConstructTag(Control *control) {
     if(control->Class) 
         buffer.AppendArray(&buffer, (const char *[]){" class=\"", control->Class, "\"", NULL});
     
-    if(control->InlineCSS && control->CSS) {
+    if(control->CSS) {
         buffer.AppendString(&buffer, " style=\"");
         buffer.AppendArray(&buffer, (const char **)control->CSS);
         buffer.AppendString(&buffer, "\"");
