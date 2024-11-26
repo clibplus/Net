@@ -56,6 +56,9 @@ String ConstructDesign(Control **controls) {
 
         if(controls[0]->Data)
             design.AppendArray(&design, (const char *[]){" ", controls[0]->Data, NULL});
+
+        if(controls[0]->Class) 
+            design.AppendArray(&design, (const char *[]){" class=\"", controls[0]->Class, "\"", NULL});
         
         if(controls[0]->InlineCSS && controls[0]->CSS) {
             design.AppendString(&design, " style=\"");
@@ -106,6 +109,9 @@ String ConstructControl(Control *control) {
 
         if(control->Data)
             design.AppendArray(&design, (const char *[]){" ", control->Data, NULL});
+
+        if(control->Class) 
+            design.AppendArray(&design, (const char *[]){" class=\"", control->Class, "\"", NULL});
         
         if(control->InlineCSS && control->CSS) {
             design.AppendString(&design, " style=\"");
@@ -156,6 +162,9 @@ String ConstructParent(Control *p) {
 
         if(p->Data)
             design.AppendArray(&design, (const char *[]){" ", p->Data, NULL});
+
+        if(p->Class) 
+            design.AppendArray(&design, (const char *[]){" class=\"", p->Class, "\"", NULL});
         
         if(p->InlineCSS && p->CSS) {
             design.AppendString(&design, " style=\"");
@@ -181,6 +190,9 @@ String ConstructParent(Control *p) {
 
             if (subControl->Data)
                 design.AppendArray(&design, (const char *[]){" ", subControl->Data, NULL});
+
+            if(subControl->Class) 
+                design.AppendArray(&design, (const char *[]){" class=\"", subControl->Class, "\"", NULL});
 
             if (subControl->InlineCSS && subControl->CSS) {
                 design.AppendString(&design, " style=\"");
@@ -223,6 +235,9 @@ char *ConstructTag(Control *control) {
 
     if(control->Data)
         buffer.AppendArray(&buffer, (const char *[]){" ", control->Data, NULL});
+
+    if(control->Class) 
+        buffer.AppendArray(&buffer, (const char *[]){" class=\"", control->Class, "\"", NULL});
     
     if(control->InlineCSS && control->CSS) {
         buffer.AppendString(&buffer, " style=\"");

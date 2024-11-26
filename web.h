@@ -40,6 +40,7 @@ typedef struct Control {
     ControlTag          Tag;        // ControlTag
     char                *Type;      // Type for <input> <button> <select> <script>
     char                *Text;      // text for tags: <p> <h1> <h2> <h3>
+    char                *Class;     // class=""
     char                *Data;      // For Any Other Data In the Opening Tag <div Data... > </div>
     char                *href;      // href for <a>
     char                **CSS;      // CSS Function Generator for the tag <div style="CSS FUNCTION"></div>
@@ -47,13 +48,15 @@ typedef struct Control {
 } Control;
 
 typedef struct WebRoute {
-    char                *Name;
-    char                *Path;
-    char                *Output;
-    int                 InlineCSS;
+    char                *Name;          // Name of route
+    char                *Path;          // Route
+    char                *Output;        // Output (Cache)
+    int                 InlineCSS;      // Inline CSS 
 
-    void                *Handler;
-    void                *Generator;
+    void                *Handler;       // Web Route Handler
+    void                *Generator;     // Generator UI/UX Template
+
+    char                ***CSS;         // 2D Array CSS_SELECTOR_NAME => CSS_DATA (Cache)
 
     Control             **Controls;
     long                ControlCount;
