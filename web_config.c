@@ -21,6 +21,19 @@ int SearchRoute(cWS *web, const char *data) {
     return -1;
 }
 
+int AddRoutes(cWS *web, WebRoute **routes) {
+    if(!web || !routes)
+        return 0;
+
+    int i = 0;
+    while(routes[i] != NULL) {
+        AddRoute(web, *routes[i]);
+        i++;
+    }
+
+    return 1;
+}
+
 int AddRoute(cWS *web, WebRoute route) {
     if(!web || !route.Name)
         return 0;

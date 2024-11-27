@@ -116,6 +116,7 @@ void    SendResponse(cWS *web, int request_socket, StatusCode code, Map headers,
 void    DestroyServer(cWS *web);
 
 int     SearchRoute(cWS *web, const char *data);
+int     AddRoutes(cWS *web, WebRoute **routes);
 int     AddRoute(cWS *web, WebRoute route);
 void    DestroyCfg(WebServerConfig *cfg);
 void    DestroyRoute(WebRoute *r);
@@ -124,4 +125,4 @@ char *ExecuteConstructor(Control *control);
 String ConstructDesign(Control **controls);
 String ConstructControl(Control *control);
 char *ConstructTag(Control *header);
-String ConstructParent(Control *p);
+String ConstructParent(Control *p, int sub);

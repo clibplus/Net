@@ -143,44 +143,47 @@ String ConstructControl(Control *control) {
     return ((String){});
 }
 
-String ConstructParent(Control *p) {
+String ConstructParent(Control *p, int sub) {
     if(!p)
         return ((String){});
 
         
     /* Start w/ <html> and the main tag */
-    String design = NewString("<");
+    String design = (sub == 0 ? NewString("<") : NewString(NULL));
 
     /* Main Tag */
     char *main_tag = FindTag(p);
-    design.AppendString(&design, main_tag);
+    if(sub == 0) {
+        design.AppendString(&design, main_tag);
 
-    {
-        /* Construct The Parent Control (<html>\n\n</html> // <head>\n\n</head> // <body>\n\n</body>) */
-        if(p->Type)
-            design.AppendArray(&design, (const char *[]){" type=\"", p->Type, "\"", NULL});
+        {
+            /* Construct The Parent Control (<html>\n\n</html> // <head>\n\n</head> // <body>\n\n</body>) */
+            if(p->Type)
+                design.AppendArray(&design, (const char *[]){" type=\"", p->Type, "\"", NULL});
 
-        if(p->Data)
-            design.AppendArray(&design, (const char *[]){" ", p->Data, NULL});
+            if(p->Data)
+                design.AppendArray(&design, (const char *[]){" ", p->Data, NULL});
 
-        if(p->Class) 
-            design.AppendArray(&design, (const char *[]){" class=\"", p->Class, "\"", NULL});
-        
-        if(p->CSS) {
-            design.AppendString(&design, " style=\"");
-            design.AppendArray(&design, (const char **)p->CSS);
-            design.AppendString(&design, "\"");
+            if(p->Class) 
+                design.AppendArray(&design, (const char *[]){" class=\"", p->Class, "\"", NULL});
+            
+            if(p->CSS) {
+                design.AppendString(&design, " style=\"");
+                design.AppendArray(&design, (const char **)p->CSS);
+                design.AppendString(&design, "\"");
+            }
+
+            design.AppendString(&design, ">\n");
         }
-
-        design.AppendString(&design, ">\n");
     }
 
     int count = 0;
+    char *sub_tag = NULL;
     if (p->SubControls != NULL) {
         for (int i = 0; p->SubControls[i] != NULL; i++) {
             Control *subControl = (Control *)p->SubControls[i];
             design.AppendString(&design, "<");
-            char *sub_tag = FindTag(subControl);
+            sub_tag = FindTag(subControl);
             if (!sub_tag) continue; 
 
             design.AppendString(&design, sub_tag);
@@ -199,26 +202,19 @@ String ConstructParent(Control *p) {
                 design.AppendArray(&design, (const char **)subControl->CSS);
                 design.AppendString(&design, "\"");
             }
-            design.AppendString(&design, ">");
+            design.AppendString(&design, ">\n");
 
             if (subControl->Text)
-                design.AppendArray(&design, (const char *[]){"\n", subControl->Text, "\n", NULL});
+                design.AppendArray(&design, (const char *[]){subControl->Text, "\n", "</", sub_tag, ">\n", NULL});
             if (subControl->SubControls != NULL) {
-                String n = ConstructParent(subControl);
-                design.AppendArray(&design, (const char *[]){n.data, NULL});
+                String n = ConstructParent(subControl, 1);
+                design.AppendArray(&design, (const char *[]){n.data, "\n", NULL});
                 n.Destruct(&n);
             }
         }
-
-        for (int i = 0; p->SubControls[i] != NULL; i++) {
-            char *sub_tag = FindTag(p->SubControls[i]);
-            if (sub_tag)
-                design.AppendArray(&design, (const char *[]){"</", sub_tag, ">\n", NULL});
-        }
     }
 
-    
-    design.AppendArray(&design, (const char *[]){"</", main_tag, ">\n\n", NULL});
+    design.AppendArray(&design, (const char *[]){"</", main_tag, ">\n", NULL});
 
     design.data[design.idx] = '\0';
     if(design.idx > 0)
