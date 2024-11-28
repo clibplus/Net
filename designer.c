@@ -83,7 +83,7 @@ String ConstructDesign(Control **controls) {
     }
 
 
-    design.AppendArray(&design, (const char *[]){"</", main_tag, ">\n\n", NULL});
+    design.AppendArray(&design, (const char *[]){"</", main_tag, ">\n", NULL});
     design.data[design.idx] = '\0';
     if(design.idx > 0)
         return design;
@@ -112,6 +112,9 @@ String ConstructControl(Control *control) {
 
         if(control->Class) 
             design.AppendArray(&design, (const char *[]){" class=\"", control->Class, "\"", NULL});
+            
+        if(control->href)
+            design.AppendArray(&design, (const char *[]){" href=\"", control->href, "\"", NULL});
         
         if(control->CSS) {
             design.AppendString(&design, " style=\"");
@@ -166,6 +169,9 @@ String ConstructParent(Control *p, int sub) {
 
             if(p->Class) 
                 design.AppendArray(&design, (const char *[]){" class=\"", p->Class, "\"", NULL});
+
+            if(p->href)
+                design.AppendArray(&design, (const char *[]){" href=\"", p->href, "\"", NULL});
             
             if(p->CSS) {
                 design.AppendString(&design, " style=\"");
@@ -196,6 +202,9 @@ String ConstructParent(Control *p, int sub) {
 
             if(subControl->Class) 
                 design.AppendArray(&design, (const char *[]){" class=\"", subControl->Class, "\"", NULL});
+
+            if(subControl->href)
+                design.AppendArray(&design, (const char *[]){" href=\"", subControl->href, "\"", NULL});
 
             if (subControl->CSS) {
                 design.AppendString(&design, " style=\"");
