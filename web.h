@@ -50,13 +50,14 @@ typedef struct Control {
 typedef struct WebRoute {
     char                *Name;          // Name of route
     char                *Path;          // Route
-    char                *Output;        // Output (Cache)
+    char                *Template;      // Output (Cache)
     int                 InlineCSS;      // Inline CSS 
 
     void                *Handler;       // Web Route Handler
     void                *Generator;     // Generator UI/UX Template
 
-    char                ***CSS;         // 2D Array CSS_SELECTOR_NAME => CSS_DATA (Cache)
+    char                **CSS;         // 2D Array CSS_SELECTOR_NAME => CSS_DATA (Cache)
+    long                CSS_Count;
 
     Control             **Controls;
     long                ControlCount;
@@ -106,23 +107,85 @@ typedef Control Div;
 
 extern void *HTML_TAGS[][2];
 
+// == [ Web Server Operation ] ==
+
+//
+//      | - > Initalize a web server struct
+//      | - > Returns struct with info upon success or empty struct upon failure
+//
 cWS     *StartWebServer(const String IP, int port, int auto_search);
+
+//
+//      | - > Start listening for connections
+//
 void    RunServer(cWS *web, int concurrents, const char *search_path);
+
+//
+//      | - > Check and route the request
+//
 void    ParseAndCheckRoute(void **args);
+
+//
+//      | - > Parse the incoming request
+//      | - > Returns struct with info upon success or empty struct upon failure
+//
 cWR     *ParseRequest(const char *data);
+
+//
+//      | - > Split up data for POST parameters
+//
 void    GetPostQueries(cWS *web, cWR *r);
+
+//
+//      | - > split up the URL for GET parameters
+//      | - > Returns 1 upon success or 0 for failure
+//
 int     RetrieveGetParameters(cWS *web, cWR *r);
+
+//
+//      | - > Send a response to client
+//
 void    SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map vars, const char *body);
+
+//
+//      | - > Destruct Web Server
+//
 void    DestroyServer(cWS *web);
 
+// == [ Route Operation ] ==
+
+//
+//      | - > Search for route
+//      | - > Returns position of route in the route list upon success or -1 upon failure
+//
 int     SearchRoute(cWS *web, const char *data);
+
+//
+//      | - > Add a routes to the web server 
+//      | - > Returns 1 upon success or 0 upon failure
+//
 int     AddRoutes(cWS *web, WebRoute **routes);
+
+//
+//      | - > Add a route to the web server 
+//      | - > Returns 1 upon success or 0 upon failure
+//
 int     AddRoute(cWS *web, WebRoute route);
+
+//
+//      | - > Config Destructor
+//
 void    DestroyCfg(WebServerConfig *cfg);
+
+//
+//      | - > Route Destructor
+//
 void    DestroyRoute(WebRoute *r);
 
-char *ExecuteConstructor(Control *control);
-String ConstructDesign(Control **controls);
-String ConstructControl(Control *control);
-char *ConstructTag(Control *header);
-String ConstructParent(Control *p, int sub);
+// == [ Websign Template Generation Operations ] ==
+
+char    *ExecuteConstructor(Control *control);
+String  ConstructDesign(Control **controls);
+String  ConstructControl(Control *control);
+char    *ConstructTag(Control *header);
+String  ConstructParent(Control *p, int sub);

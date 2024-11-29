@@ -21,6 +21,18 @@ int SearchRoute(cWS *web, const char *data) {
     return -1;
 }
 
+int AddCSS(WebRoute *route, char *name, void *css_function) {
+    if(!route || !name || !css_function)
+        return 0;
+
+    route->CSS[route->CSS_Count] = (char **)malloc(sizeof(char *) * 2);
+    memset(route->CSS[route->CSS_Count], '\0', sizeof(char *) * 2);
+    route->CSS[route->CSS_Count][0] = strdup(name);
+    route->CSS[route->CSS_Count][1] = css_function;
+    
+    return 1;
+}
+
 int AddRoutes(cWS *web, WebRoute **routes) {
     if(!web || !routes)
         return 0;
