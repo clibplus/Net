@@ -50,8 +50,8 @@ typedef struct Control {
 typedef struct WebRoute {
     char                *Name;          // Name of route
     char                *Path;          // Route
-    char                *Template;      // Output (Cache)
-    int                 InlineCSS;      // Inline CSS 
+    int                 InlineCSS;      // Inline CSS
+    char                *Template;
 
     void                *Handler;       // Web Route Handler
     void                *Generator;     // Generator UI/UX Template
@@ -184,8 +184,7 @@ void    DestroyRoute(WebRoute *r);
 
 // == [ Websign Template Generation Operations ] ==
 
-char    *ExecuteConstructor(Control *control);
-String  ConstructDesign(Control **controls);
-String  ConstructControl(Control *control);
-char    *ConstructTag(Control *header);
+char *FindTag(Control *control);
+int ConstructTemplate(WebRoute *route);
+char *ConstructCSS(WebRoute *route);
 String  ConstructParent(Control *p, int sub);

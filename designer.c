@@ -26,124 +26,66 @@ char *FindTag(Control *control) {
     return NULL;
 }
 
-char *ExecuteConstructor(Control *control) {
-    if(!control)
+char *ConstructCSS(WebRoute *route) {
+    if(!route->CSS)
         return NULL;
 
-    for(int i = 0; i < HTML_TAGS_COUNT; i++) {
-        if((ControlTag)control->Tag == (ControlTag)HTML_TAGS[i][0])
-            return ConstructTag(control);
-    }
+    char *BUFF = (char *)malloc(1);
+    int idx = 0;
 
-    return NULL;
-}
+    for (int i = 0; route->CSS[i][0] != NULL; i++) {
+        const char *selector = (const char *)route->CSS[i][0];
+        const char **styles = (const char **)route->CSS[i][1];
+        if(!selector || !styles)
+            break;
 
-String ConstructDesign(Control **controls) {
-    if(!controls)
-        return ((String){});
+        idx += 1 + strlen(selector) + 3;
+        BUFF = (char *)realloc(BUFF, idx);
+        strcat(BUFF, ".");
+        strcat(BUFF, selector);
+        strcat(BUFF, " { \n");
 
-    /* Start w/ <html> and the main tag */
-    String design = NewString("<");
-
-    /* Main Tag */
-    char *main_tag = FindTag(controls[0]);
-    design.AppendString(&design, main_tag);
-
-    {
-        /* Construct The Parent Control (<html>\n\n</html> // <head>\n\n</head> // <body>\n\n</body>) */
-        if(controls[0]->Type)
-            design.AppendArray(&design, (const char *[]){" type=\"", controls[0]->Type, "\"", NULL});
-
-        if(controls[0]->Data)
-            design.AppendArray(&design, (const char *[]){" ", controls[0]->Data, NULL});
-
-        if(controls[0]->Class) 
-            design.AppendArray(&design, (const char *[]){" class=\"", controls[0]->Class, "\"", NULL});
-        
-        if(controls[0]->CSS) {
-            design.AppendString(&design, " style=\"");
-            design.AppendArray(&design, (const char **)controls[0]->CSS);
-            design.AppendString(&design, "\"");
+        for (int j = 0; styles[j] != NULL; j++) {
+            idx += 1 + strlen(styles[j]) + 3;
+            BUFF = (char *)realloc(BUFF, idx);
+            strcat(BUFF, "\t");
+            strcat(BUFF, styles[j]);
+            strcat(BUFF, ";\n");
         }
 
-        design.AppendString(&design, ">\n");
+        idx += 3;
+        BUFF = (char *)realloc(BUFF, idx + strlen("}\n"));
+        strcat(BUFF, "}\n");
     }
 
-    /* Start Iterating Controls */
-    int i = 1;
-
-    while(controls[i] != NULL) {
-        char *data = ExecuteConstructor(controls[i]);
-        if(!data)
-            continue;
-
-        design.AppendArray(&design, (const char *[]){data, NULL});
-        controls[i]->Parent = controls[0];
-        i++;
-    }
-
-
-    design.AppendArray(&design, (const char *[]){"</", main_tag, ">\n", NULL});
-    design.data[design.idx] = '\0';
-    if(design.idx > 0)
-        return design;
-
-    return ((String){});
+    BUFF[idx] = '\0';
+    return BUFF;
 }
 
-String ConstructControl(Control *control) {
-    if(!control)
-        return ((String){});
+int ConstructTemplate(WebRoute *route) {
+    if(!route)
+        return 0;
 
-    /* Start w/ <html> and the main tag */
-    String design = NewString("<");
+    String template = NewString("<html>\n");
 
-    /* Main Tag */
-    char *main_tag = FindTag(control);
-    design.AppendString(&design, main_tag);
-
-    {
-        /* Construct The Parent Control (<html>\n\n</html> // <head>\n\n</head> // <body>\n\n</body>) */
-        if(control->Type)
-            design.AppendArray(&design, (const char *[]){" type=\"", control->Type, "\"", NULL});
-
-        if(control->Data)
-            design.AppendArray(&design, (const char *[]){" ", control->Data, NULL});
-
-        if(control->Class) 
-            design.AppendArray(&design, (const char *[]){" class=\"", control->Class, "\"", NULL});
-            
-        if(control->href)
-            design.AppendArray(&design, (const char *[]){" href=\"", control->href, "\"", NULL});
-        
-        if(control->CSS) {
-            design.AppendString(&design, " style=\"");
-            design.AppendArray(&design, (const char **)control->CSS);
-            design.AppendString(&design, "\"");
-        }
-
-        design.AppendString(&design, ">\n");
-    }
-
-    /* Start Iterating Controls */
     int i = 0;
-    while(control->SubControls[i] != NULL) {
-        char *data = ExecuteConstructor(control->SubControls[i]);
-        if(!data)
-            continue;
+    while(route->Controls[i] != NULL) {
+        String new = ConstructParent(route->Controls[i], 0);
+        if(i == 1) {
+            char *CSS_SELECTOR = ConstructCSS(route);
+            template.AppendArray(&template, (const char *[]){CSS_SELECTOR, "\n", NULL});
+            if(CSS_SELECTOR != NULL)
+                free(CSS_SELECTOR);
+        }
 
-        design.AppendArray(&design, (const char *[]){data, NULL});
-        ((Control *)control->SubControls[i])->Parent = control;
+        template.AppendArray(&template, (const char *[]){new.data, "\n", NULL});
         i++;
     }
+    template.AppendString(&template, "</html>\n");
+    template.data[template.idx] = '\0';
 
-
-    design.AppendArray(&design, (const char *[]){"</", main_tag, ">\n\n", NULL});
-    design.data[design.idx] = '\0';
-    if(design.idx > 0)
-        return design;
-
-    return ((String){});
+    route->Template = strdup(template.data);
+    return 1;
 }
 
 String ConstructParent(Control *p, int sub) {
@@ -230,38 +172,4 @@ String ConstructParent(Control *p, int sub) {
         return design;
 
     return ((String){});
-}
-
-char *ConstructTag(Control *control) {
-    String buffer = NewString("<");
-    
-    char *tag = FindTag(control);
-    buffer.AppendString(&buffer, tag);
-
-    if(control->Data)
-        buffer.AppendArray(&buffer, (const char *[]){" ", control->Data, NULL});
-
-    if(control->Class) 
-        buffer.AppendArray(&buffer, (const char *[]){" class=\"", control->Class, "\"", NULL});
-    
-    if(control->CSS) {
-        buffer.AppendString(&buffer, " style=\"");
-        buffer.AppendArray(&buffer, (const char **)control->CSS);
-        buffer.AppendString(&buffer, "\"");
-    }
-    
-    buffer.AppendString(&buffer, ">");
-
-    if(control->Text)
-        buffer.AppendArray(&buffer, (const char *[]){"\n", control->Text, NULL});
-
-    buffer.AppendArray(&buffer, (const char *[]){"\n</", tag, ">\n", NULL});
-
-    char *output = strdup(buffer.data);
-    if(!output)
-        return NULL;
-
-    buffer.Destruct(&buffer);
-
-    return output;
 }
