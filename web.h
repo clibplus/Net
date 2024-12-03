@@ -44,6 +44,7 @@ typedef struct Control {
     char                *Data;      // For Any Other Data In the Opening Tag <div Data... > </div>
     char                *href;      // href for <a>
     char                **CSS;      // CSS Function Generator for the tag <div style="CSS FUNCTION"></div>
+    long                CSS_Count;
     void                **SubControls;
 } Control;
 
@@ -159,6 +160,12 @@ void    DestroyServer(cWS *web);
 //      | - > Returns position of route in the route list upon success or -1 upon failure
 //
 int     SearchRoute(cWS *web, const char *data);
+
+//
+//
+//
+//
+int     AddCSS(WebRoute *r, void *arr);
 
 //
 //      | - > Add a routes to the web server 

@@ -34,6 +34,18 @@ int AddRoutes(cWS *web, WebRoute **routes) {
     return 1;
 }
 
+int AddCSS(WebRoute *r, void *arr) {
+    if(!r)
+        return 0;
+
+    neww->CSS[neww->CSS_Count] = (void *)malloc(sizeof(void));
+    neww->CSS[neww->CSS_Count] = arr;
+    neww->CSS_Count++;
+    neww->CSS = (void **)realloc(neww->CSS, sizeof(void *) * (neww->CSS_Count + 1));
+
+    return 1;
+}
+
 int AddRoute(cWS *web, WebRoute route) {
     if(!web || !route.Name)
         return 0;
@@ -41,8 +53,12 @@ int AddRoute(cWS *web, WebRoute route) {
     WebRoute *neww = (WebRoute *)malloc(sizeof(WebRoute));
     *neww = route;
 
-    neww->Template = (char *)malloc(1);
-    neww->Destruct = DestroyRoute;
+    {
+        neww->Template      = (char *)malloc(1);
+        neww->CSS           = (char **)malloc(sizeof(char *) * 1);
+        neww->CSS_Count     = 0;
+        neww->Destruct      = DestroyRoute;
+    }
 
     web->CFG.Routes[web->CFG.RouteCount] = neww;
     web->CFG.RouteCount++;
