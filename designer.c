@@ -1,3 +1,11 @@
+/*
+*      [ Websign's Browser SDK (The Magic Browser Lib) ]
+*
+* - Serving as a browser SDK to generate template supporting
+*   everything a browser takes
+*
+* - ALL HTML Tag as ENUM since no often HTML updates and//or changes
+*/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -30,59 +38,59 @@ char *ConstructCSS(WebRoute *route) {
     if(!route->CSS)
         return NULL;
 
-    char *BUFF = (char *)malloc(1);
-    int idx = 0;
+    String BUFFER = NewString("<style>\n");
 
-    for (int i = 0; route->CSS[i][0] != NULL; i++) {
-        const char *selector = (const char *)route->CSS[i][0];
-        const char **styles = (const char **)route->CSS[i][1];
-        if(!selector || !styles)
-            break;
+    int i = 0;
+    while(route->CSS[i] != NULL) {
+        if(route->CSS[i]->Selector)
+            BUFFER.AppendString(&BUFFER, ".");
 
-        idx += 1 + strlen(selector) + 3;
-        BUFF = (char *)realloc(BUFF, idx);
-        strcat(BUFF, ".");
-        strcat(BUFF, selector);
-        strcat(BUFF, " { \n");
-
-        for (int j = 0; styles[j] != NULL; j++) {
-            idx += 1 + strlen(styles[j]) + 3;
-            BUFF = (char *)realloc(BUFF, idx);
-            strcat(BUFF, "\t");
-            strcat(BUFF, styles[j]);
-            strcat(BUFF, ";\n");
+        BUFFER.AppendArray(&BUFFER, (const char *[]){route->CSS[i]->Class, " {\n", NULL});
+        int css_idx = 0;
+        while((const char **)route->CSS[i]->Data[css_idx] != NULL) {
+            BUFFER.AppendArray(&BUFFER, (const char *[]){route->CSS[i]->Data[css_idx], ";", NULL});;
+            css_idx++;
         }
-
-        idx += 3;
-        BUFF = (char *)realloc(BUFF, idx + strlen("}\n"));
-        strcat(BUFF, "}\n");
+        BUFFER.AppendString(&BUFFER, "\n}\n\0");
+        i++;
     }
 
-    BUFF[idx] = '\0';
+    BUFFER.AppendString(&BUFFER, "</style>\n");
+    BUFFER.data[BUFFER.idx] = '\0';
+    char *BUFF = strdup(BUFFER.data);
+    BUFFER.Destruct(&BUFFER);
+
     return BUFF;
 }
 
 int ConstructTemplate(WebRoute *route) {
-    if(!route)
-        return 0;
-
     String template = NewString("<html>\n");
 
     int i = 0;
+    printf("Adding CSS....\n");
+    if(route->Controls[0]->Tag == HEAD_TAG) {
+        String header = ConstructParent(route->Controls[0], 0);
+        template.AppendArray(&template, (const char *[]){header.data, "\n", NULL});
+        header.Destruct(&header);
+
+        char *data = ConstructCSS(route);
+        template.AppendString(&template, data);
+        free(data);
+
+        i = 1;
+    }
+
+    printf("Adding controls...\n");
     while(route->Controls[i] != NULL) {
         String new = ConstructParent(route->Controls[i], 0);
-        // if(i == 1) {
-        //     char *CSS_SELECTOR = ConstructCSS(route);
-        //     template.AppendArray(&template, (const char *[]){CSS_SELECTOR, "\n", NULL});
-        //     if(CSS_SELECTOR != NULL)
-        //         free(CSS_SELECTOR);
-        // }
-
         template.AppendArray(&template, (const char *[]){new.data, "\n", NULL});
         i++;
     }
-    template.AppendString(&template, "</html>\n");
+    template.AppendString(&template, "</html>\n\n\n");
     template.data[template.idx] = '\0';
+
+    if(route->Template)
+        free(route->Template);
 
     route->Template = strdup(template.data);
     return 1;

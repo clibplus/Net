@@ -102,7 +102,7 @@ void ParseAndCheckRoute(void **args) {
     if(web->CFG.Routes[chk]->Generator)
         (((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Generator)(web, r, web->CFG.Routes[chk], request_socket));
 
-    (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, new_headers, ((Map){}), NULL));
+    (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, new_headers, ((Map){}), "ERROR\n\n\n"));
 
     free(BUFFER);
     close(request_socket);

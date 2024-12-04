@@ -36,8 +36,9 @@ typedef enum ControlTag {
 } ControlTag;
 
 typedef struct CSS {
-    char *Class;
-    char **Data;
+    char                *Class;
+    char                **Data;
+    int                 Selector;
 } CSS;
 
 typedef struct Control {

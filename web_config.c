@@ -41,7 +41,7 @@ int AddCSS(WebRoute *r, void *arr) {
     r->CSS[r->CSS_Count] = (void *)malloc(sizeof(void));
     r->CSS[r->CSS_Count] = arr;
     r->CSS_Count++;
-    r->CSS = (char **)realloc(r->CSS, sizeof(void *) * (r->CSS_Count + 1));
+    r->CSS = (CSS **)realloc(r->CSS, sizeof(CSS *) * (r->CSS_Count + 1));
 
     return 1;
 }
@@ -55,7 +55,7 @@ int AddRoute(cWS *web, WebRoute route) {
 
     {
         neww->Template      = (char *)malloc(1);
-        neww->CSS           = (char **)malloc(sizeof(char *) * 1);
+        neww->CSS           = (CSS **)malloc(sizeof(CSS *) * 1);
         neww->CSS_Count     = 0;
         neww->Destruct      = DestroyRoute;
     }
