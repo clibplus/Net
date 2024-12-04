@@ -71,12 +71,12 @@ int ConstructTemplate(WebRoute *route) {
     int i = 0;
     while(route->Controls[i] != NULL) {
         String new = ConstructParent(route->Controls[i], 0);
-        if(i == 1) {
-            char *CSS_SELECTOR = ConstructCSS(route);
-            template.AppendArray(&template, (const char *[]){CSS_SELECTOR, "\n", NULL});
-            if(CSS_SELECTOR != NULL)
-                free(CSS_SELECTOR);
-        }
+        // if(i == 1) {
+        //     char *CSS_SELECTOR = ConstructCSS(route);
+        //     template.AppendArray(&template, (const char *[]){CSS_SELECTOR, "\n", NULL});
+        //     if(CSS_SELECTOR != NULL)
+        //         free(CSS_SELECTOR);
+        // }
 
         template.AppendArray(&template, (const char *[]){new.data, "\n", NULL});
         i++;

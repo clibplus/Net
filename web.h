@@ -35,6 +35,11 @@ typedef enum ControlTag {
     A_TAG               = 8499
 } ControlTag;
 
+typedef struct CSS {
+    char *Class;
+    char **Data;
+} CSS;
+
 typedef struct Control {
     void                *Parent;
     ControlTag          Tag;        // ControlTag
@@ -57,7 +62,7 @@ typedef struct WebRoute {
     void                *Handler;       // Web Route Handler
     void                *Generator;     // Generator UI/UX Template
 
-    char                **CSS;         // 2D Array CSS_SELECTOR_NAME => CSS_DATA (Cache)
+    CSS                 **CSS;         // 2D Array CSS_SELECTOR_NAME => CSS_DATA (Cache)
     long                CSS_Count;
 
     Control             **Controls;

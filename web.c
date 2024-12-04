@@ -71,7 +71,7 @@ void ParseAndCheckRoute(void **args) {
 
     char *BUFFER = (char *)calloc(4096, sizeof(char));
     int bytes = read(request_socket, BUFFER, 4096);
-    BUFFER[bytes + 1] = '\0';
+    BUFFER[bytes] = '\0';
     
     Map new_headers = NewMap();
     new_headers.Append(&new_headers, "Content-Type", "text/html; charset=UTF-8");
