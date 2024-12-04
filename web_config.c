@@ -38,10 +38,10 @@ int AddCSS(WebRoute *r, void *arr) {
     if(!r)
         return 0;
 
-    neww->CSS[neww->CSS_Count] = (void *)malloc(sizeof(void));
-    neww->CSS[neww->CSS_Count] = arr;
-    neww->CSS_Count++;
-    neww->CSS = (void **)realloc(neww->CSS, sizeof(void *) * (neww->CSS_Count + 1));
+    r->CSS[r->CSS_Count] = (void *)malloc(sizeof(void));
+    r->CSS[r->CSS_Count] = arr;
+    r->CSS_Count++;
+    r->CSS = (char **)realloc(r->CSS, sizeof(void *) * (r->CSS_Count + 1));
 
     return 1;
 }
