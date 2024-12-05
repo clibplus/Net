@@ -17,6 +17,7 @@
 #include <str.h>
 #include <arr.h>
 #include <map.h>
+#include <OS/file.h>
 
 #include "request.h"
 
@@ -63,7 +64,7 @@ typedef struct WebRoute {
     void                *Handler;       // Web Route Handler
     void                *Generator;     // Generator UI/UX Template
 
-    CSS                 **CSS;         // 2D Array CSS_SELECTOR_NAME => CSS_DATA (Cache)
+    CSS                 **CSS;          // 2D Array CSS_SELECTOR_NAME => CSS_DATA (Cache)
     long                CSS_Count;
 
     Control             **Controls;
@@ -91,6 +92,7 @@ typedef struct cWS {
     SSL                 *SSL;
     SSL_CTX             *CTX;
     WebServerConfig     CFG;
+    char                *Logs;
 
     void                (*Run)          (struct cWS *web, int concurrents, const char *search_path);
     void                (*Destruct)     (struct cWS *web);
