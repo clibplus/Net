@@ -41,6 +41,7 @@ int LogAction(char *ACTION, char *MSG) {
     }
 
     logs.Write(&logs, NewLog.data);
+    printf("%s\n", NewLog.data);
     NewLog.Destruct(&NewLog);
     return 1;
 }

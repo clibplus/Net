@@ -58,7 +58,6 @@ typedef struct Control {
 typedef struct WebRoute {
     char                *Name;          // Name of route
     char                *Path;          // Route
-    int                 InlineCSS;      // Inline CSS
     char                *Template;
 
     void                *Handler;       // Web Route Handler
