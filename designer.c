@@ -12,7 +12,7 @@
 
 #include "web.h"
 
-#define HTML_TAGS_COUNT 8
+#define HTML_TAGS_COUNT 9
 void *HTML_TAGS[][2] = {
     { (void *)HTML_TAG,     "html" },
     { (void *)HEAD_TAG,     "head"},
@@ -21,7 +21,8 @@ void *HTML_TAGS[][2] = {
     { (void *)DIV_TAG,      "div" },
     { (void *)H1_TAG,       "h1" },
     { (void *)P_TAG,        "p" },
-    { (void *)A_TAG,        "a" }
+    { (void *)A_TAG,        "a" },
+    { (void *)PRE_TAG,      "pre" }
 };
 
 char *FindTag(Control *control) {

@@ -33,7 +33,8 @@ typedef enum ControlTag {
     INPUT_TAG           = 8496,
     P_TAG               = 8497,
     DIV_TAG             = 8498,
-    A_TAG               = 8499
+    A_TAG               = 8499,
+    PRE_TAG             = 8500
 } ControlTag;
 
 typedef struct CSS {
