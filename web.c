@@ -87,6 +87,7 @@ void ParseAndCheckRoute(void **args) {
     printf("[ NEW REQUEST ATTEMPT ] %s\n", r->Route.data);
     int chk = SearchRoute(web, r->Route.data);
     if(chk == -1) {
+        SendResponse(web, request_socket, OK, new_headers, ((Map){}), web->CFG.Err404);
         free(BUFFER);
         close(request_socket);
         return;
@@ -231,7 +232,7 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
         for(int i = 0; i < headers.idx; i++)
             resp.AppendArray(&resp, ((const char *[]){(char *)((Key *)headers.arr[i])->key, ": ", (char *)((Key *)headers.arr[i])->value, "\r\n", NULL}));
 
-    resp.AppendArray(&resp, ((const char *[]){"\r\n", body, "\r\n", NULL}));
+    resp.AppendArray(&resp, ((const char *[]){"\r\n", body, "\r\n\r\n", NULL}));
     write(request_socket, resp.data, resp.idx - 1);
 
     resp.Destruct(&resp);
