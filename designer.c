@@ -12,7 +12,7 @@
 
 #include "web.h"
 
-#define HTML_TAGS_COUNT 9
+#define HTML_TAGS_COUNT 11
 void *HTML_TAGS[][2] = {
     { (void *)HTML_TAG,     "html" },
     { (void *)HEAD_TAG,     "head"},
@@ -20,6 +20,8 @@ void *HTML_TAGS[][2] = {
     { (void *)BODY_TAG,     "body" },
     { (void *)DIV_TAG,      "div" },
     { (void *)H1_TAG,       "h1" },
+    { (void *)H2_TAG,       "h2" },
+    { (void *)H3_TAG,       "h3" },
     { (void *)P_TAG,        "p" },
     { (void *)A_TAG,        "a" },
     { (void *)PRE_TAG,      "pre" }
@@ -71,11 +73,11 @@ int ConstructTemplate(WebRoute *route) {
     printf("Adding CSS....\n");
     if(route->Controls[0]->Tag == HEAD_TAG) {
         String header = ConstructParent(route->Controls[0], 0);
-        template.AppendArray(&template, (const char *[]){header.data, "\n", NULL});
+        template.AppendArray(&template, (const char *[]){header.data, "\n\n", NULL});
         header.Destruct(&header);
 
         char *data = ConstructCSS(route);
-        template.AppendString(&template, data);
+        template.AppendArray(&template, (const char *[]){data, "\n", NULL});
         free(data);
 
         i = 1;
@@ -168,7 +170,7 @@ String ConstructParent(Control *p, int sub) {
                 design.AppendArray(&design, (const char *[]){subControl->Text, "\n", "</", sub_tag, ">\n", NULL});
             if (subControl->SubControls != NULL) {
                 String n = ConstructParent(subControl, 1);
-                design.AppendArray(&design, (const char *[]){n.data, "\n", NULL});
+                design.AppendArray(&design, (const char *[]){n.data, NULL});
                 n.Destruct(&n);
             }
         }
