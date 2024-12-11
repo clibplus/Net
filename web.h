@@ -69,6 +69,7 @@ typedef struct WebRoute {
     CSS                 **CSS;          // 2D Array CSS_SELECTOR_NAME => CSS_DATA (Cache)
     long                CSS_Count;
 
+    long                ReadOnly;       // Use Template Only
     Control             **Controls;
     long                ControlCount;
     void                (*Destruct)     (struct WebRoute *r);
