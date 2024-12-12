@@ -100,6 +100,7 @@ void ParseAndCheckRoute(void **args) {
         RetrieveGetParameters(web, r);
 
     if(web->CFG.Routes[chk]->ReadOnly) {
+        printf("HERE\n");
         SendResponse(web, request_socket, OK, new_headers, ((Map){}), web->CFG.Routes[chk]->Template);
         free(BUFFER);
         close(request_socket);
