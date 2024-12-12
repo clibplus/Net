@@ -72,7 +72,7 @@ int ConstructTemplate(WebRoute *route) {
 
     int i = 0;
     printf("Adding CSS....\n");
-    if(route->Controls == NULL || route->Controls[0]) {
+    if(route->Controls == NULL || route->Controls[0] == NULL) {
         printf("ERROR\n");
         return 0;
     }
