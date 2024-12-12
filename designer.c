@@ -49,7 +49,6 @@ char *ConstructCSS(WebRoute *route) {
             BUFFER.AppendString(&BUFFER, ".");
 
         BUFFER.AppendArray(&BUFFER, (const char *[]){route->CSS[i]->Class, " {\n", NULL});
-        printf("%s\n", route->CSS[i]->Class);
         int css_idx = 0;
         while((const char **)route->CSS[i]->Data[css_idx] != NULL) {
             BUFFER.AppendArray(&BUFFER, (const char *[]){route->CSS[i]->Data[css_idx], ";", NULL});;
@@ -72,12 +71,11 @@ int ConstructTemplate(WebRoute *route) {
 
     int i = 0;
     printf("Adding CSS....\n");
-    if(route->Controls == NULL || route->Controls[0] == NULL) {
+    if(!route->Controls || !route->Controls[0]) {
         printf("ERROR\n");
         return 0;
     }
 
-    printf("%d\n", (int)route->Controls[0]->Tag);
     if(route->Controls[0]->Tag == HEAD_TAG) {
         String header = ConstructParent(route->Controls[0], 0);
         template.AppendArray(&template, (const char *[]){header.data, "\n\n", NULL});
