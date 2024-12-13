@@ -12,7 +12,14 @@
 
 #include "web.h"
 
-#define HTML_TAGS_COUNT 11
+#define HTML_TAGS_COUNT 12
+#define WS_TAGS_COUNT 3
+
+char *JS_HANDLER_FORMAT = "<script src=\"ws_form_handler.js\"></script>",
+    "<script>",
+    "    document.getElementById('[SUBMIT_BUTTON]').addEventListener('click', () => submitForm('[FORM_ID]'));",
+    "</script>";
+
 void *HTML_TAGS[][2] = {
     { (void *)HTML_TAG,     "html" },
     { (void *)HEAD_TAG,     "head"},
@@ -24,15 +31,28 @@ void *HTML_TAGS[][2] = {
     { (void *)H3_TAG,       "h3" },
     { (void *)P_TAG,        "p" },
     { (void *)A_TAG,        "a" },
-    { (void *)PRE_TAG,      "pre" }
+    { (void *)PRE_TAG,      "pre" },
+    { (void *)BUTTON_TAG,   "button" }
+};
+
+void *WEBSIGN_TAGS[][2] = {
+    { (void *)WS_FORM,              "div" },
+    { (void *)WS_BUTTON_TAG,        "button" },
+    { (void *)WS_TXT_INPUT_TAG,     "input" }
 };
 
 char *FindTag(Control *control) {
-    for(int i = 0; i < HTML_TAGS_COUNT; i++) {
-        if((ControlTag)control->Tag == (ControlTag)HTML_TAGS[i][0]) {
+    for(int i = 0; i < HTML_TAGS_COUNT; i++)
+        if((ControlTag)control->Tag == (ControlTag)HTML_TAGS[i][0])
             return HTML_TAGS[i][1];
-        }
-    }
+
+    return NULL;
+}
+
+char *FindWSTag(Control *control) {
+    for(int i = 0; i < WS_TAGS_COUNT; i++)
+        if((WSControlTag)control->Tag == (WSControlTag)WEBSIGN_TAGS[i][0])
+            return WEBSIGN_TAGS[i][1]
 
     return NULL;
 }
@@ -66,7 +86,7 @@ char *ConstructCSS(WebRoute *route) {
     return BUFF;
 }
 
-int ConstructTemplate(WebRoute *route) {
+int ConstructTemplate(WebRoute *route, int Dynamic) {
     String template = NewString("<html>\n");
 
     int i = 0;
@@ -114,6 +134,8 @@ String ConstructParent(Control *p, int sub) {
 
     /* Main Tag */
     char *main_tag = FindTag(p);
+
+    /* Construct Parent Control */
     if(sub == 0) {
         design.AppendString(&design, main_tag);
 
@@ -138,10 +160,17 @@ String ConstructParent(Control *p, int sub) {
             }
 
             design.AppendString(&design, ">\n");
+
+            if(p->Text)
+                design.AppendString(&design, p->Text);
+
+            
+            design.AppendArray(&design, (const char *[]){"</", main_tag, ">\n", NULL});
+            return design;
         }
     }
 
-    int count = 0;
+    /* Construct SubControls */
     char *sub_tag = NULL;
     if (p->SubControls != NULL) {
         for (int i = 0; p->SubControls[i] != NULL; i++) {
@@ -178,9 +207,12 @@ String ConstructParent(Control *p, int sub) {
                 design.AppendArray(&design, (const char *[]){n.data, NULL});
                 n.Destruct(&n);
             }
+
+            free(sub_tag);
         }
     }
 
+    /* End Parent Control */
     design.AppendArray(&design, (const char *[]){"</", main_tag, ">\n", NULL});
 
     design.data[design.idx] = '\0';
@@ -188,4 +220,35 @@ String ConstructParent(Control *p, int sub) {
         return design;
 
     return ((String){});
+}
+
+int ConstructForm(Webroute *route, Control *Form, Button *Btn) {
+    char *tag = FindWSTag(Form);
+    if(!tag)
+        return 0;
+
+    if(!Form->ID || !Btn->ID)
+        return 0;
+
+    Form->Tag = DIV_TAG;
+    String form = ConstructParent(Form);
+
+    Btn->Tag = BUTTON_TAG;
+    String btn = ConstructParent(Btn);
+
+    String JS_HANDLER = NewString(JS_HANDLER_FORMAT);
+    JS_HANDLER.ReplaceString(&JS_HANDLER, "[SUBMIT_BUTTON]", Btn->ID);
+    JS_HANDLER.ReplaceString(&JS_HANDLER, "[FORM_ID]", Form->ID);
+
+    String template = NewString(route->Template);
+    template.AppendString(&template, JS_HANDLER.data);
+
+    JS_HANDLER.Destruct(&JS_HANDLER);
+    if(route->Template)
+        free(route->Template);
+
+    route->Template = strdup(template.data);
+    template.Destruct(&template);
+    
+    return 1;
 }

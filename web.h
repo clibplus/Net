@@ -21,6 +21,7 @@
 
 #include "request.h"
 
+/* Controls using HTML Tags */
 typedef enum ControlTag {
     NO_TAG              = 8490,
 
@@ -36,8 +37,16 @@ typedef enum ControlTag {
     P_TAG               = 8499,
     DIV_TAG             = 8500,
     A_TAG               = 8501,
-    PRE_TAG             = 8502
+    PRE_TAG             = 8502,
+    BUTTON_TAG          = 8503
 } ControlTag;
+
+/* Controls w/ auto JS implementation for event handling */
+typedef enum WSControlTag {
+    WS_FORM                 = 9490,
+    WS_BUTTON_TAG           = 8491,
+    WS_TXT_INPUT_TAG        = 9492
+} WSControlTag;
 
 typedef struct CSS {
     char                *Class;
@@ -51,12 +60,20 @@ typedef struct Control {
     char                *Type;      // Type for <input> <button> <select> <script>
     char                *Text;      // text for tags: <p> <h1> <h2> <h3>
     char                *Class;     // class=""
-    char                *Data;      // For Any Other Data In the Opening Tag <div Data... > </div>
     char                *href;      // href for <a>
     char                **CSS;      // CSS Function Generator for the tag <div style="CSS FUNCTION"></div>
-    long                CSS_Count;
+    char                *Data;      // For Any Other Data In the Opening Tag <div Data... > </div>
     void                **SubControls;
 } Control;
+
+typedef struct EventControl {
+    void                *Parent;
+    WSControlTag        Tag;
+    char                *ID;
+    char                *Class;
+    char                *CSS;
+    char                *Data;
+} EventControl;
 
 typedef struct WebRoute {
     char                *Name;          // Name of route
@@ -118,6 +135,7 @@ typedef Control Button;
 typedef Control Div;
 
 extern void *HTML_TAGS[][2];
+extern void *WEBSIGN_TAGS[][2];
 
 // == [ Web Server Operation ] ==
 
@@ -203,6 +221,8 @@ void    DestroyRoute(WebRoute *r);
 // == [ Websign Template Generation Operations ] ==
 
 char *FindTag(Control *control);
+char *FindWSTag(Control *control);
 int ConstructTemplate(WebRoute *route);
 char *ConstructCSS(WebRoute *route);
 String  ConstructParent(Control *p, int sub);
+int ConstructForm(Webroute *route, Control *Form, Button *Btn);
