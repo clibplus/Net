@@ -38,7 +38,8 @@ typedef enum ControlTag {
     DIV_TAG             = 8500,
     A_TAG               = 8501,
     PRE_TAG             = 8502,
-    BUTTON_TAG          = 8503
+    BUTTON_TAG          = 8503,
+    FORM_TAG            = 8504
 } ControlTag;
 
 /* Controls w/ auto JS implementation for event handling */
@@ -57,23 +58,17 @@ typedef struct CSS {
 typedef struct Control {
     void                *Parent;
     ControlTag          Tag;        // ControlTag
+    char                *ID;
     char                *Type;      // Type for <input> <button> <select> <script>
     char                *Text;      // text for tags: <p> <h1> <h2> <h3>
     char                *Class;     // class=""
     char                *href;      // href for <a>
     char                **CSS;      // CSS Function Generator for the tag <div style="CSS FUNCTION"></div>
     char                *Data;      // For Any Other Data In the Opening Tag <div Data... > </div>
+    long                OnClick;
+    char                *FormID;
     void                **SubControls;
 } Control;
-
-typedef struct EventControl {
-    void                *Parent;
-    WSControlTag        Tag;
-    char                *ID;
-    char                *Class;
-    char                *CSS;
-    char                *Data;
-} EventControl;
 
 typedef struct WebRoute {
     char                *Name;          // Name of route
@@ -209,6 +204,13 @@ int     AddRoutes(cWS *web, WebRoute **routes);
 int     AddRoute(cWS *web, WebRoute route);
 
 //
+//
+//
+//
+
+int     AddDynamicHandler(cWS *web);
+
+//
 //      | - > Config Destructor
 //
 void    DestroyCfg(WebServerConfig *cfg);
@@ -220,9 +222,14 @@ void    DestroyRoute(WebRoute *r);
 
 // == [ Websign Template Generation Operations ] ==
 
-char *FindTag(Control *control);
-char *FindWSTag(Control *control);
-int ConstructTemplate(WebRoute *route);
-char *ConstructCSS(WebRoute *route);
+char    *FindTag(Control *control);
+char    *FindWSTag(Control *control);
+
+//
+//      | - > Construct a template using an array of Controls in HTML order and CSS styles
+//      | - > Returns 1 upon success or 0 upon failure
+//
+int     ConstructTemplate(WebRoute *route, Control **controls, CSS **styles);
+char    *ConstructCSS(WebRoute *route);
 String  ConstructParent(Control *p, int sub);
-int ConstructForm(Webroute *route, Control *Form, Button *Btn);
+int     ConstructForm(WebRoute *route, Control *Form, Button *Btn);

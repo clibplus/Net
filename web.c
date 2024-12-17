@@ -100,6 +100,7 @@ void ParseAndCheckRoute(void **args) {
         RetrieveGetParameters(web, r);
 
     if(web->CFG.Routes[chk]->ReadOnly) {
+        printf("HERE\n");
         SendResponse(web, request_socket, OK, new_headers, ((Map){}), web->CFG.Routes[chk]->Template);
         free(BUFFER);
         close(request_socket);
@@ -128,6 +129,7 @@ cWR *ParseRequest(const char *data) {
         .Body = NewString(NULL),
     };
 
+    printf("%s\n", data);
     String traffic = NewString(data);
     Array lines = NewArray(NULL);
     lines.Merge(&lines, (void **)traffic.Split(&traffic, "\n"));
@@ -178,7 +180,7 @@ cWR *ParseRequest(const char *data) {
 void GetPostQueries(cWS *web, cWR *r) {
     Map Queries = NewMap();
     Array args = NewArray(NULL);
-
+    
     args.Merge(&args, (void **)r->Body.Split(&r->Body, "&"));
     if(args.idx < 1)
         return;
