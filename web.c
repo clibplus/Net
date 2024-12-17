@@ -100,7 +100,6 @@ void ParseAndCheckRoute(void **args) {
         RetrieveGetParameters(web, r);
 
     if(web->CFG.Routes[chk]->ReadOnly) {
-        printf("HERE\n");
         SendResponse(web, request_socket, OK, new_headers, ((Map){}), web->CFG.Routes[chk]->Template);
         free(BUFFER);
         close(request_socket);
@@ -129,7 +128,6 @@ cWR *ParseRequest(const char *data) {
         .Body = NewString(NULL),
     };
 
-    printf("%s\n", data);
     String traffic = NewString(data);
     Array lines = NewArray(NULL);
     lines.Merge(&lines, (void **)traffic.Split(&traffic, "\n"));
@@ -150,15 +148,18 @@ cWR *ParseRequest(const char *data) {
     argz.Destruct(&argz);
     request_type.Destruct(&request_type);
 
+    int READ_BODY = 0;
     for(int i = 0; i < lines.idx; i++) {
         if(!lines.arr[i])
             break;
 
         String line = NewString(lines.arr[i]);
-        if(line.isEmpty(&line) || line.Is(&line, " "))
-            break;
+        if(line.isEmpty(&line) || line.Is(&line, " ")) {
+            if(READ_BODY) break;
+            READ_BODY = 1;
+        }
 
-        if(line.Contains(&line, ":")) {
+        if(line.Contains(&line, ":") && line.data[0] != '{') {
             Array args = NewArray(NULL);
             args.Merge(&args, (void **)line.Split(&line, ": "));
 
@@ -170,6 +171,8 @@ cWR *ParseRequest(const char *data) {
 
         line.Destruct(&line);
     }
+
+    r->Body.data[r->Body.idx] = '\0';
 
     traffic.Destruct(&traffic);
     lines.Destruct(&lines);
