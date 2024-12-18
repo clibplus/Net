@@ -35,24 +35,10 @@ void *HTML_TAGS[][2] = {
     { (void *)FORM_TAG,     "form" }
 };
 
-void *WEBSIGN_TAGS[][2] = {
-    { (void *)WS_FORM,              "div" },
-    { (void *)WS_BUTTON_TAG,        "button" },
-    { (void *)WS_TXT_INPUT_TAG,     "input" }
-};
-
 char *FindTag(Control *control) {
     for(int i = 0; i < HTML_TAGS_COUNT; i++)
         if((ControlTag)control->Tag == (ControlTag)HTML_TAGS[i][0])
             return HTML_TAGS[i][1];
-
-    return NULL;
-}
-
-char *FindWSTag(Control *control) {
-    for(int i = 0; i < WS_TAGS_COUNT; i++)
-        if((WSControlTag)control->Tag == (WSControlTag)WEBSIGN_TAGS[i][0])
-            return WEBSIGN_TAGS[i][1];
 
     return NULL;
 }
@@ -244,64 +230,4 @@ String ConstructParent(Control *p, int sub) {
         return design;
 
     return ((String){});
-}
-
-int ConstructForm(WebRoute *route, Control *Form, Button *Btn) {
-    char *tag = FindWSTag(Form);
-    if(!tag)
-        return 0;
-
-    if(!Form->ID || !Btn->ID)
-        return 0;
-
-    Form->Tag = DIV_TAG;
-    String form = ConstructParent(Form, 0);
-
-    Btn->Tag = BUTTON_TAG;
-    
-    String design = (NewString("<"));
-    char *main_tag = FindWSTag((Control *)Btn);
-    design.AppendString(&design, main_tag);
-    /* Construct The Parent Control (<html>\n\n</html> // <head>\n\n</head> // <body>\n\n</body>) */
-    if(Btn->ID)
-        design.AppendArray(&design, (const char *[]){" ", Btn->ID, NULL});
-
-    if(Btn->Class) 
-        design.AppendArray(&design, (const char *[]){" class=\"", Btn->Class, "\"", NULL});
-    
-    if(Btn->CSS) {
-        design.AppendString(&design, " style=\"");
-        design.AppendArray(&design, (const char **)Btn->CSS);
-        design.AppendString(&design, "\"");
-    }
-    
-    if(Btn->Data)
-        design.AppendArray(&design, (const char *[]){" ", Btn->Data, NULL});
-
-    design.AppendString(&design, ">\n");
-
-    if(Btn->Text)
-        design.AppendArray(&design, (const char *[]){Btn->Text, "\n", NULL});
-
-    design.AppendArray(&design, (const char *[]){"</", main_tag, ">\n", NULL});
-
-    String JS_HANDLER = NewString(JS_HANDLER_FORMAT);
-    JS_HANDLER.Replace(&JS_HANDLER, "[SUBMIT_BUTTON]", Btn->ID);
-    JS_HANDLER.Replace(&JS_HANDLER, "[FORM_ID]", Form->ID);
-
-    design.AppendArray(&design, (const char *[]){form.data, "\n", JS_HANDLER.data, "\n", NULL});
-
-    JS_HANDLER.Destruct(&JS_HANDLER);
-    form.Destruct(&form);
-    design.Destruct(&design);
-
-    design.data[design.idx] = '\0';
-
-    if(route->Template)
-        free(route->Template);
-
-    route->Template = strdup(design.data);
-    design.Destruct(&design);
-    
-    return 1;
 }

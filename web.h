@@ -23,37 +23,53 @@
 
 /* Controls using HTML Tags */
 typedef enum ControlTag {
-    NO_TAG              = 8490,
+    NO_TAG                              = 8490,
 
-    HTML_TAG            = 8491,
-    HEAD_TAG            = 8492,
-    BODY_TAG            = 8493,
+    HTML_TAG                            = 8491,
+    HEAD_TAG                            = 8492,
+    BODY_TAG                            = 8493,
 
-    TITLE_TAG           = 8494,
-    H1_TAG              = 8495,
-    H2_TAG              = 8496,
-    H3_TAG              = 8497,
-    INPUT_TAG           = 8498,
-    P_TAG               = 8499,
-    DIV_TAG             = 8500,
-    A_TAG               = 8501,
-    PRE_TAG             = 8502,
-    BUTTON_TAG          = 8503,
-    FORM_TAG            = 8504
+    TITLE_TAG                           = 8494,
+    H1_TAG                              = 8495,
+    H2_TAG                              = 8496,
+    H3_TAG                              = 8497,
+    INPUT_TAG                           = 8498,
+    P_TAG                               = 8499,
+    DIV_TAG                             = 8500,
+    A_TAG                               = 8501,
+    PRE_TAG                             = 8502,
+    BUTTON_TAG                          = 8503,
+    FORM_TAG                            = 8504
 } ControlTag;
 
-/* Controls w/ auto JS implementation for event handling */
-typedef enum WSControlTag {
-    WS_FORM                 = 9490,
-    WS_BUTTON_TAG           = 8491,
-    WS_TXT_INPUT_TAG        = 9492
-} WSControlTag;
+typedef enum WJS_Value_T {
+    FORM_TAG                            = 9040,     // Provide a form ID <form id=""></form>
+    ELEMENT_IDS                         = 9041      // Provide an array of element IDs
+} WJS_Value_T;
+
+typedef enum WJS_Action_T {
+    NO_ACTION                           = 10930
+    REDIRECT                            = 10931,
+    MSG_BEFORE_REDIRECT                 = 10932,
+    GET_RESULTS                         = 10933,
+    SPIN_UNTIL_RESULTS                  = 10934,
+    VERTICAL_BOOMERANG_UNTIL_RESULT     = 10935,
+    HORIZONTAL_BOOMERANG_UNTIL_RESULT   = 10936,
+} WJS_Action_T;
 
 typedef struct CSS {
     char                *Class;
     char                **Data;
     int                 Selector;
 } CSS;
+
+typedef struct WJS {
+    WJS_Value_T         ValueType;      // OnClick Action Type
+    void                **Elements;     // Grab value of other elements using IDs
+    WJS_Action_T        Action;         // IF USING ANIMATION TAGS, AnimationID must be set.
+    char                *AnimationID;   // Element ID to the element you want animated
+    char                *ChangeID;      // Element ID to the element you want its value changed  
+} WJS;
 
 typedef struct Control {
     void                *Parent;
@@ -130,7 +146,6 @@ typedef Control Button;
 typedef Control Div;
 
 extern void *HTML_TAGS[][2];
-extern void *WEBSIGN_TAGS[][2];
 
 // == [ Web Server Operation ] ==
 
@@ -222,14 +237,26 @@ void    DestroyRoute(WebRoute *r);
 
 // == [ Websign Template Generation Operations ] ==
 
+//
+//
+//
+//
 char    *FindTag(Control *control);
-char    *FindWSTag(Control *control);
 
 //
 //      | - > Construct a template using an array of Controls in HTML order and CSS styles
 //      | - > Returns 1 upon success or 0 upon failure
 //
 int     ConstructTemplate(WebRoute *route, Control **controls, CSS **styles);
+
+//
+//
+//
+//
 char    *ConstructCSS(WebRoute *route);
+
+//
+//
+//
+//
 String  ConstructParent(Control *p, int sub);
-int     ConstructForm(WebRoute *route, Control *Form, Button *Btn);
