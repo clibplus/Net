@@ -237,6 +237,8 @@ void    DestroyRoute(WebRoute *r);
 
 // == [ Websign Template Generation Operations ] ==
 
+// == [ HTML / CSS Genetation ] ==
+
 //
 //
 //
@@ -260,3 +262,17 @@ char    *ConstructCSS(WebRoute *route);
 //
 //
 String  ConstructParent(Control *p, int sub);
+
+// == [ WebJS Genetation ] ==
+
+//
+//
+//
+//
+String ConstructOnClickForm(Control *p);
+
+//
+//
+//
+//
+String  ConstructJS(WJS *js);

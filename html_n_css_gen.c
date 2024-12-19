@@ -15,9 +15,6 @@
 #define HTML_TAGS_COUNT 14
 #define WS_TAGS_COUNT 3
 
-char *JS_HANDLER_FORMAT = "<script src=\"ws_form_handler.js\"></script><br /><script>document.getElementById('[SUBMIT_BUTTON]').addEventListener('click', () => submitForm('[FORM_ID]'));\n</script>";
-char *JS_HANDLER[] = {"(()=>(f=new FormData(document.getElementById('", "')),d={},f.forEach((v,k)=>d[k]=v),fetch(window.location.href,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).then(r=>r.json()).then(r=>{console.log('Response:',r);alert('POST Request successful!')}).catch(e=>{console.error('Error:',e);alert('POST Request failed!')})))();"};
-
 void *HTML_TAGS[][2] = {
     { (void *)HTML_TAG,     "html" },
     { (void *)HEAD_TAG,     "head"},
@@ -48,24 +45,27 @@ char *ConstructCSS(WebRoute *route) {
         return NULL;
 
     String BUFFER = NewString("<style>\n");
+    int i = 0, css_idx = 0;
 
-    int i = 0;
     while(route->CSS[i] != NULL) {
         if(route->CSS[i]->Selector)
             BUFFER.AppendString(&BUFFER, ".");
 
         BUFFER.AppendArray(&BUFFER, (const char *[]){route->CSS[i]->Class, " {\n", NULL});
-        int css_idx = 0;
+
+        css_idx = 0;
         while((const char **)route->CSS[i]->Data[css_idx] != NULL) {
             BUFFER.AppendArray(&BUFFER, (const char *[]){route->CSS[i]->Data[css_idx], ";", NULL});;
             css_idx++;
         }
+
         BUFFER.AppendString(&BUFFER, "\n}\n\0");
         i++;
     }
 
     BUFFER.AppendString(&BUFFER, "</style>\n");
     BUFFER.data[BUFFER.idx] = '\0';
+    
     char *BUFF = strdup(BUFFER.data);
     BUFFER.Destruct(&BUFFER);
 
@@ -150,16 +150,8 @@ String ConstructParent(Control *p, int sub) {
                 design.AppendString(&design, "\"");
             }
 
-            if(p->OnClick && p->FormID) {
-                // add here
-                String JS_CODE = NewString(JS_HANDLER[0]);
-                JS_CODE.AppendArray(&JS_CODE,  (const char *[]){p->FormID, JS_HANDLER[1], NULL});
-
-                JS_CODE.data[JS_CODE.idx] = '\0';
-                design.AppendArray(&design, (const char *[]){"onclick=\"", JS_CODE.data, "\" ", NULL});
-                JS_CODE.Destruct(&JS_CODE);
-            }
-
+            String onclick_js = ConstructOnClickForm(p);
+            design.AppendString(&design, onclick_js.data);
             design.AppendString(&design, p->Tag == INPUT_TAG ? "/>\n" : ">\n");
         }
     }
@@ -200,16 +192,9 @@ String ConstructParent(Control *p, int sub) {
             }
 
             
-            if(subControl->OnClick && subControl->FormID) {
-                // add here
-                String JS_CODE = NewString(JS_HANDLER[0]);
-                JS_CODE.AppendArray(&JS_CODE,  (const char *[]){subControl->FormID, JS_HANDLER[1], NULL});
-                JS_CODE.data[JS_CODE.idx] = '\0';
-
-                design.AppendArray(&design, (const char *[]){"onclick=\"", JS_CODE.data, "\" ", NULL});
-                JS_CODE.Destruct(&JS_CODE);
-            }
-
+            
+            String onclick_js = ConstructOnClickForm(p);
+            design.AppendString(&design, onclick_js.data);
             design.AppendString(&design, subControl->Tag == INPUT_TAG ? "/>\n" : ">\n");
 
             if (subControl->Text)
