@@ -82,6 +82,7 @@ typedef struct Control {
     char                **CSS;      // CSS Function Generator for the tag <div style="CSS FUNCTION"></div>
     char                *Data;      // For Any Other Data In the Opening Tag <div Data... > </div>
     long                OnClick;
+    char                *OnClickJS;
     char                *FormID;
     void                **SubControls;
 } Control;
