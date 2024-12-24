@@ -20,7 +20,6 @@ cWS *StartWebServer(String ip, int port, int auto_search) {
             .Routes             = (WebRoute **)malloc(sizeof(WebRoute *) * 1),
             .Destruct           = DestroyCfg
         },
-
         .Run        = RunServer,
         .Destruct   = DestroyServer
     };
@@ -200,7 +199,7 @@ void GetPostQueries(cWS *web, cWR *r) {
         query_args.Destruct(&query_args);
     }
     
-    r->Queries = Queries;
+    r->Headers = Queries;
     args.Destruct(&args);
 }
 

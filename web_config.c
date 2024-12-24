@@ -79,6 +79,9 @@ int AddRoute(cWS *web, WebRoute route) {
     web->CFG.Routes[web->CFG.RouteCount] = neww;
     web->CFG.RouteCount++;
     web->CFG.Routes = (WebRoute **)realloc(web->CFG.Routes, sizeof(WebRoute *) * (web->CFG.RouteCount + 1));
+
+    
+    web->CFG.Routes[web->CFG.RouteCount] = NULL;
     return 1;
 }
 

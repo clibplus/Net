@@ -43,12 +43,12 @@ typedef enum ControlTag {
 } ControlTag;
 
 typedef enum WJS_Value_T {
-    FORM_TAG                            = 9040,     // Provide a form ID <form id=""></form>
+    FORM_ELEMENTS                       = 9040,     // Provide a form ID <form id=""></form>
     ELEMENT_IDS                         = 9041      // Provide an array of element IDs
 } WJS_Value_T;
 
 typedef enum WJS_Action_T {
-    NO_ACTION                           = 10930
+    NO_ACTION                           = 10930,
     REDIRECT                            = 10931,
     MSG_BEFORE_REDIRECT                 = 10932,
     GET_RESULTS                         = 10933,
@@ -81,9 +81,10 @@ typedef struct Control {
     char                *href;      // href for <a>
     char                **CSS;      // CSS Function Generator for the tag <div style="CSS FUNCTION"></div>
     char                *Data;      // For Any Other Data In the Opening Tag <div Data... > </div>
-    long                OnClick;
-    char                *OnClickJS;
+    long                OnClick;    // Enable this to 1 and Use FormID and DisplayID
+    char                *OnClickJS; 
     char                *FormID;
+    char                *DisplayID;
     void                **SubControls;
 } Control;
 

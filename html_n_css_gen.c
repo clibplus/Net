@@ -150,8 +150,11 @@ String ConstructParent(Control *p, int sub) {
                 design.AppendString(&design, "\"");
             }
 
-            String onclick_js = ConstructOnClickForm(p);
-            design.AppendString(&design, onclick_js.data);
+            if(p->OnClick && p->FormID) {
+                String onclick_js = ConstructOnClickForm(p);
+                design.AppendArray(&design, (const char *[]){"onclick=\"", onclick_js.data, "\" ", NULL});
+            }
+            
             design.AppendString(&design, p->Tag == INPUT_TAG ? "/>\n" : ">\n");
         }
     }
@@ -161,11 +164,11 @@ String ConstructParent(Control *p, int sub) {
 
     /* Construct SubControls */
     char *sub_tag = NULL;
-    if (p->SubControls != NULL) {
+    if (p->SubControls) {
         for (int i = 0; p->SubControls[i] != NULL; i++) {
             Control *subControl = (Control *)p->SubControls[i];
             design.AppendString(&design, "<");
-            sub_tag = FindTag(subControl) ? FindTag(subControl) : FindWSTag(subControl);
+            sub_tag = FindTag(subControl);
             if (!sub_tag) continue; 
 
             design.AppendString(&design, sub_tag);
@@ -191,10 +194,11 @@ String ConstructParent(Control *p, int sub) {
                 design.AppendString(&design, "\"");
             }
 
-            
-            
-            String onclick_js = ConstructOnClickForm(p);
-            design.AppendString(&design, onclick_js.data);
+            if(p->OnClick && p->FormID) {
+                String onclick_js = ConstructOnClickForm(p);
+                design.AppendArray(&design, (const char *[]){"onclick=\"", onclick_js.data, "\" ", NULL});
+            }
+
             design.AppendString(&design, subControl->Tag == INPUT_TAG ? "/>\n" : ">\n");
 
             if (subControl->Text)
