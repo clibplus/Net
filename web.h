@@ -278,3 +278,6 @@ String ConstructOnClickForm(Control *p);
 //
 //
 String  ConstructJS(WJS *js);
+
+String control2str(Control *p);
+String DumpControls(Control *controls, int nestingLevel);

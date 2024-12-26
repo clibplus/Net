@@ -8,7 +8,7 @@ char *JS_HANDLER_FORMAT = "<script src=\"ws_form_handler.js\"></script><br /><sc
 char *JS_HANDLER[] = {"(()=>(f=new FormData(document.getElementById('", "')),d={},f.forEach((v,k)=>d[k]=v),fetch(window.location.href,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).then(r=>r.json()).then(r=>{console.log('Response:',r);alert('POST Request successful!')}).catch(e=>{console.error('Error:',e);alert('POST Request failed!')})))();"};
 
 String ConstructOnClickForm(Control *p) {
-    if(p->OnClick || p->FormID)
+    if(!p->OnClick || !p->FormID)
         return ((String){});
 
     String JS_CODE = NewString(JS_HANDLER[0]);
