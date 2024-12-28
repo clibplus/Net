@@ -40,6 +40,21 @@ char *FindTag(Control *control) {
     return NULL;
 }
 
+ControlTag FindTagType(const char *data) {
+    if(!data || strlen(data) < 1)
+        0;
+        
+    for(int i = 0; i < HTML_TAGS_COUNT; i++) {
+        if(!HTML_TAGS[i][1])
+            break;
+
+        if(!strcmp(data, (char *)HTML_TAGS[i][1]))
+            return (ControlTag)HTML_TAGS[i][0];
+    }
+
+    return 0;
+}
+
 char *ConstructCSS(WebRoute *route) {
     if(!route->CSS)
         return NULL;

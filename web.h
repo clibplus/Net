@@ -86,6 +86,7 @@ typedef struct Control {
     char                *FormID;
     char                *DisplayID;
     void                **SubControls;
+    long                SubControlCount;
 } Control;
 
 typedef struct WebRoute {
@@ -248,6 +249,12 @@ void    DestroyRoute(WebRoute *r);
 char    *FindTag(Control *control);
 
 //
+//
+//
+//
+ControlTag FindTagType(const char *data);
+
+//
 //      | - > Construct a template using an array of Controls in HTML order and CSS styles
 //      | - > Returns 1 upon success or 0 upon failure
 //
@@ -281,3 +288,6 @@ String  ConstructJS(WJS *js);
 
 String control2str(Control *p);
 String DumpControls(Control *controls, int nestingLevel);
+
+Control **process_html_line(const char *data);
+Control **ParseHTMLContent(const char *data);
