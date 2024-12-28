@@ -41,16 +41,12 @@ char *FindTag(Control *control) {
 }
 
 ControlTag FindTagType(const char *data) {
-    if(!data || strlen(data) < 1)
-        0;
+    if(!data)
+        return 0;
         
-    for(int i = 0; i < HTML_TAGS_COUNT; i++) {
-        if(!HTML_TAGS[i][1])
-            break;
-
+    for(int i = 0; i < HTML_TAGS_COUNT; i++)
         if(!strcmp(data, (char *)HTML_TAGS[i][1]))
             return (ControlTag)HTML_TAGS[i][0];
-    }
 
     return 0;
 }
