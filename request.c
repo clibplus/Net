@@ -47,7 +47,6 @@ Array ParseURL(const char *u) {
 
 HTTPClientResponse RequestURL(const String URL, const Map h, const Req_T reqt) {
 	Array hostname = ParseURL(URL.data);
-	printf("%ld\n", hostname.idx);
 	HTTPClient c = {
 		.Hostname	= NewString(hostname.arr[0]),
 		.URL_Route 	= NewString(hostname.arr[1]),
@@ -55,22 +54,37 @@ HTTPClientResponse RequestURL(const String URL, const Map h, const Req_T reqt) {
 		.Port 		= NewString((strstr(URL.data, "https://") ? "443" : "80"))
 	};
 
-	printf("%s %s\r\n\r\n", c.Hostname.data, c.Port.data);
-	printf("%s\r\n\r\n", c.URL_Route.data);
 	c.ServerFD = CreateHTTPSocket(&c);
+	if(c.ServerFD < 1) {
+		printf("[ x ] Error, Unable to start socket....!\n");
+		return ((HTTPClientResponse){});
+	}
+
 	int check = 0;
 	HTTPClientResponse Response;
 
 	if(!strcmp(c.Port.data, "443")) {
 		InitOpenSSL();
+		c.CTX = CreateCTXContext();
+		if(!c.CTX) {
+			return ((HTTPClientResponse){});
+		}
 
-		SSL_set_fd(c.SSL, c.ServerFD);
+		c.SSL = CreateSSL(c.CTX);
+		if(!c.SSL)
+			return ((HTTPClientResponse){});
 
-		if(SSL_connect(c.SSL) <= 0)
+
+		if(SSL_set_fd(c.SSL, c.ServerFD) == 0) {
+			return ((HTTPClientResponse){});
+		}
+
+		if(SSL_connect(c.SSL) != 1)
 			return ((HTTPClientResponse){});
 
 		if(reqt == __GET__) {
-			SendHTTPGetReq(&c);
+			int chk = SendHTTPGetReq(&c);
+			Response = RetrieveHTTPResponse(&c);
 			HTTPClientResponse empty;
 			if(memcpy(&Response, &empty, sizeof(HTTPClientResponse)) || !ExtractRawTraffic(&c, &Response))
 				return ((HTTPClientResponse){});
@@ -80,7 +94,7 @@ HTTPClientResponse RequestURL(const String URL, const Map h, const Req_T reqt) {
 
 		SSL_free(c.SSL);
 		SSL_CTX_free(c.CTX);
-		CleanOpenSSL();
+		CleanOpenSSL(c.SSL, c.CTX);
 		close(c.ServerFD);
 
 		return Response;
@@ -98,7 +112,7 @@ int CreateHTTPSocket(HTTPClient *c) {
 	struct addrinfo hints, *res;
 	memset(&hints, 0, sizeof(hints));
 	{
-		hints.ai_family = AF_INET;
+		hints.ai_family = AF_UNSPEC;
 		hints.ai_socktype = SOCK_STREAM;
 	}
 
@@ -112,6 +126,10 @@ int CreateHTTPSocket(HTTPClient *c) {
 	if(connect(c->ServerFD, res->ai_addr, res->ai_addrlen) < 0)
 		return 0;
 
+	int reuse = 1;
+	if(setsockopt(c->ServerFD, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse, sizeof(reuse)) < 0)
+		return 1;
+
 	freeaddrinfo(res);
 	return c->ServerFD;
 }
@@ -120,21 +138,21 @@ int SendHTTPGetReq(HTTPClient *c) {
 	if(!c)
 		return 0;
 
-	char *req_data[] = {"GET", c->URL_Route.data, "HTTP/1.1\r\nHost: ", c->Hostname.data, "\r\n"};
+	char *req_data[] = {"GET ", c->URL_Route.data, " HTTP/1.1\r\nHost: ", c->Hostname.data, "\r\n"};
 	String req = NewString(NULL);
 	for(int i = 0; i < 5; i++) req.AppendString(&req, req_data[i]);
 
 	if(c->Headers.idx > 0) {
 		for(int i = 0; i < c->Headers.idx; i++) {
-			char *current_header[] = {
+			req.AppendArray(&req, (const char *[]){
 				(char *)((Key *)c->Headers.arr[i])->key, 
 				": ", 
-				(char *)((Key *)c->Headers.arr[i])->value, "\r\n"
-			};
-			for(int arg = 0; arg < 4; arg++) req.AppendString(&req, current_header[arg]);
+				(char *)((Key *)c->Headers.arr[i])->value, "\r\n", NULL
+			});
 		}
 	}
 
+	req.AppendString(&req, "\r\n");
 	(void)(!strcmp(c->Port.data, "443") ? SSL_write(c->SSL, req.data, strlen(req.data)) : write(c->ServerFD, req.data, strlen(req.data)));
 	req.Destruct(&req);
 
@@ -153,13 +171,33 @@ HTTPClientResponse RetrieveHTTPResponse(HTTPClient *c) {
 		.Body = NewString(NULL)
 	};
 
+	int max_length;
 	if(!strcmp(c->Port.data, "443")) {
-		while((bytes = SSL_read(c->SSL, BUFFER, sizeof(BUFFER) - 1)) > 0) {
-			BUFFER[bytes] = '\0';
+		while((bytes = SSL_read(c->SSL, BUFFER, sizeof(BUFFER) - 1)) != 0) {
+			{
+				if(strstr((char *)&BUFFER, "Content-Length:")) {
+					printf("CHECKING\n");
+					String chk = NewString(BUFFER);
+					char **arr = chk.Split(&chk, ":");
+
+					String val = NewString(arr[1]);
+					if(val.isNumber(&val)) {
+						printf("GOT MAX\n");
+						max_length = atoi(val.data);
+					}
+
+					val.Destruct(&val);
+				}
+			}
+
 			r.Body.AppendString(&r.Body, (const char *)&BUFFER);
 			memset(BUFFER, '\0', 4096);
+
+			// if(strlen(BUFFER) >= max_length && max_length > 0)
+			// 	break;
 		}
 
+		r.Body.data[r.Body.idx] = '\0';
 		return r;
 	}
 	
@@ -175,34 +213,27 @@ int ExtractRawTraffic(HTTPClient *c, HTTPClientResponse *r) {
 
 	String copy 		= NewString(r->Body.data);
 	Array lines 		= NewArray(NULL);
-	lines.Merge(&lines, (void **)copy.Split(&copy, "/"));
-	int line_count 		= copy.CountChar(&copy, '\n');
+	lines.Merge(&lines, (void **)copy.Split(&copy, "\n"));
 
 	Map headers 		= NewMap();
 	String Body 		= NewString(NULL);
 	
-	if(line_count == 0)
-		return 0;
+	// if(lines.idx == 0)
+	// 	return 0;
 
 	/* Grab Status Code And HTTP Version (1.1) */
 	String version 		= NewString(lines.arr[0]);
 	Array status 		= NewArray(NULL);
 	status.Merge(&status, (void **)version.Split(&version, " "));
-	version.RmSubstr(&version, 0, strlen(status.arr[0]) + 1);
-
-	for(int i = 0; i < status.idx; i++) {
-		version.AppendString(&version, status.arr[i]);
-		version.AppendString(&version, " ");
-	}
+	version.RmSubstr(&version, strlen(status.arr[0]), strlen(status.arr[1]) + strlen(status.arr[2]) - 1); // remove status code number and string '200 OK'
 
 	r->StatusCode = atoi(status.arr[1]);
-	headers.Append(&headers, status.arr[0], version.data);
 	version.Destruct(&version);
 	status.Destruct(&status);
 
 	/* Grab all headers */
 	int stop = 0;
-	for(int i = 1; i < line_count; i++) {
+	for(int i = 1; i < lines.idx; i++) {
 		if(!strcmp(lines.arr[i], "") || !strcmp(lines.arr[i], "2be")) {
 			stop = 1;
 			continue;
@@ -213,16 +244,17 @@ int ExtractRawTraffic(HTTPClient *c, HTTPClientResponse *r) {
 		String line		= NewString(lines.arr[i]);
 		Array args 		= NewArray(NULL);
 		args.Merge(&args, (void **)line.Split(&line, (const char *)":"));
-		int arg_count 	= line.CountChar(&line, ':');
 		line.Strip(&line);
-		if(!strcmp(line.data, "")) {
+		if(!strcmp(line.data, "") || !strcmp(line.data, " ") || line.isEmpty(&line)) {
 			stop = 1;
 			continue;
 		}
 
-		if(arg_count >= 2 && !stop) {
-			String value = NewString(lines.arr[i]);
-			value.Replace(&value, args.arr[0], "");
+		if(args.idx >= 1 && !stop) {
+			String value = NewString(NULL);
+			for(int i = 1; i < args.idx; i++) value.AppendArray(&value, (const char *[]){args.arr[i], (i == args.idx - 1 ? NULL : ":"), NULL});
+			value.Trim(&value, '\r');
+			value.Trim(&value, '\n');
 			headers.Append(&headers, args.arr[0], value.data);
 			value.Destruct(&value);
 		} else {
@@ -235,7 +267,9 @@ int ExtractRawTraffic(HTTPClient *c, HTTPClientResponse *r) {
 
 	copy.Destruct(&copy);
 	lines.Destruct(&lines);
-	r->Body.Destruct(&r->Body);
+	if(r->Body.idx > 1)
+		r->Body.Destruct(&r->Body);
+
 	r->Body = Body;
 	r->Headers = headers;
 	return 1;

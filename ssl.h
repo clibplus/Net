@@ -4,5 +4,6 @@
 #include <openssl/err.h>
 
 void InitOpenSSL();
-SSL_CTX *CreateSSLContext();
-void CleanOpenSSL();
+SSL *CreateSSL(SSL_CTX *ctx);
+SSL_CTX *CreateCTXContext();
+void CleanOpenSSL(SSL *ssl, SSL_CTX *ctx);

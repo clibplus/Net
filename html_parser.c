@@ -8,9 +8,9 @@ int count_tabs(const char *data) {
     int count = 0;
     
     for(int i = 0; i < strlen(data); i++) {
-        if(data[i] == '\0')
+        if(data[i] != '\t' && data[i] != ' ')
             break;
-
+            
         if(data[i] == '\t')
             count++;
     }

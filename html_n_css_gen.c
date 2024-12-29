@@ -29,7 +29,8 @@ void *HTML_TAGS[][2] = {
     { (void *)PRE_TAG,      "pre" },
     { (void *)BUTTON_TAG,   "button" },
     { (void *)INPUT_TAG,    "input" },
-    { (void *)FORM_TAG,     "form" }
+    { (void *)FORM_TAG,     "form" },
+    NULL
 };
 
 char *FindTag(Control *control) {
