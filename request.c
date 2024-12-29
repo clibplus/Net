@@ -46,10 +46,11 @@ Array ParseURL(const char *u) {
 }
 
 HTTPClientResponse RequestURL(const String URL, const Map h, const Req_T reqt) {
-	Array hostname = ParseURL(URL.data);
+	Array hostname = ParseURL(strdup(URL.data));
 	HTTPClient c = {
 		.Hostname	= NewString(hostname.arr[0]),
-		.URL_Route 	= NewString(hostname.arr[1]),
+		.Route 		= NewString(hostname.arr[1]),
+		.URL_Route 	= URL,
 		.Headers	= h,
 		.Port 		= NewString((strstr(URL.data, "https://") ? "443" : "80"))
 	};
@@ -138,7 +139,19 @@ int SendHTTPGetReq(HTTPClient *c) {
 	if(!c)
 		return 0;
 
-	char *req_data[] = {"GET ", c->URL_Route.data, " HTTP/1.1\r\nHost: ", c->Hostname.data, "\r\n"};
+	if(c->URL_Route.Contains(&c->URL_Route, "https://"))
+		for(int i = 0; i < strlen("https://"); i++) 
+			c->URL_Route.TrimAt(&c->URL_Route, 0);
+
+	
+	if(c->URL_Route.Contains(&c->URL_Route, "http://"))
+		for(int i = 0; i < strlen("http://"); i++) 
+			c->URL_Route.TrimAt(&c->URL_Route, 0);
+
+	if(c->URL_Route.EndsWith(&c->URL_Route, "/"))
+		c->URL_Route.TrimAt(&c->URL_Route, c->URL_Route.idx - 1);
+
+	char *req_data[] = {"GET ", c->Route.data, " HTTP/1.1\r\nHost: ", c->URL_Route.data, "\r\n"};
 	String req = NewString(NULL);
 	for(int i = 0; i < 5; i++) req.AppendString(&req, req_data[i]);
 
@@ -146,7 +159,7 @@ int SendHTTPGetReq(HTTPClient *c) {
 		for(int i = 0; i < c->Headers.idx; i++) {
 			req.AppendArray(&req, (const char *[]){
 				(char *)((Key *)c->Headers.arr[i])->key, 
-				": ", 
+				": ",
 				(char *)((Key *)c->Headers.arr[i])->value, "\r\n", NULL
 			});
 		}
@@ -176,25 +189,23 @@ HTTPClientResponse RetrieveHTTPResponse(HTTPClient *c) {
 		while((bytes = SSL_read(c->SSL, BUFFER, sizeof(BUFFER) - 1)) != 0) {
 			{
 				if(strstr((char *)&BUFFER, "Content-Length:")) {
-					printf("CHECKING\n");
 					String chk = NewString(BUFFER);
 					char **arr = chk.Split(&chk, ":");
 
 					String val = NewString(arr[1]);
 					if(val.isNumber(&val)) {
-						printf("GOT MAX\n");
 						max_length = atoi(val.data);
 					}
 
 					val.Destruct(&val);
 				}
 			}
-
+			
 			r.Body.AppendString(&r.Body, (const char *)&BUFFER);
 			memset(BUFFER, '\0', 4096);
 
-			// if(strlen(BUFFER) >= max_length && max_length > 0)
-			// 	break;
+			if(strlen(BUFFER) - 1 >= max_length && max_length > 0)
+				break;
 		}
 
 		r.Body.data[r.Body.idx] = '\0';
@@ -245,12 +256,12 @@ int ExtractRawTraffic(HTTPClient *c, HTTPClientResponse *r) {
 		Array args 		= NewArray(NULL);
 		args.Merge(&args, (void **)line.Split(&line, (const char *)":"));
 		line.Strip(&line);
-		if(!strcmp(line.data, "") || !strcmp(line.data, " ") || line.isEmpty(&line)) {
+		if(!strcmp(line.data, "") || !strcmp(line.data, " ") || line.isEmpty(&line) || line.StartsWith(&line, "2e")) {
 			stop = 1;
 			continue;
 		}
 
-		if(args.idx >= 1 && !stop) {
+		if(args.idx >= 1 && !stop && !line.StartsWith(&line, "<")) {
 			String value = NewString(NULL);
 			for(int i = 1; i < args.idx; i++) value.AppendArray(&value, (const char *[]){args.arr[i], (i == args.idx - 1 ? NULL : ":"), NULL});
 			value.Trim(&value, '\r');
@@ -266,7 +277,6 @@ int ExtractRawTraffic(HTTPClient *c, HTTPClientResponse *r) {
 	}
 
 	copy.Destruct(&copy);
-	lines.Destruct(&lines);
 	if(r->Body.idx > 1)
 		r->Body.Destruct(&r->Body);
 

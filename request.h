@@ -91,6 +91,7 @@ typedef struct HTTPClient {
 	String		Hostname;
 	String 		Port;
 	String		URL_Route;
+    String      Route;
 	Map			Headers;
 
 	SSL 		*SSL;
