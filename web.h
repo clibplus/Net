@@ -79,6 +79,7 @@ typedef struct Control {
     char                *Class;     // class=""
     char                *href;      // href for <a>
     char                **CSS;      // CSS Function Generator for the tag <div style="CSS FUNCTION"></div>
+    long                CSSCount;
     char                *Data;      // For Any Other Data In the Opening Tag <div Data... > </div>
     long                OnClick;    // Enable this to 1 and Use FormID and DisplayID
     char                *OnClickJS; 
@@ -86,6 +87,10 @@ typedef struct Control {
     char                *DisplayID;
     void                **SubControls;
     long                SubControlCount;
+
+    int                 (*ToCHT)        (struct Control *c);
+    int                 (*ToHTML)       (struct Control *c);
+    void                (*Destruct)     (struct Control *c);
 } Control;
 
 typedef struct WebRoute {
@@ -127,6 +132,8 @@ typedef struct cWS {
     WebServerConfig     CFG;
     char                *Logs;
 
+    int                 (*AddRoutes)    (struct cWS *web, WebRoute *routes);
+    int                 (*AddRoute)     (struct cWS *web, WebRoute r);
     void                (*Run)          (struct cWS *web, int concurrents, const char *search_path);
     void                (*Destruct)     (struct cWS *web);
 } cWS;
