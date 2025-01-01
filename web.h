@@ -8,6 +8,7 @@
 */
 #pragma once
 
+#include <time.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <arpa/inet.h>
@@ -147,6 +148,9 @@ typedef struct cWR {
     Map                 Queries;
     String              Body;
     
+    clock_t             StartTime;
+    clock_t             EndTime;
+    double              Elapsed;
     void                (*Destruct)     (struct cWS *r);
 } cWR;
 
