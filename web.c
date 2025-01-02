@@ -56,10 +56,9 @@ void RunServer(cWS *web, int concurrents, const char *search_path) {
             continue;
 
         pthread_t tid;
-        void **arr = (void **)malloc(sizeof(void *) * 3);
+        void **arr = (void **)malloc(sizeof(void *) * 2);
         arr[0] = (void *)web;
         arr[1] = (void *)&request_socket;
-        arr[2] = (void *)clock();
 
         pthread_create(&tid, NULL, (void *)ParseAndCheckRoute, (void *)arr);
     }
@@ -68,7 +67,6 @@ void RunServer(cWS *web, int concurrents, const char *search_path) {
 void ParseAndCheckRoute(void **args) {
     cWS *web = (cWS *)args[0];
     int request_socket = *(int *)args[1];
-    clock_t StartTime = (clock_t)args[2];
 
     char *BUFFER = (char *)calloc(4096, sizeof(char));
     int bytes = read(request_socket, BUFFER, 4096);
@@ -79,13 +77,9 @@ void ParseAndCheckRoute(void **args) {
     new_headers.Append(&new_headers, "Connection", "close");
 
     cWR *r = ParseRequest(BUFFER);
-    r->StartTime = StartTime;
     if(!r || !r->Route.data) {
         SendResponse(web, request_socket, OK, new_headers, ((Map){}), web->CFG.Err404);
         close(request_socket);
-        r->EndTime = clock();
-        r->Elapsed = (double)(r->EndTime - r->StartTime) / CLOCKS_PER_SEC * 1e9;
-        printf("\t= > %s: In %.2fns", r->Route.data, r->Elapsed);
         return;
     }
 
@@ -109,21 +103,15 @@ void ParseAndCheckRoute(void **args) {
         free(BUFFER);
         close(request_socket);
         pthread_exit(NULL);
-        r->EndTime = clock();
-        r->Elapsed = (double)(r->EndTime - r->StartTime) / CLOCKS_PER_SEC * 1e9;
-        printf("\t= > %s: In %.2fns", r->Route.data, r->Elapsed);
         return;
     }
 
-    printf("[ NEW REQUEST%s ] %s = > %s\n", (strlen(r->Route.data) > 1 ? " " : " ATTEMPT"), web->CFG.Routes[chk]->Name, web->CFG.Routes[chk]->Path);
+    printf("[ NEW REQUEST%s ] %s = > %s\n", (chk > -1 ? " " : " ATTEMPT"), web->CFG.Routes[chk]->Name, web->CFG.Routes[chk]->Path);
     if(web->CFG.Routes[chk]->Generator)
         (((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Generator)(web, r, web->CFG.Routes[chk], request_socket));
 
     (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, new_headers, ((Map){}), "ERROR\n\n\n"));
 
-    r->EndTime = clock();
-    r->Elapsed = (double)(r->EndTime - r->StartTime) / CLOCKS_PER_SEC * 1e9;
-    printf("\t= > %s: In %.2fns\n", r->Route.data, r->Elapsed);
     free(BUFFER);
     close(request_socket);
     pthread_exit(NULL);
