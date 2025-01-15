@@ -20,6 +20,8 @@ cWS *StartWebServer(String ip, int port, int auto_search) {
             .Routes             = (WebRoute **)malloc(sizeof(WebRoute *) * 1),
             .Destruct           = DestroyCfg
         },
+        .AddRoute   = AddRoute,
+        .AddRoutes  = AddRoutes,
         .Run        = RunServer,
         .Destruct   = DestroyServer
     };

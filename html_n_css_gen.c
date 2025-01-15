@@ -181,7 +181,7 @@ String ConstructParent(Control *p, int sub) {
             Control *subControl = (Control *)p->SubControls[i];
             design.AppendString(&design, "<");
             sub_tag = FindTag(subControl);
-            if (!sub_tag) continue; 
+            if (!sub_tag) break; 
 
             design.AppendString(&design, sub_tag);
 
