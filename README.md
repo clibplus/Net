@@ -166,3 +166,8 @@ if(isButtonClick(req, YOUR_CONTROL_STRUCT.ID)) {
 ```
 
 - Developers to bind and wrap the library for other languages
+
+
+### Notes
+
+Even though Websign is in development stage. Current symbols aren't to change in the future unless there a major update!
