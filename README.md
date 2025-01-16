@@ -50,7 +50,13 @@ Create your handler function with 4 parameters for webserver cWS, incoming reque
 
 ```
 // You can handle incoming request to the specified path with this function
-void index_handler(cWS *server, cWR *req, WebRoute *route, int socket) { ... }
+void index_handler(cWS *server, cWR *req, WebRoute *route, int socket) { 
+    Map new_headers = NewMap();
+    new_headers.Append(&new_headers, "Content-Type", "text/html; charset=UTF-8");
+    new_headers.Append(&new_headers, "Connection", "close");
+    
+    SendResponse(web, socket, OK, new_headers, ((Map){}), route->Template);
+}
 
 // Edit's your WebRoute struct to use a handler
 (WebRoute){
