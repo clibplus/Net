@@ -70,6 +70,58 @@ void index_handler(cWS *server, cWR *req, WebRoute *route, int socket) {
 
 You can easily use Control and CSS structs to declare what you want for the template, from HTML tags to in-tag attributes and CSS!
 
+```
+/* Controls using HTML Tags */
+typedef enum ControlTag {
+    NO_TAG                              = 8490,
+
+    HTML_TAG                            = 8491,
+    HEAD_TAG                            = 8492,
+    BODY_TAG                            = 8493,
+
+    TITLE_TAG                           = 8494,
+    H1_TAG                              = 8495,
+    H2_TAG                              = 8496,
+    H3_TAG                              = 8497,
+    INPUT_TAG                           = 8498,
+    P_TAG                               = 8499,
+    DIV_TAG                             = 8500,
+    A_TAG                               = 8501,
+    PRE_TAG                             = 8502,
+    BUTTON_TAG                          = 8503,
+    FORM_TAG                            = 8504
+} ControlTag;
+
+typedef struct CSS {
+    char                *Class;     // <name> {
+    char                **Data;     // (arr) }
+    int                 Selector;   // add a period (.) before the <name>
+} CSS;
+
+typedef struct Control {
+    void                *Parent;        // Do not use
+    ControlTag          Tag;            // ControlTag
+    char                *ID;
+    char                *Type;          // Type for <input> <button> <select> <script>
+    char                *Text;          // text for tags: <p> <h1> <h2> <h3>
+    char                *Class;         // class=""
+    char                *href;          // href for <a>
+    char                **CSS;          // CSS Function Generator for the tag <div style="CSS FUNCTION"></div>
+    long                CSSCount;
+    char                *Data;          // For Any Other Data In the Opening Tag <div Data... > </div>
+    long                OnClick;        // Enable this to 1 and Use FormID and DisplayID
+    char                *OnClickJS;     // use direct js (onclick="")
+    char                *FormID;        // TESTING FIELD
+    char                *DisplayID;     // TESTING FIELD
+    void                **SubControls;  // Add more controls
+    long                SubControlCount;
+
+    int                 (*ToCHT)        (struct Control *c);
+    int                 (*ToHTML)       (struct Control *c);
+    void                (*Destruct)     (struct Control *c);
+} Control;
+```
+
 Create your generators with the same parameters!
 
 (This function allow to do special customerization for whatever you want per site, user, rank/role, and//or any special site operation, unlike loading a specific template, Even randomize templates!)
