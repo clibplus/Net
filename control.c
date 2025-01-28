@@ -4,19 +4,32 @@
 
 #include "web.h"
 
-Control NewControl(ControlTag tag, const char *id, Control **subcontrols, char **css) {
+/*
+
+Control *Controls[] = {
+    CreateControl(HEAD_TAG, NULL, NULL, NULL, {
+        CreateControl(TITLE_TAG, NULL, NULL, "My Website", NULL),
+        NULL
+    }),
+    CreateControl(BODY_TAG, NULL, NULL, NULL, {
+        CreateControl(P_TAG, NULL, NULL, "Hi", NULL),
+        NULL
+    }),
+    NULL
+});
+
+*/
+Control CreateControl(ControlTag tag, const char *sclass, const char *id, const char *text, Control **subcontrols) {
     Control c = (Control){
         .Tag = tag,
         .ID = id,
-        .SubControls = subcontrols,
-        .CSS = css
+        .Class = sclass,
+        .Text = text,
+        .SubControls = subcontrols
     };
 
     while(subcontrols[c.SubControlCount] != NULL)
         c.SubControlCount++;
-
-    while(css[c.CSSCount] != NULL)
-        c.CSSCount++;
 
     return c;
 }

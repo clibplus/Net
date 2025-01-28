@@ -133,7 +133,7 @@ typedef struct cWS {
     WebServerConfig     CFG;
     char                *Logs;
 
-    int                 (*AddRoutes)    (struct cWS *web, WebRoute *routes);
+    int                 (*AddRoutes)    (struct cWS *web, WebRoute **routes);
     int                 (*AddRoute)     (struct cWS *web, WebRoute r);
     void                (*Run)          (struct cWS *web, int concurrents, const char *search_path);
     void                (*Destruct)     (struct cWS *web);
