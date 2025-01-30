@@ -16,7 +16,7 @@ inline void SetBufferSize(int c) { int MAX_BUFFER_SIZE = c; }
 
 Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 	Socket s = {
-		.IP 				= ip,
+		.IP 				= strdup(ip->data),
 		.Port 				= (!port ? 1337 : port),
 		.SockFD	 			= -1,
 		.BufferLen 			= 1024,
@@ -40,8 +40,8 @@ Socket Create_TCP_Socket(Hostname_T ip_t, String *ip, int port) {
 	memset(&s.SockAddr, 0, sizeof(s.SockAddr));
 	s.SockAddr.sin_family = AF_INET;
 	s.SockAddr.sin_port = htons(s.Port);
-	if(ip_t == IPv4 && strlen(ip.data) > 2)
-		if(!inet_aton(ip.data, &s.SockAddr.sin_addr))
+	if(ip_t == IPv4 && strlen(ip->data) > 2)
+		if(!inet_aton(ip->data, &s.SockAddr.sin_addr))
 			return (Socket){.IP = NULL, .Port = 0, .SockFD = 0, .BufferLen = 0};
 
 	int reuse = 1;

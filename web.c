@@ -80,7 +80,7 @@ void ParseAndCheckRoute(void **args) {
 
     cWR *r = ParseRequest(BUFFER);
     if(!r || !r->Route.data) {
-        SendResponse(web, request_socket, OK, new_headers, ((Map){}), web->CFG.Err404);
+        SendResponse(web, request_socket, OK, new_headers, ((Map){}), "Error");
         close(request_socket);
         return;
     }
@@ -88,7 +88,7 @@ void ParseAndCheckRoute(void **args) {
     printf("[ NEW REQUEST ATTEMPT ] %s\n", r->Route.data);
     int chk = SearchRoute(web, r->Route.data);
     if(chk == -1) {
-        SendResponse(web, request_socket, OK, new_headers, ((Map){}), web->CFG.Err404);
+        (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((void *)web->CFG.Err404_Handler))(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, new_headers, ((Map){}), "ERROR\n\n\n"));
         free(BUFFER);
         close(request_socket);
         return;

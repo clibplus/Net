@@ -39,7 +39,8 @@ typedef enum ControlTag {
     A_TAG                               = 8501,
     PRE_TAG                             = 8502,
     BUTTON_TAG                          = 8503,
-    FORM_TAG                            = 8504
+    FORM_TAG                            = 8504,
+    IMG_TAG                             = 8505
 } ControlTag;
 
 typedef enum WJS_Value_T {

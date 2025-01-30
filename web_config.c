@@ -182,9 +182,6 @@ void DestroyCfg(WebServerConfig *cfg) {
 
     if(cfg->Index)
         free(cfg->Index);
-
-    if(cfg->Err404)
-        free(cfg->Err404);
 }
 
 void DestroyRoute(WebRoute *r) {

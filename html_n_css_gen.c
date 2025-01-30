@@ -12,7 +12,7 @@
 
 #include "web.h"
 
-#define HTML_TAGS_COUNT 14
+#define HTML_TAGS_COUNT 15
 #define WS_TAGS_COUNT 3
 
 void *HTML_TAGS[][2] = {
@@ -30,6 +30,7 @@ void *HTML_TAGS[][2] = {
     { (void *)BUTTON_TAG,   "button" },
     { (void *)INPUT_TAG,    "input" },
     { (void *)FORM_TAG,     "form" },
+    { (void *)IMG_TAG,      "img" },
     NULL
 };
 
@@ -176,7 +177,6 @@ String ConstructParent(Control *p, int sub) {
         for (int i = 0; p->SubControls[i] != NULL; i++) {
             Control *subControl = (Control *)p->SubControls[i];
             design.AppendString(&design, "<");
-            printf("%d\n", (int)subControl->Tag);
             sub_tag = FindTag(subControl);
             if (!sub_tag) break; 
 
