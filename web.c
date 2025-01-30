@@ -105,12 +105,11 @@ void ParseAndCheckRoute(void **args) {
         free(BUFFER);
         close(request_socket);
         pthread_exit(NULL);
+
+        // TODO: Create Destructor for Request Struct
+        // r->Destruct(r);
         return;
     }
-
-    printf("[ NEW REQUEST%s ] %s = > %s\n", (chk > -1 ? " " : " ATTEMPT"), web->CFG.Routes[chk]->Name, web->CFG.Routes[chk]->Path);
-    if(web->CFG.Routes[chk]->Generator)
-        (((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Generator)(web, r, web->CFG.Routes[chk], request_socket));
 
     (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, new_headers, ((Map){}), "ERROR\n\n\n"));
 

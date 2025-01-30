@@ -85,38 +85,34 @@ char *ConstructCSS(WebRoute *route) {
 }
 
 int ConstructTemplate(WebRoute *route, Control **controls, CSS **styles) {
-    route->Controls = controls;
-    route->CSS = styles;
     String template = NewString("<html>\n");
 
     int i = 0;
-    printf("Adding CSS....\n");
-    if(!route->Controls || !route->Controls[0]) {
-        printf("ERROR\n");
+    if(!route->Controls || !route->Controls[0])
         return 0;
-    }
 
     if(route->Controls[0]->Tag == HEAD_TAG) {
         String header = ConstructParent(route->Controls[0], 0);
         template.AppendArray(&template, (const char *[]){header.data, "\n\n", NULL});
         header.Destruct(&header);
 
-        char *data = ConstructCSS(route);
-        template.AppendArray(&template, (const char *[]){data, "\n", NULL});
-        free(data);
+        if(styles != NULL && route->CSS != NULL) {
+            char *data = ConstructCSS(route);
+            template.AppendArray(&template, (const char *[]){data, "\n", NULL});
+            free(data);
+        }
 
         i = 1;
     }
 
-    printf("Adding controls...\n");
     while(route->Controls[i] != NULL) {
         String new = ConstructParent(route->Controls[i], 0);
         template.AppendArray(&template, (const char *[]){new.data, "\n", NULL});
         i++;
     }
+    
     template.AppendString(&template, "</html>\n\n\n");
     template.data[template.idx] = '\0';
-
     if(route->Template)
         free(route->Template);
 
@@ -176,10 +172,11 @@ String ConstructParent(Control *p, int sub) {
 
     /* Construct SubControls */
     char *sub_tag = NULL;
-    if (p->SubControls != NULL) {
+    if (p->SubControlCount > 0) {
         for (int i = 0; p->SubControls[i] != NULL; i++) {
             Control *subControl = (Control *)p->SubControls[i];
             design.AppendString(&design, "<");
+            printf("%d\n", (int)subControl->Tag);
             sub_tag = FindTag(subControl);
             if (!sub_tag) break; 
 
@@ -215,7 +212,7 @@ String ConstructParent(Control *p, int sub) {
 
             if (subControl->Text)
                 design.AppendArray(&design, (const char *[]){subControl->Text, "\n", "</", sub_tag, ">\n", NULL});
-            if (subControl->SubControls != NULL) {
+            if (subControl->SubControlCount > 0) {
                 String n = ConstructParent(subControl, 1);
                 design.AppendArray(&design, (const char *[]){n.data, NULL});
                 n.Destruct(&n);

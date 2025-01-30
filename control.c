@@ -19,22 +19,44 @@ Control *Controls[] = {
 });
 
 */
-Control CreateControl(ControlTag tag, const char *sclass, const char *id, const char *text, Control **subcontrols) {
-    Control c = (Control){
+Control *CreateControl(ControlTag tag, const char *sclass, const char *id, const char *text, Control **subcontrols) {
+    Control *c = (Control *)malloc(sizeof(Control));
+    *c = (Control){
         .Tag = tag,
-        .ID = id,
-        .Class = sclass,
-        .Text = text,
-        .SubControls = subcontrols
+        .ID = (!id ? NULL : strdup(id)),
+        .Class = (!sclass ? NULL : strdup(sclass)),
+        .Text = (!text ? NULL : strdup(text)),
+        .SubControls = (void **)malloc(sizeof(void *) * 1),
+        .SubControlCount = 0
     };
 
-    while(subcontrols[c.SubControlCount] != NULL)
-        c.SubControlCount++;
+    memset(c->SubControls, '\0', sizeof(void *) * 1);
+    if(!subcontrols)
+        return c;
+
+    while(subcontrols[c->SubControlCount] != NULL) {
+        AppendControl(c, subcontrols[c->SubControlCount]);
+    }
 
     return c;
 }
 
-void DestructControl(Control *c) {
+int AppendControl(Control *c, Control *new_control) {
+    if(!c || !new_control)
+        return 0;
+
+    c->SubControls[c->SubControlCount] = new_control;
+    c->SubControlCount++;
+    c->SubControls = (void **)realloc(c->SubControls, sizeof(void *) * (c->SubControlCount + 1));
+
+    return 1;
+}
+
+String ConstructControl(Control *c) {
+
+}
+
+void DestructControl(Control *c, int del_control, int del_styles) {
     if(!c)
         return;
 
@@ -65,7 +87,7 @@ void DestructControl(Control *c) {
     if(c->DisplayID)
         free(c->DisplayID);
 
-    if(c->SubControls) {
+    if(del_control && c->SubControls) {
         for(int i = 0; i < c->SubControlCount; i++) {
             free(c->SubControls[i]);
             c->SubControls[i] = NULL;
@@ -73,7 +95,7 @@ void DestructControl(Control *c) {
         free(c->SubControls);
     }
 
-    if(c->CSS) {
+    if(del_styles && c->CSS) {
         for(int i = 0; i< c->CSSCount; i++) {
             free(c->CSS[i]);
             c->CSS[i] = NULL;

@@ -60,6 +60,7 @@ typedef enum WJS_Action_T {
 typedef struct CSS {
     char                *Class;
     char                **Data;
+    char                DataCount;
     int                 Selector;
 } CSS;
 
@@ -99,8 +100,7 @@ typedef struct WebRoute {
     char                *Path;          // Route
     char                *Template;
 
-    void                *Handler;       // Web Route Handler
-    void                *Generator;     // Generator UI/UX Template
+    void                *Handler;       // Web Route Handler and//or UI/UX Template Gen
 
     CSS                 **CSS;          // 2D Array CSS_SELECTOR_NAME => CSS_DATA (Cache)
     long                CSS_Count;
@@ -118,7 +118,8 @@ typedef struct WebServerConfig {
     long                RouteCount;
 
     WebRoute            *Index;
-    char                *Err404;
+    void                *Err404_Handler;
+    int                 (*Set404Handle) (struct WebServerConfig *cfg, void *handle);
     void                (*Destruct)     (struct WebServerConfig *cfg);
 } WebServerConfig;
 
@@ -301,3 +302,21 @@ String DumpControls(Control *controls, int nestingLevel);
 
 Control **process_html_line(const char *data);
 Control **ParseHTMLContent(const char *data);
+
+// == [ Web_Route.c ] ==
+
+WebRoute *CreateRoute(const char *n, const char *p, void *handler);
+int SetReadOnly(WebRoute *w, const char *data);
+void DestroyWebRoute(WebRoute *w);
+
+// == [ Control.c ] ==
+
+Control *CreateControl(ControlTag tag, const char *sclass, const char *id, const char *text, Control **subcontrols);
+int AppendControl(Control *c, Control *new_control);
+void DestructControl(Control *c, int del_control, int del_styles);
+
+// == [ ws_css.c ] ==
+
+CSS *CreateCSS(const char *class, int selector, const char **data);
+int AppendCSS(CSS *style, const char *q);
+void DestroyCSS(CSS *style);
