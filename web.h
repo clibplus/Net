@@ -1,6 +1,6 @@
 /*
     Compile:
-        gcc -c web.c web_config.c designer.c -lstr -larr -lmap -lpthread -g -g1
+        gcc -c web.c web_config.c html_n_css_gen.c html_parser.c control.c ws_css.c wjs_gen.c web_route.c -lstr -larr -lmap -lpthread -g -g1
         ar rcs websign.a *.o; rm *.o; mv websign.a /usr/local/lib/libwebsign.a
 
     Use:
@@ -119,6 +119,7 @@ typedef struct WebServerConfig {
     long                RouteCount;
 
     WebRoute            *Index;
+    void                *Middleware;
     void                *Err404_Handler;
     int                 (*Set404Handle) (struct WebServerConfig *cfg, void *handle);
     void                (*Destruct)     (struct WebServerConfig *cfg);
@@ -153,7 +154,7 @@ typedef struct cWR {
     clock_t             StartTime;
     clock_t             EndTime;
     double              Elapsed;
-    void                (*Destruct)     (struct cWS *r);
+    void                (*Destruct)     (struct cWR *r);
 } cWR;
 
 typedef Control Textbox;
@@ -206,6 +207,11 @@ void    SendResponse(cWS *web, int request_socket, StatusCode code, Map headers,
 //      | - > Destruct Web Server
 //
 void    DestroyServer(cWS *web);
+
+//
+//      - > Destruct cWR Struct
+//
+void    DestroyReq(cWR *req);
 
 // == [ Route Operation ] ==
 

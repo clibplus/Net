@@ -37,7 +37,7 @@ void DestroyWebRoute(WebRoute *w) {
         free(w->Template);
 
     if(w->CSS) {
-        for(int i = 0; i < CSS_Count; i++)
+        for(int i = 0; i < w->CSS_Count; i++)
             if(w->CSS[i])
                 free(w->CSS[i]);
 

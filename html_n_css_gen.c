@@ -5,6 +5,12 @@
 *   everything a browser takes
 *
 * - ALL HTML Tag as ENUM since no often HTML updates and//or changes
+*
+*
+* - Install Commands
+*
+* gcc -c web.c web_config.c html_n_css_gen.c html_parser.c wjs_gen.c ws_css.c web_route.c -lstr -larr -lmap -lpthread -g -g1
+* ar rcs websign.a *.o; rm *.o; mv websign.a /usr/local/lib/libwebsign.a
 */
 #include <stdio.h>
 #include <string.h>
@@ -86,6 +92,8 @@ char *ConstructCSS(WebRoute *route) {
 }
 
 int ConstructTemplate(WebRoute *route, Control **controls, CSS **styles) {
+    route->Controls = controls;
+    route->CSS = styles;
     String template = NewString("<html>\n");
 
     int i = 0;
