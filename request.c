@@ -214,6 +214,7 @@ HTTPClientResponse RetrieveHTTPResponse(HTTPClient *c) {
 	
 	bytes = read(c->ServerFD, BUFFER, 4095);
 	r.Body.AppendString(&r.Body, (const char *)&BUFFER);
+	r.Body.data[r.Body.idx - 1] = '\0';
 
 	return r;
 }
