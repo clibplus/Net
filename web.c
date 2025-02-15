@@ -72,12 +72,13 @@ void ParseAndCheckRoute(void **args) {
 
     char *BUFFER = (char *)calloc(4096, sizeof(char));
     int bytes = read(request_socket, BUFFER, 4096);
-    BUFFER[bytes] = '\0';
+    BUFFER[strlen(BUFFER) - 1] = '\0';
     
     Map new_headers = NewMap();
     new_headers.Append(&new_headers, "Content-Type", "text/html; charset=UTF-8");
     new_headers.Append(&new_headers, "Connection", "close");
 
+    // printf("%d: %s\n", (int)strlen(BUFFER), BUFFER);
     cWR *r = ParseRequest(BUFFER);
     if(!r || !r->Route.data) {
         SendResponse(web, request_socket, OK, new_headers, ((Map){}), "Error");
@@ -99,6 +100,16 @@ void ParseAndCheckRoute(void **args) {
 
     if(strstr(r->Route.data, "?"))
         RetrieveGetParameters(web, r);
+
+    if(web->CFG.Middleware != NULL) {
+        int check = (int)((int (*)(cWS *, cWR *, int))(void *)web->CFG.Middleware)(web, r, request_socket);
+        if(!check) {
+            free(BUFFER);
+            close(request_socket);
+            pthread_exit(NULL);
+            return;
+        }
+    }
 
     if(web->CFG.Routes[chk]->ReadOnly) {
         SendResponse(web, request_socket, OK, new_headers, ((Map){}), web->CFG.Routes[chk]->Template);
@@ -126,6 +137,7 @@ cWR *ParseRequest(const char *data) {
     *r = (cWR){
         .Headers = NewMap(),
         .Body = NewString(NULL),
+        .Destruct = DestroyReq
     };
 
     String traffic = NewString(data);
@@ -200,7 +212,7 @@ void GetPostQueries(cWS *web, cWR *r) {
         query_args.Destruct(&query_args);
     }
     
-    r->Headers = Queries;
+    r->Queries = Queries;
     args.Destruct(&args);
 }
 
@@ -249,6 +261,26 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
     write(request_socket, resp.data, resp.idx - 1);
 
     resp.Destruct(&resp);
+}
+
+void DestroyReq(cWR *req) {
+    if(req->Route.data != NULL)
+        req->Route.Destruct(&req->Route);
+
+    if(req->Fullroute.data != NULL)
+        req->Fullroute.Destruct(&req->Fullroute);
+
+    if(req->RequestType.data != NULL)
+        req->RequestType.Destruct(&req->RequestType);
+
+    if(req->Headers.arr != NULL)
+        req->Headers.Destruct(&req->Headers);
+
+    if(req->Queries.arr != NULL)
+        req->Queries.Destruct(&req->Queries);
+
+    if(req->Body.data != NULL)
+        req->Body.Destruct(&req->Body);
 }
 
 void DestroyServer(cWS *web) {

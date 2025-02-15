@@ -1,10 +1,13 @@
 /*
     Compile:
-        gcc -c web.c web_config.c designer.c -lstr -larr -lmap -lpthread -g -g1
+        gcc -c web.c web_config.c html_n_css_gen.c html_parser.c control.c ws_css.c wjs_gen.c web_route.c -lstr -larr -lmap -lpthread -g -g1
         ar rcs websign.a *.o; rm *.o; mv websign.a /usr/local/lib/libwebsign.a
 
     Use:
         -lwebsign -lstr -larr -lmap -lpthread
+
+    Current Update: 1.0-2.15.24-
+    Last Update: 0.27-1.14.24.5f63294
 */
 #pragma once
 
@@ -75,25 +78,26 @@ typedef struct WJS {
 
 typedef struct Control {
     void                *Parent;
-    ControlTag          Tag;        // ControlTag
+    ControlTag          Tag;            // ControlTag
     char                *ID;
-    char                *Type;      // Type for <input> <button> <select> <script>
-    char                *Text;      // text for tags: <p> <h1> <h2> <h3>
-    char                *Class;     // class=""
-    char                *href;      // href for <a>
-    char                **CSS;      // CSS Function Generator for the tag <div style="CSS FUNCTION"></div>
+    char                *Type;          // Type for <input> <button> <select> <script>
+    char                *Text;          // text for tags: <p> <h1> <h2> <h3>
+    char                *Class;         // class=""
+    char                *href;          // href for <a>
+    char                **CSS;          // CSS Function Generator for the tag <div style="CSS FUNCTION"></div>
     long                CSSCount;
-    char                *Data;      // For Any Other Data In the Opening Tag <div Data... > </div>
-    long                OnClick;    // Enable this to 1 and Use FormID and DisplayID
+    char                *Data;          // For Any Other Data In the Opening Tag <div Data... > </div>
+    long                OnClick;        // Enable this to 1 and Use FormID and DisplayID
     char                *OnClickJS; 
     char                *FormID;
     char                *DisplayID;
     void                **SubControls;
     long                SubControlCount;
 
+    String              (*Construct)    (struct Control *c, int sub);
     int                 (*ToCHT)        (struct Control *c);
     int                 (*ToHTML)       (struct Control *c);
-    void                (*Destruct)     (struct Control *c);
+    void                (*Destruct)     (struct Control *c, int del_control, int del_styles);
 } Control;
 
 typedef struct WebRoute {
@@ -109,6 +113,8 @@ typedef struct WebRoute {
     long                ReadOnly;       // Use Template Only
     Control             **Controls;
     long                ControlCount;
+
+    int                 (*ConstructCHT) (struct WebRoute *r, Control **controls, CSS **styles);
     void                (*Destruct)     (struct WebRoute *r);
 } WebRoute;
 
@@ -119,6 +125,7 @@ typedef struct WebServerConfig {
     long                RouteCount;
 
     WebRoute            *Index;
+    void                *Middleware;
     void                *Err404_Handler;
     int                 (*Set404Handle) (struct WebServerConfig *cfg, void *handle);
     void                (*Destruct)     (struct WebServerConfig *cfg);
@@ -153,7 +160,7 @@ typedef struct cWR {
     clock_t             StartTime;
     clock_t             EndTime;
     double              Elapsed;
-    void                (*Destruct)     (struct cWS *r);
+    void                (*Destruct)     (struct cWR *r);
 } cWR;
 
 typedef Control Textbox;
@@ -207,6 +214,11 @@ void    SendResponse(cWS *web, int request_socket, StatusCode code, Map headers,
 //
 void    DestroyServer(cWS *web);
 
+//
+//      - > Destruct cWR Struct
+//
+void    DestroyReq(cWR *req);
+
 // == [ Route Operation ] ==
 
 //
@@ -216,8 +228,8 @@ void    DestroyServer(cWS *web);
 int     SearchRoute(cWS *web, const char *data);
 
 //
-//
-//
+//      | - > Add a CSS to WebRoute
+//      | - > Returns 1 upon success or 0 upon failure
 //
 int     AddCSS(WebRoute *r, void *arr);
 
@@ -237,7 +249,6 @@ int     AddRoute(cWS *web, WebRoute route);
 //
 //
 //
-
 int     AddDynamicHandler(cWS *web);
 
 //
@@ -255,8 +266,8 @@ void    DestroyRoute(WebRoute *r);
 // == [ HTML / CSS Genetation ] ==
 
 //
-//
-//
+//      | - > Find a matching HTML Tag
+//      | - > Returns the HTML string upon success or NULL upon failure
 //
 char    *FindTag(Control *control);
 
@@ -273,14 +284,14 @@ ControlTag FindTagType(const char *data);
 int     ConstructTemplate(WebRoute *route, Control **controls, CSS **styles);
 
 //
-//
-//
+//      | - > Construct CSS into a generated web template
+//      | - > Returns generated CSS string upon success or NULL upon failure
 //
 char    *ConstructCSS(WebRoute *route);
 
 //
-//
-//
+//      | - > Construct parent HTML element string
+//      | - > Returns generated HTML string upon success or NULL upon failure
 //
 String  ConstructParent(Control *p, int sub);
 
@@ -306,6 +317,10 @@ Control **ParseHTMLContent(const char *data);
 
 // == [ Web_Route.c ] ==
 
+//
+//      | - > Create a new WebRoute instanse
+//      | - > Returns a new WebRoute struct with info upon success or NULL upon failure
+//
 WebRoute *CreateRoute(const char *n, const char *p, void *handler);
 int SetReadOnly(WebRoute *w, const char *data);
 void DestroyWebRoute(WebRoute *w);
@@ -315,6 +330,7 @@ void DestroyWebRoute(WebRoute *w);
 Control *CreateControl(ControlTag tag, const char *sclass, const char *id, const char *text, Control **subcontrols);
 int AppendControl(Control *c, Control *new_control);
 void DestructControl(Control *c, int del_control, int del_styles);
+String ConstructControl(Control *c, int sub);
 
 // == [ ws_css.c ] ==
 

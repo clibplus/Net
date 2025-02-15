@@ -174,34 +174,12 @@ String control2str(Control *p) {
 void DestroyCfg(WebServerConfig *cfg) {
     if(cfg->Routes) {
         for(int i = 0; i < cfg->RouteCount; i++) {
-            free(cfg->Routes[i]);
-            cfg->Routes[i] = NULL;
+            cfg->Routes[i]->Destruct(cfg->Routes[i]);
         }
+        
         free(cfg->Routes);
     }
 
     if(cfg->Index)
         free(cfg->Index);
-}
-
-void DestroyRoute(WebRoute *r) {
-    if(r->Name)
-        free(r->Name);
-
-    if(r->Template)
-        free(r->Template);
-
-    if(r->Path)
-        free(r->Path);
-
-    if(r->Controls) {
-        for(int i = 0; i < r->ControlCount; i++) {
-            free(r->Controls[i]);
-            r->Controls[i] = NULL; // No dangling pointers
-        }
-
-        free(r->Controls);
-    }
-
-    free(r);
 }
