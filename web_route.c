@@ -10,11 +10,8 @@ WebRoute *CreateRoute(const char *n, const char *p, void *handler) {
         .Name = (char *)n,
         .Path = (char *)p,
         .Handler = handler,
-<<<<<<< Updated upstream
-=======
         .Controls = (Control **)malloc(sizeof(Control *) * 1),
         .ControlCount = 0,
->>>>>>> Stashed changes
         .Destruct = DestroyWebRoute,
 
         .ConstructCHT = ConstructTemplate

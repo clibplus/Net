@@ -358,11 +358,9 @@ int     AddRoutes(cWS *web, WebRoute **routes);
 //
 int     AddRoute(cWS *web, WebRoute route);
 
-<<<<<<< Updated upstream
-=======
+//
 void DestroyWebRoute(WebRoute *w);
 
->>>>>>> Stashed changes
 //
 //
 //

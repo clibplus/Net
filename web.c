@@ -385,8 +385,6 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
     resp.Destruct(&resp);
 }
 
-<<<<<<< Updated upstream
-=======
 char *statuscode_to_str(StatusCode code) {
     for(int i = 0; i < STATUS_CODE_COUNT; i++)
         if(code == (StatusCode)StatusCodeDef[i][0])
@@ -395,7 +393,6 @@ char *statuscode_to_str(StatusCode code) {
     return NULL;
 }
 
->>>>>>> Stashed changes
 void DestroyReq(cWR *req) {
     if(req->Route.data != NULL)
         req->Route.Destruct(&req->Route);
