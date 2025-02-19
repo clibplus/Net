@@ -1,0 +1,143 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include "../web.h"
+
+#define HTML_TAGS_COUNT 112
+#define WS_TAGS_COUNT 3
+
+void *HTML_TAGS[][2] = {
+    { (void *)HTML_TAG,         "html" },
+    { (void *)HEAD_TAG,         "head"},
+    { (void *)TITLE_TAG,        "title" },
+    { (void *)BODY_TAG,         "body" },
+    { (void *)DIV_TAG,          "div" },
+    { (void *)H1_TAG,           "h1" },
+    { (void *)H2_TAG,           "h2" },
+    { (void *)H3_TAG,           "h3" },
+    { (void *)P_TAG,            "p" },
+    { (void *)A_TAG,            "a" },
+    { (void *)PRE_TAG,          "pre" },
+    { (void *)BUTTON_TAG,       "button" },
+    { (void *)INPUT_TAG,        "input" },
+    { (void *)FORM_TAG,         "form" },
+    { (void *)IMG_TAG,          "img" },
+    { (void *)META_TAG,         "meta" },
+    { (void *)LINK_TAG,         "link" },
+    { (void *)BASE_TAG,         "base" },
+    { (void *)STYLE_TAG,        "style" },
+    { (void *)ADDRESS_TAG,      "address" },
+    { (void *)ARTICLE_TAG,      "article" },
+    { (void *)ASIDE_TAG,        "aside" },
+    { (void *)FOOTER_TAG,       "footer" },
+    { (void *)HEADER_TAG,       "header" },
+    { (void *)HGROUP_TAG,       "hgroup" },
+    { (void *)MAIN_TAG,         "main" },
+    { (void *)NAV_TAG,          "nav" },
+    { (void *)SECTION_TAG,      "section" },
+    { (void *)SEARCH_TAG,       "search" },
+    { (void *)BLOCKQUOTE_TAG,   "blockquote" },
+    { (void *)DD_TAG,           "dd" },
+    { (void *)DL_TAG,           "dl" },
+    { (void *)DT_TAG,           "dt" },
+    { (void *)FIGCAPTION_TAG,   "figcaption" },
+    { (void *)FIGURE_TAG,       "figure" },
+    { (void *)HR_TAG,           "hr" },
+    { (void *)LI_TAG,           "li" },
+    { (void *)MENU_TAG,         "menu" },
+    { (void *)OL_TAG,           "ol" },
+    { (void *)UL_TAG,           "ul" },
+    { (void *)ABBR_TAG,         "abbr" },
+    { (void *)B_TAG,            "b" },
+    { (void *)BDI_TAG,          "bdi" },
+    { (void *)BDO_TAG,          "bdo" },
+    { (void *)BR_TAG,           "br" },
+    { (void *)CITE_TAG,         "cite" },
+    { (void *)CODE_TAG,         "code" },
+    { (void *)DATA_TAG,         "data" },
+    { (void *)DFN_TAG,          "dfn" },
+    { (void *)EM_TAG,           "em" },
+    { (void *)I_TAG,            "i" },
+    { (void *)KBD_TAG,          "kbd" },
+    { (void *)MARK_TAG,         "mark" },
+    { (void *)Q_TAG,            "q" },
+    { (void *)RP_TAG,           "rp" },
+    { (void *)RT_TAG,           "rt" },
+    { (void *)RUBY_TAG,         "ruby" },
+    { (void *)S_TAG,            "s" },
+    { (void *)SAMP_TAG,         "samp" },
+    { (void *)SMALL_TAG,        "small" },
+    { (void *)SPAN_TAG,         "span" },
+    { (void *)STRONG_TAG,       "strong" },
+    { (void *)SUB_TAG,          "sub" },
+    { (void *)SUP_TAG,          "sup" },
+    { (void *)TIME_TAG,         "time" },
+    { (void *)U_TAG,            "u" },
+    { (void *)VAR_TAG,          "var" },
+    { (void *)WBR_TAG,          "wbr" },
+    { (void *)AREA_TAG,         "area" },
+    { (void *)AUDIO_TAG,        "audio" },
+    { (void *)MAP_TAG,          "map" },
+    { (void *)TRACK_TAG,        "track" },
+    { (void *)VIDEO_TAG,        "video" },
+    { (void *)EMBED_TAG,        "embed" },
+    { (void *)FENCEDFRAME_TAG,  "fencedframe" },
+    { (void *)IFRAME_TAG,       "iframe" },
+    { (void *)OBJECT_TAG,       "object" },
+    { (void *)PICTURE_TAG,      "picture" },
+    { (void *)SOURCE_TAG,       "source" },
+    { (void *)SVG_TAG,          "svg" },
+    { (void *)MATH_TAG,         "math" },
+    { (void *)CANVAS_TAG,       "canvas" },
+    { (void *)NOSCRIPT_TAG,     "noscript" },
+    { (void *)SCRIPT_TAG,       "script" },
+    { (void *)DEL_TAG,          "del" },
+    { (void *)INS_TAG,          "ins" },
+    { (void *)CAPTION_TAG,      "captio" },
+    { (void *)COL_TAG,          "col" },
+    { (void *)COLGROUP_TAG,     "colgroup" },
+    { (void *)TABLE_TAG,        "table" },
+    { (void *)TBODY_TAG,        "tbody" },
+    { (void *)TD_TAG,           "td" },
+    { (void *)TFOOT_TAG,        "tfoot" },
+    { (void *)TH_TAG,           "th" },
+    { (void *)THEAD_TAG,        "thead" },
+    { (void *)TR_TAG,           "tr" },
+    { (void *)DATALIST_TAG,     "datalist" },
+    { (void *)FIELDSET_TAG,     "fieldset" },
+    { (void *)LABEL_TAG,        "label" },
+    { (void *)LEGEND_TAG,       "legend" },
+    { (void *)METER_TAG,        "meter" },
+    { (void *)OPTGROUP_TAG,     "optgroup" },
+    { (void *)OPTION_TAG,       "option" },
+    { (void *)OUTPUT_TAG,       "output" },
+    { (void *)PROGRESS_TAG,     "progress" },
+    { (void *)SELECT_TAG,       "select" },
+    { (void *)TEXTAREA_TAG,     "textarea" },
+    { (void *)DATAILS_TAG,      "datails" },
+    { (void *)DIALOG_TAG,       "dialog" },
+    { (void *)SUMMARY_TAG,      "summary" },
+    { (void *)SLOT_TAG,         "slot" },
+    { (void *)TEMPLATE_TAG,     "template" },
+    NULL
+};
+
+char *FindTag(Control *control) {
+    for(int i = 0; i < HTML_TAGS_COUNT; i++)
+        if((ControlTag)control->Tag == (ControlTag)HTML_TAGS[i][0])
+            return HTML_TAGS[i][1];
+
+    return NULL;
+}
+
+ControlTag FindTagType(const char *data) {
+    if(!data)
+        return 0;
+        
+    for(int i = 0; i < HTML_TAGS_COUNT; i++)
+        if(!strcmp(data, (char *)HTML_TAGS[i][1]))
+            return (ControlTag)HTML_TAGS[i][0];
+
+    return 0;
+}

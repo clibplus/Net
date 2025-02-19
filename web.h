@@ -28,22 +28,119 @@
 typedef enum ControlTag {
     NO_TAG                              = 8490,
 
-    HTML_TAG                            = 8491,
-    HEAD_TAG                            = 8492,
-    BODY_TAG                            = 8493,
+    HTML_TAG                            = 8491, // <html>
+    HEAD_TAG                            = 8492, // <head>
+    BODY_TAG                            = 8493, // <body>
 
-    TITLE_TAG                           = 8494,
-    H1_TAG                              = 8495,
-    H2_TAG                              = 8496,
-    H3_TAG                              = 8497,
-    INPUT_TAG                           = 8498,
-    P_TAG                               = 8499,
-    DIV_TAG                             = 8500,
-    A_TAG                               = 8501,
-    PRE_TAG                             = 8502,
-    BUTTON_TAG                          = 8503,
-    FORM_TAG                            = 8504,
-    IMG_TAG                             = 8505
+    TITLE_TAG                           = 8494, // <title>
+    H1_TAG                              = 8495, // <h1>
+    H2_TAG                              = 8496, // <h2>
+    H3_TAG                              = 8497, // <h3>
+    INPUT_TAG                           = 8498, // <input>
+    P_TAG                               = 8499, // <p>
+    DIV_TAG                             = 8500, // <div>
+    A_TAG                               = 8501, // <a>
+    PRE_TAG                             = 8502, // <pre>
+    BUTTON_TAG                          = 8503, // <button>
+    FORM_TAG                            = 8504, // <form>
+    IMG_TAG                             = 8505, // <img>
+    META_TAG                            = 8506, // <meta>
+    LINK_TAG                            = 8507, // <link>
+    BASE_TAG                            = 8508, // <base>
+    STYLE_TAG                           = 8509, // <style>
+    ADDRESS_TAG                         = 8510, // <address>
+    ARTICLE_TAG                         = 8511, // <article>
+    ASIDE_TAG                           = 8512, // <aside>
+    FOOTER_TAG                          = 8513, // <footer>
+    HEADER_TAG                          = 8514, // <header>
+    HGROUP_TAG                          = 8515, // <hgroup>
+    MAIN_TAG                            = 8516, // <main>
+    NAV_TAG                             = 8517, // <nav>
+    SECTION_TAG                         = 8518, // <section>
+    SEARCH_TAG                          = 8519, // <search>
+    BLOCKQUOTE_TAG                      = 8520, // <blockquote>
+    DD_TAG                              = 8521, // <dd>
+    DL_TAG                              = 8522, // <dl>
+    DT_TAG                              = 8523, // <dt>
+    FIGCAPTION_TAG                      = 8524, // <figcaption>
+    FIGURE_TAG                          = 8525, // <figure>
+    HR_TAG                              = 8526, // <hr>
+    LI_TAG                              = 8527, // <li>
+    MENU_TAG                            = 8528, // <menu>
+    OL_TAG                              = 8529, // <ol>
+    UL_TAG                              = 8530, // <ul>
+    ABBR_TAG                            = 8531, // <abbr>
+    B_TAG                               = 8532, // <b>
+    BDI_TAG                             = 8533, // <bdi>
+    BDO_TAG                             = 8534, // <bdo>
+    BR_TAG                              = 8535, // <br>
+    CITE_TAG                            = 8536, // <cite>
+    CODE_TAG                            = 8537, // <code>
+    DATA_TAG                            = 8538, // <data>
+    DFN_TAG                             = 8539, // <dfn>
+    EM_TAG                              = 8540, // <em>
+    I_TAG                               = 8541, // <i>
+    KBD_TAG                             = 8542, // <kbd>
+    MARK_TAG                            = 8543, // <mark>
+    Q_TAG                               = 8544, // <q>
+    RP_TAG                              = 8545, // <rp>
+    RT_TAG                              = 8546, // <rt>
+    RUBY_TAG                            = 8547, // <ruby>
+    S_TAG                               = 8548, // <s>
+    SAMP_TAG                            = 8549, // <samp>
+    SMALL_TAG                           = 8550, // <small>
+    SPAN_TAG                            = 8551, // <span>
+    STRONG_TAG                          = 8552, // <strong>
+    SUB_TAG                             = 8553, // <sub>
+    SUP_TAG                             = 8554, // <sup>
+    TIME_TAG                            = 8555, // <time>
+    U_TAG                               = 8556, // <u>
+    VAR_TAG                             = 8557, // <var>
+    WBR_TAG                             = 8558, // <wbr>
+    AREA_TAG                            = 8559, // <area>
+    AUDIO_TAG                           = 8560, // <audio>
+    MAP_TAG                             = 8561, // <map>
+    TRACK_TAG                           = 8562, // <track>
+    VIDEO_TAG                           = 8563, // <video>
+    EMBED_TAG                           = 8564, // <embed>
+    FENCEDFRAME_TAG                     = 8565, // <fencedframe>
+    IFRAME_TAG                          = 8566, // <iframe>
+    OBJECT_TAG                          = 8567, // <object>
+    PICTURE_TAG                         = 8568, // <picture>
+    SOURCE_TAG                          = 8569, // <source>
+    SVG_TAG                             = 8570, // <svg>
+    MATH_TAG                            = 8571, // <math>
+    CANVAS_TAG                          = 8572, // <canvas>
+    NOSCRIPT_TAG                        = 8573, // <noscript>
+    SCRIPT_TAG                          = 8574, // <script>
+    DEL_TAG                             = 8575, // <del>
+    INS_TAG                             = 8576, // <ins>
+    CAPTION_TAG                         = 8577, // <captio>
+    COL_TAG                             = 8578, // <col>
+    COLGROUP_TAG                        = 8579, // <colgroup>
+    TABLE_TAG                           = 8580, // <table>
+    TBODY_TAG                           = 8581, // <tbody>
+    TD_TAG                              = 8582, // <td>
+    TFOOT_TAG                           = 8583, // <tfoot>
+    TH_TAG                              = 8584, // <th>
+    THEAD_TAG                           = 8585, // <thead>
+    TR_TAG                              = 8586, // <tr>
+    DATALIST_TAG                        = 8587, // <datalist>
+    FIELDSET_TAG                        = 8589, // <fieldset>
+    LABEL_TAG                           = 8590, // <label>
+    LEGEND_TAG                          = 8591, // <legend>
+    METER_TAG                           = 8592, // <meter>
+    OPTGROUP_TAG                        = 8593, // <optgroup>
+    OPTION_TAG                          = 8594, // <option>
+    OUTPUT_TAG                          = 8595, // <output>
+    PROGRESS_TAG                        = 8596, // <progress>
+    SELECT_TAG                          = 8597, // <select>
+    TEXTAREA_TAG                        = 8598, // <textarea>
+    DATAILS_TAG                         = 8599, // <datails>
+    DIALOG_TAG                          = 8600, // <dialog>
+    SUMMARY_TAG                         = 8601, // <summary>
+    SLOT_TAG                            = 8602, // <slot>
+    TEMPLATE_TAG                        = 8603, // <template>
 } ControlTag;
 
 typedef enum WJS_Value_T {
@@ -167,7 +264,10 @@ typedef Control Textbox;
 typedef Control Button;
 typedef Control Div;
 
+extern Map DefaultHeaders;
+
 extern void *HTML_TAGS[][2];
+extern void *StatusCodeDef[][2];
 
 // == [ Web Server Operation ] ==
 
@@ -176,6 +276,12 @@ extern void *HTML_TAGS[][2];
 //      | - > Returns struct with info upon success or empty struct upon failure
 //
 cWS     *StartWebServer(const String IP, int port, int auto_search);
+
+
+//
+//      | - > Set default browser headers for global use
+//
+void    SetDefaultHeaders();
 
 //
 //      | - > Start listening for connections
@@ -208,6 +314,13 @@ int     RetrieveGetParameters(cWS *web, cWR *r);
 //      | - > Send a response to client
 //
 void    SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map vars, const char *body);
+
+
+//
+//      | - > Convert status code enum to string for output
+//      | - > Returns the status code as string upon success or NULL upon failure
+//
+char    *statuscode_to_str(StatusCode code);
 
 //
 //      | - > Destruct Web Server
@@ -245,6 +358,11 @@ int     AddRoutes(cWS *web, WebRoute **routes);
 //
 int     AddRoute(cWS *web, WebRoute route);
 
+<<<<<<< Updated upstream
+=======
+void DestroyWebRoute(WebRoute *w);
+
+>>>>>>> Stashed changes
 //
 //
 //
@@ -322,6 +440,7 @@ Control **ParseHTMLContent(const char *data);
 //      | - > Returns a new WebRoute struct with info upon success or NULL upon failure
 //
 WebRoute *CreateRoute(const char *n, const char *p, void *handler);
+int AppendParentControl(WebRoute *route, Control *new_c);
 int SetReadOnly(WebRoute *w, const char *data);
 void DestroyWebRoute(WebRoute *w);
 

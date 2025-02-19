@@ -10,12 +10,27 @@ WebRoute *CreateRoute(const char *n, const char *p, void *handler) {
         .Name = (char *)n,
         .Path = (char *)p,
         .Handler = handler,
+<<<<<<< Updated upstream
+=======
+        .Controls = (Control **)malloc(sizeof(Control *) * 1),
+        .ControlCount = 0,
+>>>>>>> Stashed changes
         .Destruct = DestroyWebRoute,
 
         .ConstructCHT = ConstructTemplate
     };
 
     return w;
+}
+
+int AppendParentControl(WebRoute *route, Control *new_c) {
+    if(!route)
+        return 0;
+
+    route->Controls[route->ControlCount] = new_c;
+    route->ControlCount++;
+    route->Controls = (Control **)malloc(sizeof(Control *) * (route->ControlCount + 1));
+    return 1;
 }
 
 int SetReadOnly(WebRoute *w, const char *data) {

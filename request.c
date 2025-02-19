@@ -45,15 +45,33 @@ Array ParseURL(const char *u) {
 	return args;
 }
 
-HTTPClientResponse RequestURL(const String URL, const Map h, const Req_T reqt) {
+int is_url_direct_ip_n_port(const char *url) {
+	if(strstr(url, ":")) {
+
+	}
+}
+
+HTTPClientResponse RequestURL(const String URL, const Map h, const Req_T reqt, const Map q) {
 	Array hostname = ParseURL(strdup(URL.data));
 	HTTPClient c = {
 		.Hostname	= NewString(hostname.arr[0]),
 		.Route 		= NewString(hostname.arr[1]),
 		.URL_Route 	= URL,
 		.Headers	= h,
-		.Port 		= NewString((strstr(URL.data, "https://") ? "443" : "80"))
+		.Port 		= NewString((strstr(URL.data, "https://") ? "443" : "80")),
+		.Req_T 		= reqt
 	};
+
+	/* Check for direct IP URLs and parse them */
+	if(is_url_direct_ip_n_port(c.Hostname.data)) {
+		Array args = NewArray(NULL);
+		args.Merge(&args, (void **)c.Hostname.Split(&c.Hostname, ":"));
+
+		c.Hostname.Set(&c.Hostname, args.arr[0]);
+		c.Port = NewString(args.arr[1]);
+
+		args.Destruct(&args);
+	}
 
 	c.ServerFD = CreateHTTPSocket(&c);
 	if(c.ServerFD < 1) {
@@ -151,7 +169,7 @@ int SendHTTPGetReq(HTTPClient *c) {
 	if(c->URL_Route.EndsWith(&c->URL_Route, "/"))
 		c->URL_Route.TrimAt(&c->URL_Route, c->URL_Route.idx - 1);
 
-	char *req_data[] = {"GET ", c->Route.data, " HTTP/1.1\r\nHost: ", c->URL_Route.data, "\r\n"};
+	char *req_data[] = {(c->Req_T == __GET__ ? "GET " : "POST "), c->Route.data, " HTTP/1.1\r\nHost: ", c->URL_Route.data, "\r\n"};
 	String req = NewString(NULL);
 	for(int i = 0; i < 5; i++) req.AppendString(&req, req_data[i]);
 

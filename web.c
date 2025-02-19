@@ -1,3 +1,25 @@
+/*
+*
+*                   ╦ ╦╔═╗╔╗ ╔═╗╦╔═╗╔╗╔
+*                   ║║║║╣ ╠╩╗╚═╗║║ ╦║║║
+*                   ╚╩╝╚═╝╚═╝╚═╝╩╚═╝╝╚╝
+*      [ Websign's Browser SDK (The Magic Browser Lib) ]
+*
+* - Serving a raw simplist web-server to work with in C.
+*
+* - Serving as a browser SDK to generate template supporting
+*   everything a browser takes
+*
+* - We all know a web-browser is a web-client that automate certain takes for web 
+*   developers to design and create great applications, but as we know in these modern 
+*   years every server has a client managed by the creators of the servers, with that
+*   being said. Knowing web-server was originally created 
+*
+* - Install Commands
+*
+* gcc -c web.c web_config.c web_route.c websign/*.c -lstr -larr -lmap -lpthread -g -g1
+* ar rcs websign.a *.o; rm *.o; mv websign.a /usr/local/lib/libwebsign.a
+*/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -6,7 +28,79 @@
 
 #include "web.h"
 
+Map DefaultHeaders = {0};
+#define STATUS_CODE_COUNT 63
+
+void *StatusCodeDef[][2] = {
+    {(void *)CONTINUEE,                         "Continue" },
+    {(void *)SWITCH_PROTOCOL,                   "Switching Protocols" },
+    {(void *)PROCESSING,                        "Processing" },
+    {(void *)EARLY_HINT,                        "Early Hints" },
+    {(void *)OK,                                "OK" },
+    {(void *)CREATED,                           "Created" },
+    {(void *)ACCEPTED,                          "Accepted" },
+    {(void *)NON_AUTHORIZED_INFO,               "Non-Authoritative Information" },
+    {(void *)NO_CONTENT,                        "No Content" },
+    {(void *)RESET_CONTENT,                     "Reset Content" },
+    {(void *)PARTIAL_CONTENT,                   "Partial Content" },
+    {(void *)MULTI_STATUS,                      "Multi-Status" },
+    {(void *)ALREADY_REPRORTED,                 "Already Reported" },
+    {(void *)IM_USED,                           "IM Used" },
+    {(void *)MULTIPLE_CHOICES,                  "Multiple Choices" },
+    {(void *)MOVED_PERMANENTLY,                 "Moved Permanently" },
+    {(void *)FOUND,                             "Found" },
+    {(void *)SEE_OTHER,                         "See Other" },
+    {(void *)NOT_MODIFIED,                      "Not Modified" },
+    {(void *)USE_PROXY,                         "Use Proxy" },
+    {(void *)SWITCH_PROXY,                      "Switch Proxy" },
+    {(void *)TEMP_REDIRECT,                     "Temporary Redirect" },
+    {(void *)PERM_REDIRECT,                     "Permanent Redirect" },
+    {(void *)BAD_REQUEST,                       "Bad Request" },
+    {(void *)UNAUTHORIZED,                      "Unauthorized" },
+    {(void *)PAYMENT_REQUIRED,                  "Payment Required" },
+    {(void *)FORBIDDEN,                         "Forbidden" },
+    {(void *)NOT_FOUND,                         "Not Found" },
+    {(void *)METHOD_NOT_ALLOWED,                "Method Not Allowed" },
+    {(void *)NOT_ACCEPTABLE,                    "Not Acceptable" },
+    {(void *)PROXY_AUTH_REQUIRED,               "Proxy Authentication Required" },
+    {(void *)REQUIRE_TIMEOUT,                   "Request Timeout" },
+    {(void *)CONFLICT,                          "Conflict" },
+    {(void *)GONE,                              "Gone" },
+    {(void *)LENGTH_REQUIRED,                   "Length Required" },
+    {(void *)PRECONDITION_FAILED,               "Precondition Failed" },
+    {(void *)PAYLOAD_TOO_LARGE,                 "Content Too Large" },
+    {(void *)URI_TOO_LONG,                      "URI Too Long" },
+    {(void *)UNSUPPORTED_MEDIA_TYPE,            "Unsupported Media Type" },
+    {(void *)RANGE_NOT_SATISFIABLE,             "Range Not Satisfiable" },
+    {(void *)EXPECTATION_FAILED,                "Expectation Failed" },
+    {(void *)IM_A_TEAPOT,                       "I'm a teapot" },
+    {(void *)MISDIRECTED_REQUEST,               "Misdirected Request" },
+    {(void *)UNPROCESSABLE_ENTITY,              "Unprocessable Content" },
+    {(void *)LOCKED,                            "Locked" },
+    {(void *)FAILED_DEPENDENCY,                 "Failed Dependency" },
+    {(void *)TOO_EARLY,                         "Too Early" },
+    {(void *)UPGRADE_REQUIRED,                  "Upgrade Required" },
+    {(void *)PROCONDITION_REQUIRED,             "Precondition Required" },
+    {(void *)TOO_MANY_REQUEST,                  "Too Many Requests" },
+    {(void *)REQ_HEADER_FIELD_TOO_LARGE,        "Request Header Fields Too Large" },
+    {(void *)UNAVAILABLE_FOR_LEGAL_REASON,      "Unavailable For Legal Reasons" },
+
+    {(void *)INTERNAL_SERVER_ERR,               "Internal Server Error" },
+    {(void *)NOT_IMPLEMENTED,                   "Not Implemented" },
+    {(void *)BAD_GATEWAY,                       "Bad Gateway" },
+    {(void *)SERVER_UNAVAILABLE,                "Service Unavailable" },
+    {(void *)GATEWAY_TIMEOUT,                   "Gateway Timeout" },
+    {(void *)HTTP_VERSION_NOT_SUPPORTED,        "HTTP Version Not Supported" },
+    {(void *)VARIANT_ALSO_NEGOTIATES,           "Variant Also Negotiates" },
+    {(void *)INSUFFICIENT_STORAGE,              "Insufficient Storage" },
+    {(void *)LOOP_DETECTED,                     "Loop Detected" },
+    {(void *)NOT_EXTENDED,                      "Not Extended" },
+    {(void *)NETWORK_AUTHENTICATION_REQUIRED,   "Network Authentication Required" },
+    NULL
+};
+
 cWS *StartWebServer(String ip, int port, int auto_search) {
+    SetDefaultHeaders();
     if(!ip.data || port <= 0)
         return NULL;
 
@@ -44,6 +138,12 @@ cWS *StartWebServer(String ip, int port, int auto_search) {
         return NULL;
 
     return web;
+}
+
+void SetDefaultHeaders() {
+    DefaultHeaders = NewMap();
+	DefaultHeaders.Append(&DefaultHeaders, "Content-Type", "text/html;charset=UTF-8");
+	DefaultHeaders.Append(&DefaultHeaders, "Connection", "close");
 }
 
 void RunServer(cWS *web, int concurrents, const char *search_path) {
@@ -126,6 +226,7 @@ void ParseAndCheckRoute(void **args) {
 
     free(BUFFER);
     close(request_socket);
+    r->Destruct(r);
     pthread_exit(NULL);
 }
 
@@ -251,18 +352,50 @@ int RetrieveGetParameters(cWS *web, cWR *r) {
 }
 
 void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map vars, const char *body) {
-    String resp = NewString("HTTP/1.1 200 OK\r\n");
+    String resp = NewString("HTTP/1.1 ");
+    resp.AppendNum(&resp, (int)code);
+    resp.AppendArray(&resp, (const char *[]){" ", statuscode_to_str(code), "\r\n", NULL});
 
     if(headers.idx > 0)
         for(int i = 0; i < headers.idx; i++)
             resp.AppendArray(&resp, ((const char *[]){(char *)((Key *)headers.arr[i])->key, ": ", (char *)((Key *)headers.arr[i])->value, "\r\n", NULL}));
 
-    resp.AppendArray(&resp, ((const char *[]){"\r\n", body, "\r\n\r\n", NULL}));
-    write(request_socket, resp.data, resp.idx - 1);
+    String body_output = NewString(body);
+    if(vars.idx > 0) {
+        for(int i = 0; i < vars.idx; i++) {
+            int check = body_output.FindStringAt(&body_output, ((Key *)vars.arr[i])->key, 0);
+            String new_body = NewString(body_output.GetSubstr(&body_output, 0, check));
+            new_body.AppendString(&new_body, body_output.GetSubstr(&body_output, check + strlen(((Key *)vars.arr[i])->key), body_output.idx));
 
+            body_output.Destruct(&body_output);
+            body_output.data = new_body.data;
+            body_output.Replace(&body_output, ((Key *)vars.arr[i])->key, ((Key *)vars.arr[i])->value);
+        }
+    }
+
+    if(body != NULL & vars.idx > 0)
+        body_output.data[body_output.idx] = '\0';
+
+    resp.AppendArray(&resp, ((const char *[]){"\r\n", body_output.data, "\r\n\r\n", NULL}));
+    resp.data[resp.idx] = '\0';
+
+    write(request_socket, resp.data, resp.idx - 1);
+    
+    body_output.Destruct(&body_output);
     resp.Destruct(&resp);
 }
 
+<<<<<<< Updated upstream
+=======
+char *statuscode_to_str(StatusCode code) {
+    for(int i = 0; i < STATUS_CODE_COUNT; i++)
+        if(code == (StatusCode)StatusCodeDef[i][0])
+            return StatusCodeDef[i][1];
+
+    return NULL;
+}
+
+>>>>>>> Stashed changes
 void DestroyReq(cWR *req) {
     if(req->Route.data != NULL)
         req->Route.Destruct(&req->Route);

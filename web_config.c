@@ -48,6 +48,37 @@ String DumpControls(Control *controls, int nestingLevel) {
     return ControlList;
 }
 
+/* 
+    TODO: 
+
+        - Create a dynamic event handler.
+            WebJS Function to handle actions such as retrieve elements,
+            values, etc
+
+        - Add this dynamic event handler after adding routes
+
+        - A set of WebJS function tools will also be added with this
+            - MouseControl.js   (Handle Mouse Events)
+            - ClickControl.js   (Handle Click Events)
+            - ElementControl.js (Add/Remove elements && Update element size, location, color etc)
+            - CustomEventCustomizer.js
+
+    NOTE:
+
+        - This route will retrieve something similiar to the content below
+        {
+            "url": "",
+            "path": "",
+            "action": "click",
+            "element": {
+                "tag": "input"
+                "id": "submit_btn",
+                "class": "red_submit_btn"
+            }
+            "timestamp": ""
+        }
+           
+*/
 int AddDynamicHandler(cWS *web) {
     if(!web)
         return 0;
@@ -115,10 +146,23 @@ int AddRoute(cWS *web, WebRoute route) {
         neww->Template      = (char *)malloc(1);
         neww->CSS           = (CSS **)malloc(sizeof(CSS *) * 1);
         neww->CSS_Count     = 0;
-        neww->Destruct      = DestroyRoute;
+        neww->Destruct      = DestroyWebRoute;
     }
 
     web->CFG.Routes[web->CFG.RouteCount] = neww;
+    web->CFG.RouteCount++;
+    web->CFG.Routes = (WebRoute **)realloc(web->CFG.Routes, sizeof(WebRoute *) * (web->CFG.RouteCount + 1));
+
+    
+    web->CFG.Routes[web->CFG.RouteCount] = NULL;
+    return 1;
+}
+
+int AddRoutePtr(cWS *web, WebRoute *route) {
+    if(!web || !route->Name)
+        return 0;
+
+    web->CFG.Routes[web->CFG.RouteCount] = route;
     web->CFG.RouteCount++;
     web->CFG.Routes = (WebRoute **)realloc(web->CFG.Routes, sizeof(WebRoute *) * (web->CFG.RouteCount + 1));
 

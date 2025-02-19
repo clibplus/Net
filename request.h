@@ -93,6 +93,7 @@ typedef struct HTTPClient {
 	String		URL_Route;
     String      Route;
 	Map			Headers;
+    Req_T       Req_T;
 
 	SSL 		*SSL;
 	SSL_CTX		*CTX;
@@ -118,7 +119,7 @@ Array ParseURL(const char *u);
 //
 //
 //
-HTTPClientResponse RequestURL(const String URL, const Map h, const Req_T reqt);
+HTTPClientResponse RequestURL(const String URL, const Map h, const Req_T reqt, const Map q);
 
 //
 //

@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "web.h"
+#include "../web.h"
 
 CSS *CreateCSS(const char *class, int selector, const char **data) {
     CSS *style = (CSS *)malloc(sizeof(CSS));
