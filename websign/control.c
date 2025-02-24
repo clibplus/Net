@@ -87,6 +87,9 @@ String ConstructControl(Control *c, int sub) {
             /* Construct The Parent Control (<html>\n\n</html> // <head>\n\n</head> // <body>\n\n</body>) */
             if(c->ID)
                 design.AppendArray(&design, (const char *[]){ " id=\"", c->ID, "\" ", NULL});
+                
+            if(c->Name)
+                design.AppendArray(&design, (const char *[]){ " id=\"", c->Name, "\" ", NULL});
 
             if(c->Type)
                 design.AppendArray(&design, (const char *[]){" type=\"", c->Type, "\"", NULL});
@@ -131,6 +134,9 @@ String ConstructControl(Control *c, int sub) {
 
             if(subControl->ID)
                 design.AppendArray(&design, (const char *[]){" id=\"", subControl->ID, "\" ", NULL});
+
+            if(subControl->Name)
+                design.AppendArray(&design, (const char *[]){" id=\"", subControl->Name, "\" ", NULL});
 
             if (subControl->Type)
                 design.AppendArray(&design, (const char *[]){" type=\"", subControl->Type, "\"", NULL});
@@ -183,6 +189,9 @@ void DestructControl(Control *c, int del_control, int del_styles) {
 
     if(c->ID)
         free(c->ID);
+
+    if(c->Name)
+        free(c->Name);
 
     if(c->Type)
         free(c->Type);

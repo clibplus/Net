@@ -10,6 +10,11 @@
 * - Serving as a browser SDK to generate template supporting
 *   everything a browser takes
 *
+* - We all know a web-browser is a web-client that automate certain takes for web 
+*   developers to design and create great applications, but as we know in these modern 
+*   years every server has a client managed by the creators of the servers, with that
+*   being said. Knowing web-server was originally created 
+*
 * - Install Commands
 *
 * gcc -c web.c web_config.c web_route.c websign/*.c -lstr -larr -lmap -lpthread -g -g1
@@ -168,25 +173,23 @@ void ParseAndCheckRoute(void **args) {
     char *BUFFER = (char *)calloc(4096, sizeof(char));
     int bytes = read(request_socket, BUFFER, 4096);
     BUFFER[strlen(BUFFER) - 1] = '\0';
-    
-    Map new_headers = NewMap();
-    new_headers.Append(&new_headers, "Content-Type", "text/html; charset=UTF-8");
-    new_headers.Append(&new_headers, "Connection", "close");
 
-    // printf("%d: %s\n", (int)strlen(BUFFER), BUFFER);
     cWR *r = ParseRequest(BUFFER);
+    free(BUFFER);
     if(!r || !r->Route.data) {
-        SendResponse(web, request_socket, OK, new_headers, ((Map){}), "Error");
+        SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), ((Map){0}), "Error");
         close(request_socket);
+        pthread_exit(NULL);
         return;
     }
 
     printf("[ NEW REQUEST ATTEMPT ] %s\n", r->Route.data);
     int chk = SearchRoute(web, r->Route.data);
     if(chk == -1) {
-        (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((void *)web->CFG.Err404_Handler))(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, new_headers, ((Map){}), "ERROR\n\n\n"));
-        free(BUFFER);
+        (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((void *)web->CFG.Err404_Handler))(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), ((Map){0}), "ERROR\n\n\n"));
         close(request_socket);
+        r->Destruct(r);
+        pthread_exit(NULL);
         return;
     }
 
@@ -199,27 +202,23 @@ void ParseAndCheckRoute(void **args) {
     if(web->CFG.Middleware != NULL) {
         int check = (int)((int (*)(cWS *, cWR *, int))(void *)web->CFG.Middleware)(web, r, request_socket);
         if(!check) {
-            free(BUFFER);
             close(request_socket);
+            r->Destruct(r);
             pthread_exit(NULL);
             return;
         }
     }
 
     if(web->CFG.Routes[chk]->ReadOnly) {
-        SendResponse(web, request_socket, OK, new_headers, ((Map){}), web->CFG.Routes[chk]->Template);
-        free(BUFFER);
+        SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), ((Map){0}), web->CFG.Routes[chk]->Template);
         close(request_socket);
+        r->Destruct(r);
         pthread_exit(NULL);
-
-        // TODO: Create Destructor for Request Struct
-        // r->Destruct(r);
         return;
     }
 
-    (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, new_headers, ((Map){}), "ERROR\n\n\n"));
+    (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), ((Map){0}), "ERROR\n\n\n"));
 
-    free(BUFFER);
     close(request_socket);
     r->Destruct(r);
     pthread_exit(NULL);
@@ -232,6 +231,7 @@ cWR *ParseRequest(const char *data) {
     cWR *r = (cWR *)malloc(sizeof(cWR));
     *r = (cWR){
         .Headers = NewMap(),
+        .Cookies = NewMap(),
         .Body = NewString(NULL),
         .Destruct = DestroyReq
     };
@@ -267,6 +267,10 @@ cWR *ParseRequest(const char *data) {
             READ_BODY = 1;
         }
 
+        if(line.Contains(&line, "Cookie") || line.Contains(&line, "cookie")) {
+            ParseCookies(r, line);
+        }
+
         if(line.Contains(&line, ":") && line.data[0] != '{') {
             Array args = NewArray(NULL);
             args.Merge(&args, (void **)line.Split(&line, ": "));
@@ -286,6 +290,37 @@ cWR *ParseRequest(const char *data) {
     lines.Destruct(&lines);
 
     return r;
+}
+
+int ParseCookies(cWR *req, String cookies) {
+    if(!req || !cookies.data)
+        return 0;
+
+    Array cookz = NewArray(NULL);
+    cookz.Merge(&cookz, (void **)cookies.Split(&cookies, ";"));
+
+    for(int i = 0; i < cookz.idx; i++) {
+        if(!cookz.arr[i])
+            break;
+
+        String cookie = NewString(cookz.arr[i]);
+        for(int i = 0; i < strlen("Cookie: "); i++)
+            cookie.TrimAt(&cookie, 0);
+            
+        Array args = NewArray(NULL);
+        args.Merge(&args, (void **)cookie.Split(&cookie, "="));
+
+        if(args.idx != 2)
+            break;
+
+        req->Cookies.Append(&req->Cookies, args.arr[0], args.arr[1]);
+
+        cookie.Destruct(&cookie);
+        args.Destruct(&args);
+    }
+
+    cookz.Destruct(&cookz);
+    return req->Cookies.idx;
 }
 
 void GetPostQueries(cWS *web, cWR *r) {
@@ -346,7 +381,7 @@ int RetrieveGetParameters(cWS *web, cWR *r) {
     return 1;
 }
 
-void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map vars, const char *body) {
+void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map cookies, Map vars, const char *body) {
     String resp = NewString("HTTP/1.1 ");
     resp.AppendNum(&resp, (int)code);
     resp.AppendArray(&resp, (const char *[]){" ", statuscode_to_str(code), "\r\n", NULL});
@@ -355,29 +390,72 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
         for(int i = 0; i < headers.idx; i++)
             resp.AppendArray(&resp, ((const char *[]){(char *)((Key *)headers.arr[i])->key, ": ", (char *)((Key *)headers.arr[i])->value, "\r\n", NULL}));
 
-    String body_output = NewString(body);
-    if(vars.idx > 0) {
-        for(int i = 0; i < vars.idx; i++) {
-            int check = body_output.FindStringAt(&body_output, ((Key *)vars.arr[i])->key, 0);
-            String new_body = NewString(body_output.GetSubstr(&body_output, 0, check));
-            new_body.AppendString(&new_body, body_output.GetSubstr(&body_output, check + strlen(((Key *)vars.arr[i])->key), body_output.idx));
+    if(cookies.idx > 0)
+        for(int i = 0; i < cookies.idx; i++)
+            resp.AppendArray(&resp, ((const char *[]){(char *)((Key *)cookies.arr[i])->key, ": ", (char *)((Key *)cookies.arr[i])->value, "\r\n", NULL}));
 
-            body_output.Destruct(&body_output);
-            body_output.data = new_body.data;
-            body_output.Replace(&body_output, ((Key *)vars.arr[i])->key, ((Key *)vars.arr[i])->value);
+    if(body != NULL) {
+        String body_output = NewString(body);
+        if(vars.idx > 0)
+            for(int i = 0; i < vars.idx; i++)
+                body_output.Replace(&body_output, ((Key *)vars.arr[i])->key, ((Key *)vars.arr[i])->value);
+
+        if(body != NULL & vars.idx > 0) {
+            body_output.data[body_output.idx] = '\0';
         }
+        
+        resp.AppendArray(&resp, ((const char *[]){"\r\n", body_output.data, NULL}));
+        body_output.Destruct(&body_output);
     }
-
-    if(body != NULL & vars.idx > 0)
-        body_output.data[body_output.idx] = '\0';
-
-    resp.AppendArray(&resp, ((const char *[]){"\r\n", body_output.data, "\r\n\r\n", NULL}));
+    
+    resp.AppendString(&resp, "\r\n\r\n");
     resp.data[resp.idx] = '\0';
 
     write(request_socket, resp.data, resp.idx - 1);
     
-    body_output.Destruct(&body_output);
     resp.Destruct(&resp);
+}
+
+char *GetRfcTime(int seconds) {
+	char current_time[100] = {0};
+	time_t now = time(NULL);
+	now += seconds;
+
+	struct tm *gmt = gmtime(&now);
+	strftime(current_time, sizeof(current_time), "%a, %d %b %Y %H:%M:%S GMT", gmt);
+	current_time[99] = '\0';
+
+	return strdup(current_time);
+}
+
+Map CreateCookies(Cookie **arr) {
+	Map cookies = NewMap();
+
+	for(int i = 0; arr[i] != NULL; i++)
+	{
+		String value = NewString(arr[i]->name);
+		value.AppendArray(&value, (const char *[]){"=", arr[i]->value, NULL});
+
+		if(arr[i]->path)
+			value.AppendArray(&value, (const char *[]){";Path=", arr[i]->path, NULL});
+
+		if(arr[i]->expires)
+			value.AppendArray(&value, (const char *[]){";Expires=", GetRfcTime(60 * arr[i]->expires), NULL});
+
+		if(arr[i]->maxage) {
+			value.AppendString(&value, ";MaxAge=");
+			value.AppendNum(&value, arr[i]->maxage);
+		}
+
+		if(arr[i]->HTTPOnly)
+			value.AppendString(&value, ";HTTPOnly; Secure");
+
+		value.AppendString(&value, "\r\n");
+		cookies.Append(&cookies, "Set-Cookie", value.data);
+		value.Destruct(&value);
+	}
+
+	return cookies;
 }
 
 char *statuscode_to_str(StatusCode code) {

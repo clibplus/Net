@@ -177,6 +177,7 @@ typedef struct Control {
     void                *Parent;
     ControlTag          Tag;            // ControlTag
     char                *ID;
+    char                *Name;
     char                *Type;          // Type for <input> <button> <select> <script>
     char                *Text;          // text for tags: <p> <h1> <h2> <h3>
     char                *Class;         // class=""
@@ -252,6 +253,7 @@ typedef struct cWR {
     String              RequestType;
     Map                 Headers;
     Map                 Queries;
+    Map                 Cookies;
     String              Body;
     
     clock_t             StartTime;
@@ -260,14 +262,23 @@ typedef struct cWR {
     void                (*Destruct)     (struct cWR *r);
 } cWR;
 
+typedef struct Cookie {
+	char *name;
+	char *value;
+	char *path;
+	int  expires;
+	int  maxage;
+	int  HTTPOnly;
+} Cookie;
+
 typedef Control Textbox;
 typedef Control Button;
 typedef Control Div;
 
-extern Map DefaultHeaders;
+extern Map DefaultHeaders;          // Default HTTP/1.1 Response Headers
 
-extern void *HTML_TAGS[][2];
-extern void *StatusCodeDef[][2];
+extern void *HTML_TAGS[][2];        // List of all HTML Tag enums w/ a string definition
+extern void *StatusCodeDef[][2];    // List of all status code enums w/ a string definition
 
 // == [ Web Server Operation ] ==
 
@@ -300,6 +311,12 @@ void    ParseAndCheckRoute(void **args);
 cWR     *ParseRequest(const char *data);
 
 //
+//      | - > Parse cookies from request(s)
+//      | - > Returns the amount of cookies found upon success or 0 upon failure
+//
+int     ParseCookies(cWR *req, String cookies);
+
+//
 //      | - > Split up data for POST parameters
 //
 void    GetPostQueries(cWS *web, cWR *r);
@@ -313,7 +330,13 @@ int     RetrieveGetParameters(cWS *web, cWR *r);
 //
 //      | - > Send a response to client
 //
-void    SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map vars, const char *body);
+void    SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map cookies, Map vars, const char *body);
+
+//
+//      | - > Convert cookie structs to a Map of cookie ready for headers
+//      | - > Returns a map of cookie data upon success or 0'd struct upon failure
+//
+Map     CreateCookies(Cookie **arr);
 
 
 //
@@ -425,10 +448,28 @@ String ConstructOnClickForm(Control *p);
 //
 String  ConstructJS(WJS *js);
 
+//
+//
+//
+//
 String control2str(Control *p);
+
+//
+//
+//
+//
 String DumpControls(Control *controls, int nestingLevel);
 
+//
+//
+//
+//
 Control **process_html_line(const char *data);
+
+//
+//
+//
+//
 Control **ParseHTMLContent(const char *data);
 
 // == [ Web_Route.c ] ==
@@ -438,19 +479,67 @@ Control **ParseHTMLContent(const char *data);
 //      | - > Returns a new WebRoute struct with info upon success or NULL upon failure
 //
 WebRoute *CreateRoute(const char *n, const char *p, void *handler);
+
+//
+//
+//
+//
 int AppendParentControl(WebRoute *route, Control *new_c);
+
+//
+//
+//
+//
 int SetReadOnly(WebRoute *w, const char *data);
+
+//
+//
+//
+//
 void DestroyWebRoute(WebRoute *w);
 
 // == [ Control.c ] ==
 
+//
+//
+//
+//
 Control *CreateControl(ControlTag tag, const char *sclass, const char *id, const char *text, Control **subcontrols);
+
+//
+//
+//
+//
 int AppendControl(Control *c, Control *new_control);
+
+//
+//
+//
+//
 void DestructControl(Control *c, int del_control, int del_styles);
+
+//
+//
+//
+//
 String ConstructControl(Control *c, int sub);
 
 // == [ ws_css.c ] ==
 
+//
+//
+//
+//
 CSS *CreateCSS(const char *class, int selector, const char **data);
+
+//
+//
+//
+//
 int AppendCSS(CSS *style, const char *q);
+
+//
+//
+//
+//
 void DestroyCSS(CSS *style);
