@@ -169,12 +169,15 @@ void RunServer(cWS *web, int concurrents, const char *search_path) {
 void ParseAndCheckRoute(void **args) {
     cWS *web = (cWS *)args[0];
     int request_socket = *(int *)args[1];
+    free(args);
+    char *client_ip = GetSocketIP(request_socket);
 
     char *BUFFER = (char *)calloc(4096, sizeof(char));
     int bytes = read(request_socket, BUFFER, 4096);
     BUFFER[strlen(BUFFER) - 1] = '\0';
 
     cWR *r = ParseRequest(BUFFER);
+    r->ClientIP = client_ip;
     free(BUFFER);
     if(!r || !r->Route.data) {
         SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), ((Map){0}), "Error");
@@ -267,15 +270,18 @@ cWR *ParseRequest(const char *data) {
             READ_BODY = 1;
         }
 
-        if(line.Contains(&line, "Cookie") || line.Contains(&line, "cookie")) {
-            ParseCookies(r, line);
-        }
-
-        if(line.Contains(&line, ":") && line.data[0] != '{') {
+        if(line.Contains(&line, ":") && !READ_BODY) {
             Array args = NewArray(NULL);
             args.Merge(&args, (void **)line.Split(&line, ": "));
 
-            r->Headers.Append(&r->Headers, args.arr[0], args.arr[1]);
+            int len = strlen(args.arr[0]);
+            for(int i = 0; i < len; i++)
+                line.TrimAt(&line, 0);
+
+            if(!strcmp((char *)args.arr[0], "Cookie"))
+                ParseCookies(r, line);
+
+            r->Headers.Append(&r->Headers, args.arr[0], line.data);
             args.Destruct(&args);
         } else {
             r->Body.AppendString(&r->Body, line.data);
@@ -416,6 +422,20 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
     resp.Destruct(&resp);
 }
 
+char *GetSocketIP(int sock) {
+    struct sockaddr_in addr;
+    socklen_t addr_len = sizeof(addr);
+
+    if (getpeername(sock, (struct sockaddr *)&addr, &addr_len) == -1)
+        return NULL;
+
+    char client_ip[INET_ADDRSTRLEN] = {0};
+    if (inet_ntop(AF_INET, &addr.sin_addr, client_ip, sizeof(client_ip)) == NULL)
+        return NULL;
+
+    return strdup(client_ip);
+}
+
 char *GetRfcTime(int seconds) {
 	char current_time[100] = {0};
 	time_t now = time(NULL);
@@ -467,6 +487,9 @@ char *statuscode_to_str(StatusCode code) {
 }
 
 void DestroyReq(cWR *req) {
+    if(req->ClientIP != NULL)
+        free(req->ClientIP);
+
     if(req->Route.data != NULL)
         req->Route.Destruct(&req->Route);
 

@@ -212,7 +212,7 @@ typedef struct WebRoute {
     Control             **Controls;
     long                ControlCount;
 
-    int                 (*ConstructCHT) (struct WebRoute *r, Control **controls, CSS **styles);
+    char                *(*ConstructCHT)(Control **controls, CSS **styles);
     void                (*Destruct)     (struct WebRoute *r);
 } WebRoute;
 
@@ -239,6 +239,7 @@ typedef struct cWS {
     SSL_CTX             *CTX;
     WebServerConfig     CFG;
     char                *Logs;
+    void                *Last;
 
     int                 (*AddRoutes)    (struct cWS *web, WebRoute **routes);
     int                 (*AddRoute)     (struct cWS *web, WebRoute r);
@@ -255,6 +256,7 @@ typedef struct cWR {
     Map                 Queries;
     Map                 Cookies;
     String              Body;
+    char                *ClientIP;
     
     clock_t             StartTime;
     clock_t             EndTime;
@@ -331,6 +333,12 @@ int     RetrieveGetParameters(cWS *web, cWR *r);
 //      | - > Send a response to client
 //
 void    SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map cookies, Map vars, const char *body);
+
+//
+//
+//
+//
+char    *GetSocketIP(int sock);
 
 //
 //      | - > Convert cookie structs to a Map of cookie ready for headers
@@ -418,15 +426,15 @@ ControlTag FindTagType(const char *data);
 
 //
 //      | - > Construct a template using an array of Controls in HTML order and CSS styles
-//      | - > Returns 1 upon success or 0 upon failure
+//      | - > Returns template string upon success or NULL upon failure
 //
-int     ConstructTemplate(WebRoute *route, Control **controls, CSS **styles);
+char    *ConstructTemplate(Control **controls, CSS **styles);
 
 //
 //      | - > Construct CSS into a generated web template
 //      | - > Returns generated CSS string upon success or NULL upon failure
 //
-char    *ConstructCSS(WebRoute *route);
+char    *ConstructCSS(CSS **styles);
 
 //
 //      | - > Construct parent HTML element string

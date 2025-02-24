@@ -147,6 +147,7 @@ int AddRoute(cWS *web, WebRoute route) {
         neww->CSS           = (CSS **)malloc(sizeof(CSS *) * 1);
         neww->CSS_Count     = 0;
         neww->Destruct      = DestroyWebRoute;
+        neww->ConstructCHT  = ConstructTemplate;
     }
 
     web->CFG.Routes[web->CFG.RouteCount] = neww;

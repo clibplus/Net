@@ -141,3 +141,69 @@ ControlTag FindTagType(const char *data) {
 
     return 0;
 }
+
+char *ConstructTemplate(Control **controls, CSS **styles) {
+    String template = NewString("<!--\nGenerated Using Websign: https://github.com/clibplus/Net\n@author: @algo1337\n-->\n<html>\n");
+
+    int i = 0;
+    if(!controls || !controls[0])
+        return NULL;
+
+    if(controls[0]->Tag == HEAD_TAG && styles != NULL) {
+        String header = ConstructControl(controls[0], 0);
+        template.AppendArray(&template, (const char *[]){header.data, "\n\n", NULL});
+        header.Destruct(&header);
+        
+        char *data = ConstructCSS(styles);
+        template.AppendArray(&template, (const char *[]){data, "\n", NULL});
+        free(data);
+
+        i = 1;
+    }
+
+    for(int i = 0; controls[i] != NULL; i++) {
+        String new = ConstructControl(controls[i], 0);
+        template.AppendArray(&template, (const char *[]){new.data, "\n", NULL});
+        new.Destruct(&new);
+    }
+    
+    template.AppendString(&template, "</html>\n\n\n");
+    template.data[template.idx] = '\0';
+    if(template.idx > 0) {
+        char *output = strdup(template.data);
+        template.Destruct(&template);
+        return output;
+    }
+
+    template.Destruct(&template);
+    return NULL;
+}
+
+char *ConstructCSS(CSS **styles) {
+    if(!styles)
+        return NULL;
+
+    String BUFFER = NewString("<style>\n");
+    int i = 0, css_idx = 0;
+
+    for(int i = 0; styles[i] != NULL; i++) {
+        if(styles[i]->Selector)
+            BUFFER.AppendString(&BUFFER, ".");
+
+        BUFFER.AppendArray(&BUFFER, (const char *[]){styles[i]->Class, " {\n", NULL});
+
+        for(int css_idx = 0; (const char **)styles[i]->Data[css_idx] != NULL; css_idx++) {
+            BUFFER.AppendArray(&BUFFER, (const char *[]){styles[i]->Data[css_idx], ";", NULL});;
+        }
+
+        BUFFER.AppendString(&BUFFER, "\n}\n");
+    }
+
+    BUFFER.AppendString(&BUFFER, "</style>\n");
+    BUFFER.data[BUFFER.idx] = '\0';
+    
+    char *BUFF = strdup(BUFFER.data);
+    BUFFER.Destruct(&BUFFER);
+
+    return BUFF;
+}
