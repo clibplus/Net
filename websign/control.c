@@ -89,7 +89,7 @@ String ConstructControl(Control *c, int sub) {
                 design.AppendArray(&design, (const char *[]){ " id=\"", c->ID, "\" ", NULL});
                 
             if(c->Name)
-                design.AppendArray(&design, (const char *[]){ " id=\"", c->Name, "\" ", NULL});
+                design.AppendArray(&design, (const char *[]){ " name=\"", c->Name, "\" ", NULL});
 
             if(c->Type)
                 design.AppendArray(&design, (const char *[]){" type=\"", c->Type, "\"", NULL});
@@ -136,7 +136,7 @@ String ConstructControl(Control *c, int sub) {
                 design.AppendArray(&design, (const char *[]){" id=\"", subControl->ID, "\" ", NULL});
 
             if(subControl->Name)
-                design.AppendArray(&design, (const char *[]){" id=\"", subControl->Name, "\" ", NULL});
+                design.AppendArray(&design, (const char *[]){" name=\"", subControl->Name, "\" ", NULL});
 
             if (subControl->Type)
                 design.AppendArray(&design, (const char *[]){" type=\"", subControl->Type, "\"", NULL});

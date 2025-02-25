@@ -177,7 +177,6 @@ void ParseAndCheckRoute(void **args) {
     BUFFER[strlen(BUFFER) - 1] = '\0';
 
     cWR *r = ParseRequest(BUFFER);
-    r->ClientIP = client_ip;
     free(BUFFER);
     if(!r || !r->Route.data) {
         SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), ((Map){0}), "Error");
@@ -186,6 +185,7 @@ void ParseAndCheckRoute(void **args) {
         return;
     }
 
+    r->ClientIP = client_ip;
     printf("[ NEW REQUEST ATTEMPT ] %s\n", r->Route.data);
     int chk = SearchRoute(web, r->Route.data);
     if(chk == -1) {
@@ -212,8 +212,9 @@ void ParseAndCheckRoute(void **args) {
         }
     }
 
-    if(web->CFG.Routes[chk]->ReadOnly) {
+    if(web->CFG.Routes[chk]->ReadOnly == 1) {
         SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), ((Map){0}), web->CFG.Routes[chk]->Template);
+        sleep(1);
         close(request_socket);
         r->Destruct(r);
         pthread_exit(NULL);
@@ -260,7 +261,7 @@ cWR *ParseRequest(const char *data) {
     request_type.Destruct(&request_type);
 
     int READ_BODY = 0;
-    for(int i = 0; i < lines.idx; i++) {
+    for(int i = 1; i < lines.idx; i++) {
         if(!lines.arr[i])
             break;
 
@@ -274,7 +275,7 @@ cWR *ParseRequest(const char *data) {
             Array args = NewArray(NULL);
             args.Merge(&args, (void **)line.Split(&line, ": "));
 
-            int len = strlen(args.arr[0]);
+            int len = strlen(args.arr[0]) + 2;
             for(int i = 0; i < len; i++)
                 line.TrimAt(&line, 0);
 
@@ -310,8 +311,6 @@ int ParseCookies(cWR *req, String cookies) {
             break;
 
         String cookie = NewString(cookz.arr[i]);
-        for(int i = 0; i < strlen("Cookie: "); i++)
-            cookie.TrimAt(&cookie, 0);
             
         Array args = NewArray(NULL);
         args.Merge(&args, (void **)cookie.Split(&cookie, "="));
@@ -507,6 +506,8 @@ void DestroyReq(cWR *req) {
 
     if(req->Body.data != NULL)
         req->Body.Destruct(&req->Body);
+
+    free(req);
 }
 
 void DestroyServer(cWS *web) {

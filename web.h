@@ -204,6 +204,7 @@ typedef struct WebRoute {
     char                *Template;
 
     void                *Handler;       // Web Route Handler and//or UI/UX Template Gen
+    void                **Args;
 
     CSS                 **CSS;          // 2D Array CSS_SELECTOR_NAME => CSS_DATA (Cache)
     long                CSS_Count;
@@ -448,7 +449,7 @@ String  ConstructParent(Control *p, int sub);
 //
 //
 //
-String ConstructOnClickForm(Control *p);
+String  ConstructOnClickForm(Control *p);
 
 //
 //
@@ -460,13 +461,13 @@ String  ConstructJS(WJS *js);
 //
 //
 //
-String control2str(Control *p);
+String  control2str(Control *p);
 
 //
 //
 //
 //
-String DumpControls(Control *controls, int nestingLevel);
+String  DumpControls(Control *controls, int nestingLevel);
 
 //
 //
@@ -492,19 +493,25 @@ WebRoute *CreateRoute(const char *n, const char *p, void *handler);
 //
 //
 //
-int AppendParentControl(WebRoute *route, Control *new_c);
+int     AppendParentControl(WebRoute *route, Control *new_c);
 
 //
 //
 //
 //
-int SetReadOnly(WebRoute *w, const char *data);
+int     AppendStyle(WebRoute *route, CSS *new_css);
 
 //
 //
 //
 //
-void DestroyWebRoute(WebRoute *w);
+int     SetReadOnly(WebRoute *w, const char *data);
+
+//
+//
+//
+//
+void    DestroyWebRoute(WebRoute *w);
 
 // == [ Control.c ] ==
 
@@ -518,19 +525,19 @@ Control *CreateControl(ControlTag tag, const char *sclass, const char *id, const
 //
 //
 //
-int AppendControl(Control *c, Control *new_control);
+int     AppendControl(Control *c, Control *new_control);
 
 //
 //
 //
 //
-void DestructControl(Control *c, int del_control, int del_styles);
+void    DestructControl(Control *c, int del_control, int del_styles);
 
 //
 //
 //
 //
-String ConstructControl(Control *c, int sub);
+String  ConstructControl(Control *c, int sub);
 
 // == [ ws_css.c ] ==
 
@@ -538,16 +545,16 @@ String ConstructControl(Control *c, int sub);
 //
 //
 //
-CSS *CreateCSS(const char *class, int selector, const char **data);
+CSS     *CreateCSS(const char *class, int selector, const char **data);
 
 //
 //
 //
 //
-int AppendCSS(CSS *style, const char *q);
+int     AppendCSS(CSS *style, const char *q);
 
 //
 //
 //
 //
-void DestroyCSS(CSS *style);
+void    DestroyCSS(CSS *style);
