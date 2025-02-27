@@ -29,6 +29,8 @@ Control *CreateControl(ControlTag tag, const char *sclass, const char *id, const
         .SubControls        = (void **)malloc(sizeof(void *) * 1),
         .SubControlCount    = 0,
 
+        .sAppend            = AppendSControl,
+        .Append             = AppendControl,
         .Construct          = ConstructControl,
         .Destruct           = DestructControl
     };
@@ -41,6 +43,35 @@ Control *CreateControl(ControlTag tag, const char *sclass, const char *id, const
         AppendControl(c, subcontrols[c->SubControlCount]);
 
     return c;
+}
+
+int AppendControlAt(Control *c, char *id, Control *new_control) {
+    Control **arr = (Control **)malloc(sizeof(Control *) * 1);
+    int idx = 0;
+
+    for(int i = 0; i < c->SubControlCount; i++) {
+        if(!c->SubControls[i])
+            break;
+
+        if(((Control *)c->SubControls[i])->ID != NULL) {
+            if(!strcmp(((Control *)c->SubControls[i])->ID, id)) {
+                arr[idx] = new_control;
+                idx++;
+                arr = (Control **)realloc(arr, sizeof(Control *) * (idx + 1));
+                continue;
+            }
+        }
+
+        arr[idx] = c->SubControls[i];
+        idx++;
+        arr = (Control **)realloc(arr, sizeof(Control *) * (idx + 1));
+    }
+
+    free(c->SubControls);
+    c->SubControls = (void **)arr;
+    c->SubControlCount = idx;
+
+    return 1;
 }
 
 int SetBuffer(Control *c, char *BUFF) {
@@ -56,6 +87,77 @@ int SetStyle(Control *c, char **style) {
         return 0;
 
     c->CSS = style;
+    return 1;
+}
+
+Control *stack_to_heap(Control c) {
+    Control *parent = CreateControl(c.Tag, c.Class, c.ID, c.Text, NULL);
+    parent->Parent = c.Parent;
+    parent->Name = (!c.Name ? NULL : strdup(c.Name));
+    parent->Type = (!c.Type ? NULL : strdup(c.Type));
+    parent->href = (!c.href ? NULL : strdup(c.href));
+    parent->Data = (!c.Data ? NULL : strdup(c.Data));
+    parent->OnClick = c.OnClick;
+    parent->OnClickJS = (!c.OnClickJS ? NULL : strdup(c.OnClickJS));
+    parent->FormID = (!c.FormID ? NULL : strdup(c.FormID));
+    parent->DisplayID = (!c.DisplayID ? NULL : strdup(c.DisplayID));
+    
+    for(int i = 0; i < c.SubControlCount; i++) {
+        if(!c.SubControls[i])
+            break;
+
+        Control *newc = CreateControl(
+            ((Control *)c.SubControls[i])->Tag, 
+            ((Control *)c.SubControls[i])->Class, 
+            ((Control *)c.SubControls[i])->ID, 
+            ((Control *)c.SubControls[i])->Text, 
+            NULL
+        );
+
+        newc->Parent = ((Control *)c.SubControls[i])->Parent;
+        newc->Name = (!((Control *)c.SubControls[i])->Name ? NULL : strdup(((Control *)c.SubControls[i])->Name));
+        newc->Type = (!((Control *)c.SubControls[i])->Type ? NULL : strdup(((Control *)c.SubControls[i])->Type));
+        newc->href = (!((Control *)c.SubControls[i])->href ? NULL : strdup(((Control *)c.SubControls[i])->href));
+        newc->Data = (!((Control *)c.SubControls[i])->Data ? NULL : strdup(((Control *)c.SubControls[i])->Data));
+        newc->OnClick = ((Control *)c.SubControls[i])->OnClick;
+        newc->OnClickJS = (!((Control *)c.SubControls[i])->OnClickJS ? NULL : strdup(((Control *)c.SubControls[i])->OnClickJS));
+        newc->FormID = (!((Control *)c.SubControls[i])->FormID ? NULL : strdup(((Control *)c.SubControls[i])->FormID));
+        newc->DisplayID = (!((Control *)c.SubControls[i])->DisplayID ? NULL : strdup(((Control *)c.SubControls[i])->DisplayID));
+
+        parent->Append(parent, newc);
+        if(c.SubControls != NULL)
+            stack_to_heap(*(Control *)c.SubControls[i]);
+    }
+
+    return parent;
+}
+
+int AppendSControl(Control *c, Control new_control) {
+    if(!c)
+        return 0;
+
+    Control *newc = (Control *)malloc(sizeof(Control));
+    memset(newc, '\0', sizeof(Control));
+
+    newc->Parent = new_control.Parent;
+    newc->Tag = new_control.Tag;
+    newc->ID = new_control.ID;
+    newc->Name = new_control.Name;
+    newc->Type = new_control.Type;
+    newc->Text = new_control.Text;
+    newc->Class = new_control.Class;
+    newc->href = new_control.href;
+    newc->CSS = new_control.CSS;
+    newc->CSSCount = new_control.CSSCount;
+    newc->Data = new_control.Data;
+    newc->OnClick = new_control.OnClick;
+    newc->OnClickJS = new_control.OnClickJS;
+    newc->FormID = new_control.FormID;
+    newc->DisplayID = new_control.DisplayID;
+    newc->SubControls = new_control.SubControls;
+    newc->SubControlCount = new_control.SubControlCount;
+
+    AppendControl(c, newc);
     return 1;
 }
 

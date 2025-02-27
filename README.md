@@ -50,12 +50,8 @@ Create your handler function with 4 parameters for webserver cWS, incoming reque
 
 ```
 // You can handle incoming request to the specified path with this function
-void index_handler(cWS *server, cWR *req, WebRoute *route, int socket) { 
-    Map new_headers = NewMap();
-    new_headers.Append(&new_headers, "Content-Type", "text/html; charset=UTF-8");
-    new_headers.Append(&new_headers, "Connection", "close");
-    
-    SendResponse(web, socket, OK, new_headers, ((Map){}), route->Template);
+void index_handler(cWS *server, cWR *req, WebRoute *route, int socket) {     
+    SendResponse(web, socket, OK, DefaultHeaders, ((Map){}), "Hello World!");
 }
 
 // Edit's your WebRoute struct to use a handler
@@ -122,14 +118,12 @@ typedef struct Control {
 } Control;
 ```
 
-Create your generators with the same parameters!
 
-(This function allow to do special customerization for whatever you want per site, user, rank/role, and//or any special site operation, unlike loading a specific template, Even randomize templates!)
+(This enables special customization for whatever you want per site, user, rank/role, and//or any special site operation, unlike loading a specific template, Even randomize templates!)
 
 ```
-void index_generator(cWS *server, cWR *req, WebRoute *route, int socket) { 
-
-    Control *Controls[] = {
+void index_handler(cWS *server, cWR *req, WebRoute *route, int socket) { 
+        Control *Controls[] = {
         &(Control){ .Tag = HEAD_TAG, .SubControls = (void *[]){
             &(Control){ .Tag = TITLE_TAG, .Text = "Hello World Page" },
             NULL
@@ -146,18 +140,12 @@ void index_generator(cWS *server, cWR *req, WebRoute *route, int socket) {
         NULL
     };
 
-    int chk = ConstructTemplate(server, Controls, Styles);
-    if(!chk)
+    char *template = ConstructTemplate(server, Controls, Styles);
+    if(!template)
         printf("[ - ] Error, Unable to construct template....!\n");
+    
+    SendResponse(web, socket, OK, DefaultHeaders, ((Map){}), template);
 }
-
-// Edit's your WebRoute struct to use the generator function
-(WebRoute){
-    .Name = "index",
-    .Path = "/",
-    .Handler = index_handler,
-    .Generator = index_generator
-};
 ```
 
 ## Using a 3rd Party Template

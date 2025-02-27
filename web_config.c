@@ -178,7 +178,7 @@ String control2str(Control *p) {
 
     String info = NewString("{ ");
 
-    if(p->Tag) {
+    if((int)p->Tag != 0) {
         char *Find = strdup(FindTag(p));
         info.AppendArray(&info, (const char *[]){"Tag=\"", Find, "\" ", NULL});
         free(Find);

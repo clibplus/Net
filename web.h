@@ -192,6 +192,8 @@ typedef struct Control {
     void                **SubControls;
     long                SubControlCount;
 
+    int                 (*sAppend)      (struct Control *c, struct Control new_control);
+    int                 (*Append)       (struct Control *c, struct Control *new_control);
     String              (*Construct)    (struct Control *c, int sub);
     int                 (*ToCHT)        (struct Control *c);
     int                 (*ToHTML)       (struct Control *c);
@@ -520,6 +522,19 @@ void    DestroyWebRoute(WebRoute *w);
 //
 //
 Control *CreateControl(ControlTag tag, const char *sclass, const char *id, const char *text, Control **subcontrols);
+
+//
+//
+//
+//
+Control *stack_to_heap(Control c);
+
+int AppendControlAt(Control *c, char *id, Control *new_control);
+//
+//
+//
+//
+int     AppendSControl(Control *c, Control new_control);
 
 //
 //
