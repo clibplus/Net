@@ -161,7 +161,7 @@ char *ConstructTemplate(Control **controls, CSS **styles) {
         i = 1;
     }
 
-    for(int i = 0; controls[i] != NULL; i++) {
+    for(;controls[i] != NULL; i++) {
         String new = ConstructControl(controls[i], 0);
         template.AppendArray(&template, (const char *[]){new.data, "\n", NULL});
         new.Destruct(&new);

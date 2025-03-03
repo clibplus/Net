@@ -20,27 +20,6 @@ WebRoute *CreateRoute(const char *n, const char *p, void *handler) {
     return w;
 }
 
-int AppendParentControl(WebRoute *route, Control *new_c) {
-    if(!route)
-        return 0;
-
-    route->Controls[route->ControlCount] = new_c;
-    route->ControlCount++;
-    route->Controls = (Control **)malloc(sizeof(Control *) * (route->ControlCount + 1));
-    return 1;
-}
-
-int AppendStyle(WebRoute *route, CSS *new_css) {
-    if(!route || !new_css)
-        return 0;
-
-    route->CSS[route->CSS_Count] = new_css;
-    route->CSS_Count++;
-    route->CSS = (CSS **)realloc(route->CSS, sizeof(CSS) * (route->CSS_Count + 1));
-
-    return 1;
-}
-
 int SetReadOnly(WebRoute *w, const char *data) {
     if(!w || !data)
         return 0;

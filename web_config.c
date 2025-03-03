@@ -6,48 +6,6 @@
 
 char *WS_JS_HANDLER = "const parseForm = (formId) => Array.from(document.getElementById(formId).querySelectorAll('[id]')).reduce((formData, element) => ({ ...formData, [element.id]: element.value || element.innerText || '' }), {});\nconst submitForm = async (formId) => (await (async (jsonData) => await fetch(window.location.href, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(jsonData) }))(parseForm(formId))).ok ? console.log('Form submitted successfully:', await response.json()) : console.error('Form submission failed:', response.statusText);";
 
-String DumpControls(Control *controls, int nestingLevel) {
-    String ControlList = NewString(NULL);
-    
-    /* Add Nested Tabs */
-    for (int tabs = 0; tabs < nestingLevel; tabs++) {
-        ControlList.AppendString(&ControlList, "\t");
-    }
-     
-    String info = control2str(controls);
-    ControlList.AppendArray(&ControlList, (const char *[]){info.data, "\n", NULL});
-    info.Destruct(&info);
-    
-    if(!controls->SubControls) {
-        ControlList.data[ControlList.idx] = '\0';
-        return ControlList;
-    }
-    
-    int idx = 0;
-    while(controls->SubControls[idx] != NULL) {
-        if(!controls->SubControls[idx])
-            break;
-
-        Control *CurrentControl = controls->SubControls[idx];
-        
-        /* Add Nested Tabs */
-        for (int tabs = 0; tabs < nestingLevel; tabs++) {
-            ControlList.AppendString(&ControlList, "\t");
-        }
-
-        String nest = DumpControls(CurrentControl, nestingLevel + 1);
-        if(nest.idx < 1)
-            break;
-
-        ControlList.AppendArray(&ControlList, (const char *[]){nest.data, "\n", NULL});
-        nest.Destruct(&nest);
-        idx++;
-    }
-
-    ControlList.data[ControlList.idx] = '\0';
-    return ControlList;
-}
-
 /* 
     TODO: 
 

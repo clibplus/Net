@@ -1,25 +1,3 @@
-/*
-*
-*                   ╦ ╦╔═╗╔╗ ╔═╗╦╔═╗╔╗╔
-*                   ║║║║╣ ╠╩╗╚═╗║║ ╦║║║
-*                   ╚╩╝╚═╝╚═╝╚═╝╩╚═╝╝╚╝
-*      [ Websign's Browser SDK (The Magic Browser Lib) ]
-*
-* - Serving a raw simplist web-server to work with in C.
-*
-* - Serving as a browser SDK to generate template supporting
-*   everything a browser takes
-*
-* - We all know a web-browser is a web-client that automate certain takes for web 
-*   developers to design and create great applications, but as we know in these modern 
-*   years every server has a client managed by the creators of the servers, with that
-*   being said. Knowing web-server was originally created 
-*
-* - Install Commands
-*
-* gcc -c web.c web_config.c web_route.c websign/*.c -lstr -larr -lmap -lpthread -g -g1
-* ar rcs websign.a *.o; rm *.o; mv websign.a /usr/local/lib/libwebsign.a
-*/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

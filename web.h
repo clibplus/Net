@@ -1,13 +1,24 @@
 /*
-    Compile:
-        gcc -c web.c web_config.c html_n_css_gen.c html_parser.c control.c ws_css.c wjs_gen.c web_route.c -lstr -larr -lmap -lpthread -g -g1
-        ar rcs websign.a *.o; rm *.o; mv websign.a /usr/local/lib/libwebsign.a
-
-    Use:
-        -lwebsign -lstr -larr -lmap -lpthread
-
-    Current Update: 1.0-2.15.24-
-    Last Update: 0.27-1.14.24.5f63294
+*
+*                   ╦ ╦╔═╗╔╗ ╔═╗╦╔═╗╔╗╔
+*                   ║║║║╣ ╠╩╗╚═╗║║ ╦║║║
+*                   ╚╩╝╚═╝╚═╝╚═╝╩╚═╝╝╚╝
+*      [ Websign's Browser SDK (The Magic Browser Lib) ]
+*
+* - Serving a raw simplist web-server to work with in C.
+*
+* - Serving as a browser SDK to generate template supporting
+*   everything a browser takes
+*
+*   Compile:
+*       gcc -c web.c web_config.c web_route.c websign/*.c -lstr -larr -lmap -lpthread -g -g1
+*       ar rcs websign.a *.o; rm *.o; mv websign.a /usr/local/lib/libwebsign.a
+*
+*   Use:
+*       -lwebsign -lstr -larr -lmap -lpthread
+*
+*   Current Update: 1.0-2.15.24-
+*   Last Update: 0.27-1.14.24.5f63294
 */
 #pragma once
 
@@ -194,6 +205,8 @@ typedef struct Control {
 
     int                 (*sAppend)      (struct Control *c, struct Control new_control);
     int                 (*Append)       (struct Control *c, struct Control *new_control);
+    int                 (*AppendAt)       (struct Control *c, int pos, struct Control *new_control);
+    int                 (*AppendCSS)    (struct Control *c, char *new_control);
     String              (*Construct)    (struct Control *c, int sub);
     int                 (*ToCHT)        (struct Control *c);
     int                 (*ToHTML)       (struct Control *c);
@@ -288,162 +301,181 @@ extern void *StatusCodeDef[][2];    // List of all status code enums w/ a string
 // == [ Web Server Operation ] ==
 
 //
-//      | - > Initalize a web server struct
-//      | - > Returns struct with info upon success or empty struct upon failure
+//          | - > Initalize a web server struct
+//          | - > Returns struct with info upon success or empty struct upon failure
 //
-cWS     *StartWebServer(const String IP, int port, int auto_search);
+cWS         *StartWebServer(const String IP, int port, int auto_search);
 
 
 //
-//      | - > Set default browser headers for global use
+//          | - > Set default browser headers for global use
 //
-void    SetDefaultHeaders();
+void        SetDefaultHeaders();
 
 //
-//      | - > Start listening for connections
+//          | - > Start listening for connections
 //
-void    RunServer(cWS *web, int concurrents, const char *search_path);
+void        RunServer(cWS *web, int concurrents, const char *search_path);
 
 //
-//      | - > Check and route the request
+//          | - > Check and route the request
 //
-void    ParseAndCheckRoute(void **args);
+void        ParseAndCheckRoute(void **args);
 
 //
-//      | - > Parse the incoming request
-//      | - > Returns struct with info upon success or empty struct upon failure
+//          | - > Parse the incoming request
+//          | - > Returns struct with info upon success or empty struct upon failure
 //
-cWR     *ParseRequest(const char *data);
+cWR         *ParseRequest(const char *data);
 
 //
-//      | - > Parse cookies from request(s)
-//      | - > Returns the amount of cookies found upon success or 0 upon failure
+//          | - > Parse cookies from request(s)
+//          | - > Returns the amount of cookies found upon success or 0 upon failure
 //
-int     ParseCookies(cWR *req, String cookies);
+int         ParseCookies(cWR *req, String cookies);
 
 //
-//      | - > Split up data for POST parameters
+//          | - > Split up data for POST parameters
 //
-void    GetPostQueries(cWS *web, cWR *r);
+void        GetPostQueries(cWS *web, cWR *r);
 
 //
-//      | - > split up the URL for GET parameters
-//      | - > Returns 1 upon success or 0 for failure
+//          | - > split up the URL for GET parameters
+//          | - > Returns 1 upon success or 0 for failure
 //
-int     RetrieveGetParameters(cWS *web, cWR *r);
+int         RetrieveGetParameters(cWS *web, cWR *r);
 
 //
-//      | - > Send a response to client
+//          | - > Send a response to client
 //
-void    SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map cookies, Map vars, const char *body);
-
-//
-//
-//
-//
-char    *GetSocketIP(int sock);
-
-//
-//      | - > Convert cookie structs to a Map of cookie ready for headers
-//      | - > Returns a map of cookie data upon success or 0'd struct upon failure
-//
-Map     CreateCookies(Cookie **arr);
-
-
-//
-//      | - > Convert status code enum to string for output
-//      | - > Returns the status code as string upon success or NULL upon failure
-//
-char    *statuscode_to_str(StatusCode code);
-
-//
-//      | - > Destruct Web Server
-//
-void    DestroyServer(cWS *web);
-
-//
-//      - > Destruct cWR Struct
-//
-void    DestroyReq(cWR *req);
-
-// == [ Route Operation ] ==
-
-//
-//      | - > Search for route
-//      | - > Returns position of route in the route list upon success or -1 upon failure
-//
-int     SearchRoute(cWS *web, const char *data);
-
-//
-//      | - > Add a CSS to WebRoute
-//      | - > Returns 1 upon success or 0 upon failure
-//
-int     AddCSS(WebRoute *r, void *arr);
-
-//
-//      | - > Add a routes to the web server 
-//      | - > Returns 1 upon success or 0 upon failure
-//
-int     AddRoutes(cWS *web, WebRoute **routes);
-
-//
-//      | - > Add a route to the web server 
-//      | - > Returns 1 upon success or 0 upon failure
-//
-int     AddRoute(cWS *web, WebRoute route);
-
-//
-void DestroyWebRoute(WebRoute *w);
+void        SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map cookies, Map vars, const char *body);
 
 //
 //
 //
 //
-int     AddDynamicHandler(cWS *web);
+char        *GetSocketIP(int sock);
 
 //
-//      | - > Config Destructor
+//          | - > Convert cookie structs to a Map of cookie ready for headers
+//          | - > Returns a map of cookie data upon success or 0'd struct upon failure
 //
-void    DestroyCfg(WebServerConfig *cfg);
+Map         CreateCookies(Cookie **arr);
+
 
 //
-//      | - > Route Destructor
+//          | - > Convert status code enum to string for output
+//          | - > Returns the status code as string upon success or NULL upon failure
 //
-void    DestroyRoute(WebRoute *r);
+char        *statuscode_to_str(StatusCode code);
 
+//
+//          | - > Destruct Web Server
+//
+void        DestroyServer(cWS *web);
+
+//
+//          | - > Destruct cWR Struct
+//
+void        DestroyReq(cWR *req);
+
+// == [ Web Config Operation ] ==
+
+
+//
+//
+//
+//
+int         AddDynamicHandler(cWS *web);
+
+//
+//
+//
+//
+int         SearchRoute(cWS *web, const char *data);
+
+//
+//
+//
+//
+int         AddRoutes(cWS *web, WebRoute **routes);
+
+//
+//
+//
+//
+int         AddCSS(WebRoute *r, void *arr);
+
+//
+//
+//
+//
+int         AddRoute(cWS *web, WebRoute route);
+
+//
+//
+//
+//
+int         AddRoutePtr(cWS *web, WebRoute *route);
+
+//
+//
+//
+//
+String      control2str(Control *p);
+
+//
+//
+//
+//
+void        DestroyCfg(WebServerConfig *cfg);
+
+//
 // == [ Websign Template Generation Operations ] ==
-
-// == [ HTML / CSS Genetation ] ==
-
+// == [ HTML / CSS Genetation (html_parser.c & html_utils.c) ] ==
 //
-//      | - > Find a matching HTML Tag
-//      | - > Returns the HTML string upon success or NULL upon failure
-//
-char    *FindTag(Control *control);
 
 //
 //
 //
 //
-ControlTag FindTagType(const char *data);
+char        *FindTag(Control *control);
 
 //
-//      | - > Construct a template using an array of Controls in HTML order and CSS styles
-//      | - > Returns template string upon success or NULL upon failure
 //
-char    *ConstructTemplate(Control **controls, CSS **styles);
+//
+//
+ControlTag  FindTagType(const char *data);
 
 //
-//      | - > Construct CSS into a generated web template
-//      | - > Returns generated CSS string upon success or NULL upon failure
 //
-char    *ConstructCSS(CSS **styles);
+//
+//
+char        *ConstructTemplate(Control **controls, CSS **styles);
 
 //
-//      | - > Construct parent HTML element string
-//      | - > Returns generated HTML string upon success or NULL upon failure
 //
-String  ConstructParent(Control *p, int sub);
+//
+//
+char        *ConstructCSS(CSS **styles);
+
+//
+//
+//
+//
+int         count_tabs(const char *data);
+
+//
+//
+//
+//
+Control     **process_html_line(const char *data);
+
+//
+//
+//
+//
+Control     **ParseHTMLContent(const char *data);
 
 // == [ WebJS Genetation ] ==
 
@@ -451,69 +483,33 @@ String  ConstructParent(Control *p, int sub);
 //
 //
 //
-String  ConstructOnClickForm(Control *p);
+String      ConstructOnClickForm(Control *p);
 
 //
 //
 //
 //
-String  ConstructJS(WJS *js);
-
-//
-//
-//
-//
-String  control2str(Control *p);
-
-//
-//
-//
-//
-String  DumpControls(Control *controls, int nestingLevel);
-
-//
-//
-//
-//
-Control **process_html_line(const char *data);
-
-//
-//
-//
-//
-Control **ParseHTMLContent(const char *data);
+String      ConstructJS(WJS *js);
 
 // == [ Web_Route.c ] ==
 
 //
-//      | - > Create a new WebRoute instanse
-//      | - > Returns a new WebRoute struct with info upon success or NULL upon failure
 //
-WebRoute *CreateRoute(const char *n, const char *p, void *handler);
+//
+//
+WebRoute    *CreateRoute(const char *n, const char *p, void *handler);
 
 //
 //
 //
 //
-int     AppendParentControl(WebRoute *route, Control *new_c);
+int         SetReadOnly(WebRoute *w, const char *data);
 
 //
 //
 //
 //
-int     AppendStyle(WebRoute *route, CSS *new_css);
-
-//
-//
-//
-//
-int     SetReadOnly(WebRoute *w, const char *data);
-
-//
-//
-//
-//
-void    DestroyWebRoute(WebRoute *w);
+void        DestroyWebRoute(WebRoute *w);
 
 // == [ Control.c ] ==
 
@@ -521,38 +517,79 @@ void    DestroyWebRoute(WebRoute *w);
 //
 //
 //
-Control *CreateControl(ControlTag tag, const char *sclass, const char *id, const char *text, Control **subcontrols);
+Control     *CreateControl(ControlTag tag, const char *sclass, const char *id, const char *text, Control **subcontrols);
 
 //
 //
 //
 //
-Control *stack_to_heap(Control c);
-
-int AppendControlAt(Control *c, char *id, Control *new_control);
-//
-//
-//
-//
-int     AppendSControl(Control *c, Control new_control);
+int         Control__AppendControlAt(Control *c, int pos, Control *new_control);
 
 //
 //
 //
 //
-int     AppendControl(Control *c, Control *new_control);
+int         Control__SetBuffer(Control *c, char *BUFF);
 
 //
 //
 //
 //
-void    DestructControl(Control *c, int del_control, int del_styles);
+int         SetStyle(Control *c, char **style);
 
 //
 //
 //
 //
-String  ConstructControl(Control *c, int sub);
+Control     *stack_to_heap(Control c);
+
+//
+//
+//
+//
+int         Control__AppendStackControl(Control *c, Control new_control);
+
+//
+//
+//
+//
+int         AppendControl(Control *c, Control *new_control);
+
+//
+//
+//
+//
+int         AppendCSS(Control *c, char *new_css);
+
+//
+//
+//
+//
+char        *create_index_line(int len);
+
+//
+//
+//
+//
+String      ConstructControl(Control *c, int sub);
+
+//
+//
+//
+//
+void        DestructControl(Control *c, int del_control, int del_styles);
+
+//
+//
+//
+//
+void        DestructControls(Control *c);
+
+//
+//
+//
+//
+String      DumpControls(Control *controls, int nestingLevel);
 
 // == [ ws_css.c ] ==
 
@@ -560,16 +597,22 @@ String  ConstructControl(Control *c, int sub);
 //
 //
 //
-CSS     *CreateCSS(const char *class, int selector, const char **data);
+CSS         *css_stack_to_heap(CSS *stack_css);
 
 //
 //
 //
 //
-int     AppendCSS(CSS *style, const char *q);
+CSS         *CreateCSS(const char *class, int selector, const char **data);
 
 //
 //
 //
 //
-void    DestroyCSS(CSS *style);
+int         AppendDesign(CSS *style, const char *q);
+
+//
+//
+//
+//
+void        DestroyCSS(CSS *style);
