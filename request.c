@@ -64,6 +64,7 @@ HTTPClientResponse RequestURL(const String URL, const Map h, const Req_T reqt, c
 
 	/* Check for direct IP URLs and parse them */
 	if(is_url_direct_ip_n_port(c.Hostname.data)) {
+		printf("HERE\n");
 		Array args = NewArray(NULL);
 		args.Merge(&args, (void **)c.Hostname.Split(&c.Hostname, ":"));
 
@@ -73,6 +74,9 @@ HTTPClientResponse RequestURL(const String URL, const Map h, const Req_T reqt, c
 		args.Destruct(&args);
 	}
 
+	printf("%s\n", hostname.arr[0]);
+	printf("%s\n", hostname.arr[1]);
+	printf("%s\n", c.Port.data);
 	c.ServerFD = CreateHTTPSocket(&c);
 	if(c.ServerFD < 1) {
 		printf("[ x ] Error, Unable to start socket....!\n");
@@ -169,7 +173,7 @@ int SendHTTPGetReq(HTTPClient *c) {
 	if(c->URL_Route.EndsWith(&c->URL_Route, "/"))
 		c->URL_Route.TrimAt(&c->URL_Route, c->URL_Route.idx - 1);
 
-	char *req_data[] = {(c->Req_T == __GET__ ? "GET " : "POST "), c->Route.data, " HTTP/1.1\r\nHost: ", c->URL_Route.data, "\r\n"};
+	char *req_data[] = {(c->Req_T == __GET__ ? "GET " : "POST "), c->Route.data, " HTTP/1.0\r\nHost: ", c->URL_Route.data, "\r\n"};
 	String req = NewString(NULL);
 	for(int i = 0; i < 5; i++) req.AppendString(&req, req_data[i]);
 
@@ -184,6 +188,7 @@ int SendHTTPGetReq(HTTPClient *c) {
 	}
 
 	req.AppendString(&req, "\r\n");
+	printf("%s\n", req.data);
 	(void)(!strcmp(c->Port.data, "443") ? SSL_write(c->SSL, req.data, strlen(req.data)) : write(c->ServerFD, req.data, strlen(req.data)));
 	req.Destruct(&req);
 

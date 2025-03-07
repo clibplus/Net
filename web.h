@@ -174,6 +174,9 @@ typedef struct CSS {
     char                **Data;
     char                DataCount;
     int                 Selector;
+
+    char                **HoverData;
+    char                **ClickData;
 } CSS;
 
 typedef struct WJS {
@@ -297,6 +300,7 @@ extern Map DefaultHeaders;          // Default HTTP/1.1 Response Headers
 
 extern void *HTML_TAGS[][2];        // List of all HTML Tag enums w/ a string definition
 extern void *StatusCodeDef[][2];    // List of all status code enums w/ a string definition
+extern void *EncodedSymbols[][2];
 
 // == [ Web Server Operation ] ==
 
@@ -349,6 +353,18 @@ int         RetrieveGetParameters(cWS *web, cWR *r);
 //          | - > Send a response to client
 //
 void        SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map cookies, Map vars, const char *body);
+
+//
+//
+//
+//
+String      web_body_var_replacement(Map vars, const char *body);
+
+//
+//
+//
+//
+void        fetch_cf_post_data(cWS *server, cWR *req, int socket);
 
 //
 //
@@ -458,6 +474,12 @@ char        *ConstructTemplate(Control **controls, CSS **styles);
 //
 //
 char        *ConstructCSS(CSS **styles);
+
+//
+//
+//
+//
+char        *decode_input_symbols(const char *data);
 
 //
 //

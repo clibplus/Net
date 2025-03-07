@@ -257,7 +257,7 @@ cWR *ParseRequest(const char *data) {
             for(int i = 0; i < len; i++)
                 line.TrimAt(&line, 0);
 
-            if(!strcmp((char *)args.arr[0], "Cookie"))
+            if(!strcmp((char *)args.arr[0], "Cookie") || !strcmp((char *)args.arr[0], "cookie"))
                 ParseCookies(r, line);
 
             r->Headers.Append(&r->Headers, args.arr[0], line.data);
@@ -282,7 +282,7 @@ int ParseCookies(cWR *req, String cookies) {
         return 0;
 
     Array cookz = NewArray(NULL);
-    cookz.Merge(&cookz, (void **)cookies.Split(&cookies, ";"));
+    cookz.Merge(&cookz, (void **)cookies.Split(&cookies, "; "));
 
     for(int i = 0; i < cookz.idx; i++) {
         if(!cookz.arr[i])
@@ -296,7 +296,15 @@ int ParseCookies(cWR *req, String cookies) {
         if(args.idx != 2)
             break;
 
-        req->Cookies.Append(&req->Cookies, args.arr[0], args.arr[1]);
+        if((char)((char *)args.arr[0])[0] == ' ') {
+            String n = NewString((char *)args.arr[0]);
+            n.TrimAt(&n, 0);
+                
+            req->Cookies.Append(&req->Cookies, n.data, args.arr[1]);
+            n.Destruct(&n);
+        } else {
+            req->Cookies.Append(&req->Cookies, args.arr[0], args.arr[1]);
+        }
 
         cookie.Destruct(&cookie);
         args.Destruct(&args);
@@ -369,10 +377,15 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
     resp.AppendNum(&resp, (int)code);
     resp.AppendArray(&resp, (const char *[]){" ", statuscode_to_str(code), "\r\n", NULL});
 
+    String new_body = web_body_var_replacement(vars, body);
+    char *body_len = iString(new_body.idx);
+
     if(headers.idx > 0)
         for(int i = 0; i < headers.idx; i++)
             resp.AppendArray(&resp, ((const char *[]){(char *)((Key *)headers.arr[i])->key, ": ", (char *)((Key *)headers.arr[i])->value, "\r\n", NULL}));
 
+    resp.AppendArray(&resp, (const char *[]){"Content-length: ", body_len, "\r\n", NULL});
+    free(body_len);
     if(cookies.idx > 0)
         for(int i = 0; i < cookies.idx; i++)
             resp.AppendArray(&resp, ((const char *[]){(char *)((Key *)cookies.arr[i])->key, ": ", (char *)((Key *)cookies.arr[i])->value, "\r\n", NULL}));
@@ -387,16 +400,55 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
             body_output.data[body_output.idx] = '\0';
         }
         
+
         resp.AppendArray(&resp, ((const char *[]){"\r\n", body_output.data, NULL}));
         body_output.Destruct(&body_output);
     }
     
+    if(new_body.idx > 0)
+        resp.AppendArray(&resp, ((const char *[]){"\r\n", new_body.data, NULL}));
+
     resp.AppendString(&resp, "\r\n\r\n");
     resp.data[resp.idx] = '\0';
 
     write(request_socket, resp.data, resp.idx - 1);
     
     resp.Destruct(&resp);
+}
+
+String web_body_var_replacement(Map vars, const char *body) {
+    if(!body)
+        return ((String){0});
+
+    String nbody = NewString(NULL);
+    if(body != NULL) {
+        String body_output = NewString(body);
+        if(vars.idx > 0)
+            for(int i = 0; i < vars.idx; i++)
+                body_output.Replace(&body_output, ((Key *)vars.arr[i])->key, ((Key *)vars.arr[i])->value);
+
+        if(body != NULL & vars.idx > 0) {
+            body_output.data[body_output.idx] = '\0';
+        }
+        
+        
+        nbody.AppendArray(&nbody, ((const char *[]){"\r\n", body_output.data, NULL}));
+        body_output.Destruct(&body_output);
+    }
+
+    return nbody;
+}
+
+void fetch_cf_post_data(cWS *server, cWR *req, int socket) {
+    char *BUFFER = (char *)calloc(1024, sizeof(char));
+    int bytes = read(socket, BUFFER, 1024);
+    BUFFER[bytes] = '\0';
+
+    req->Body.Clear(&req->Body);
+    req->Body.Set(&req->Body, BUFFER);
+    GetPostQueries(server, req);
+
+    free(BUFFER);
 }
 
 char *GetSocketIP(int sock) {
@@ -447,7 +499,6 @@ Map CreateCookies(Cookie **arr) {
 		if(arr[i]->HTTPOnly)
 			value.AppendString(&value, ";HTTPOnly; Secure");
 
-		value.AppendString(&value, "\r\n");
 		cookies.Append(&cookies, "Set-Cookie", value.data);
 		value.Destruct(&value);
 	}

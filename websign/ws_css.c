@@ -17,8 +17,12 @@ CSS *CreateCSS(const char *class, int selector, const char **data) {
         .Selector = selector
     };
 
-    while(data[style->DataCount] != NULL) {
-        AppendDesign(style, data[style->DataCount]);
+    int i = 0;
+    if(data != NULL) {
+        while(data[i] != NULL) {
+            AppendDesign(style, data[i]);
+            i++;
+        }
     }
 
     return style;
@@ -31,6 +35,7 @@ int AppendDesign(CSS *style, const char *q) {
     style->Data[style->DataCount] = strdup(q);
     style->DataCount++;
     style->Data = (char **)realloc(style->Data, sizeof(char *) * (style->DataCount + 1));
+    style->Data[style->DataCount] = NULL;
 
     return 1;
 }

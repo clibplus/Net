@@ -5,7 +5,8 @@
 #include "../web.h"
 
 #define HTML_TAGS_COUNT 112
-#define WS_TAGS_COUNT 3
+
+#define ENCODED_SYMBOL_COUNT 5
 
 void *HTML_TAGS[][2] = {
     { (void *)HTML_TAG,         "html" },
@@ -122,6 +123,46 @@ void *HTML_TAGS[][2] = {
     { (void *)TEMPLATE_TAG,     "template" },
     NULL
 };
+
+void *EncodedSymbols[][2] = {
+    {(void *)' ',      "+"},
+    {(void *)'@',      "%40"},
+    {(void *)';',      "%3B"},
+    {(void *)':',      "%3A"},
+    {(void *)'#',      "%23"},
+    NULL
+};
+
+char *decode_input_symbols(const char *data) {
+    if(!data)
+        return NULL;
+
+    String n = NewString(data);
+
+    for(int i = 0; i < ENCODED_SYMBOL_COUNT; i++) {
+        if(!EncodedSymbols[i])
+            break;
+
+        int pos = -1;
+        while((pos = n.FindString(&n, EncodedSymbols[i][1])) != -1) {
+            int rm_len = strlen(EncodedSymbols[i][1]);
+            for(int b = 0; b < rm_len; b++)
+                n.TrimAt(&n, pos);
+                
+            n.InsertAtIdx(&n, pos - 1, ((char)((char *)EncodedSymbols[i][0])));
+            pos = -1;
+        }
+    }
+
+    char *output = strdup(n.data);
+    n.Destruct(&n);
+
+    if(strlen(output) > 0)
+        return output;
+
+    free(output);
+    return NULL;
+}
 
 char *FindTag(Control *control) {
     for(int i = 0; i < HTML_TAGS_COUNT; i++)
