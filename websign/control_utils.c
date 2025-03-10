@@ -25,10 +25,7 @@ Control *stack_to_heap(Control c) {
     parent->Type = (!c.Type ? NULL : strdup(c.Type));
     parent->href = (!c.href ? NULL : strdup(c.href));
     parent->Data = (!c.Data ? NULL : strdup(c.Data));
-    parent->OnClick = c.OnClick;
-    parent->OnClickJS = (!c.OnClickJS ? NULL : strdup(c.OnClickJS));
-    parent->FormID = (!c.FormID ? NULL : strdup(c.FormID));
-    parent->DisplayID = (!c.DisplayID ? NULL : strdup(c.DisplayID));
+    parent->Script = (!c.Script ? NULL : strdup(c.Script));
     
     for(int i = 0; i < c.SubControlCount; i++) {
         if(!c.SubControls[i])

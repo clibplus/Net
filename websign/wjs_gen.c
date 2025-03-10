@@ -4,40 +4,60 @@
 
 #include "../web.h"
 
-char *JS_HANDLER_FORMAT = "<script src=\"ws_form_handler.js\"></script><br /><script>document.getElementById('[SUBMIT_BUTTON]').addEventListener('click', () => submitForm('[FORM_ID]'));\n</script>";
-char *JS_HANDLER[] = {"(()=>(f=new FormData(document.getElementById('", "')),d={},f.forEach((v,k)=>d[k]=v),fetch(window.location.href,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).then(r=>r.json()).then(r=>{console.log('Response:',r);alert('POST Request successful!')}).catch(e=>{console.error('Error:',e);alert('POST Request failed!')})))();"};
+char *JS_HANDLERS = ".forEach(eventType => document.addEventListener(eventType, async event => { try { const eventData = { Route: location.pathname, eventType: event.type, targetTag: event.target?.tagName || null, targetId: event.target?.id || null, targetClass: event.target?.className || null, timestamp: new Date().toISOString(), pageX: event.pageX ?? null, pageY: event.pageY ?? null }; const response = await fetch(\"/event_handler\", { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify(eventData) }); const rawText = await response.text(); console.log(\"Server Response: \" + rawText); if (!response.ok) { console.error(\"Server error:\", response.status, rawText); return; } const data = JSON.parse(rawText); console.log(\"Received response:\", data); if (data) { if (data.new_head_content) document.head.innerHTML = data.new_head_content; if (data.new_body_content) document.body.innerHTML = data.new_body_content; if (data.new_script_content) { let scriptTag = document.querySelector(\"script[data-dynamic]\") || (() => { let s = document.createElement(\"script\"); s.setAttribute(\"data-dynamic\", \"true\"); document.body.appendChild(s); return s; })(); scriptTag.innerHTML = data.new_script_content; } if (data.new_header_content) { let header = document.querySelector(\"header\"); if (header) header.innerHTML = data.new_header_content; } if (data.new_footer_content) { let footer = document.querySelector(\"footer\"); if (footer) footer.innerHTML = data.new_footer_content; } if (data.replace_elements) { Object.entries(data.replace_elements).forEach(([id, content]) => { let el = document.getElementById(id); if (el) { el.innerHTML = content; } else { console.warn(`Element with id \"${id}\" not found.`); } }); } } } catch (err) { console.error(\"Error:\", err); console.log(\"Error: \" + err.message); } }))";
 
-String ConstructOnClickForm(Control *p) {
-    if(!p->OnClick || !p->FormID)
-        return ((String){});
+// [\"click\", \"mouseover\"]
+String ConstructHandler(int click, int hover, int mouse_track, int keyboard) {
+    String events = NewString("[\"");
 
-    String JS_CODE = NewString(JS_HANDLER[0]);
-    JS_CODE.AppendArray(&JS_CODE,  (const char *[]){p->FormID, JS_HANDLER[1], NULL});
+    if(click) {
+        events.AppendString(&events, "click\"");
+    }
 
-    JS_CODE.data[JS_CODE.idx] = '\0';
-    return JS_CODE;
+    if(hover) {
+        (events.idx > 2 ? events.AppendString(&events, ", "): 0);
+        events.AppendString(&events, "\"mouseover\"");
+    }
+
+    if(mouse_track) {
+        (events.idx > 2 ? events.AppendString(&events, ", "): 0);
+        events.AppendString(&events, "\"mousemove\"");
+    }
+
+    if(keyboard) {
+        (events.idx > 2 ? events.AppendString(&events, ", "): 0);
+        events.AppendString(&events, "\"keyup\"");
+        events.AppendString(&events, ", ");
+        events.AppendString(&events, "\"keydown\"");
+    }
+
+    events.AppendArray(&events, (const char *[]){"]", JS_HANDLERS, NULL});
+    events.data[events.idx] = '\0';
+    
+    return events;
 }
 
-// Constryct 
-String ConstructJS(WJS *js) {
-    switch((int)js->Action) {
-        case REDIRECT: {
+/*
+{
+    {"element_id", "new_content"}
+}
+*/
+String ChangeElement(int count, char **arr) {
+    String new_content = NewString("{\"replace_element\": {");
 
-        }
-        case MSG_BEFORE_REDIRECT: {
+    for(int i = 0; i < count; i++)
+    {
+        if(arr[i] == NULL)
+            break;
 
-        }
-        case GET_RESULTS: {
+        if(arr[i][0] != NULL)
+            new_content.AppendArray(&new_content, (const char *[]){"\"", (char *)arr[i][0], "\":\"", (char *)arr[i][1], "\"", NULL});
 
-        }
-        case SPIN_UNTIL_RESULTS: {
-
-        }
-        case VERTICAL_BOOMERANG_UNTIL_RESULT: {
-
-        }
-        case HORIZONTAL_BOOMERANG_UNTIL_RESULT: {
-
-        }
+        if(arr[i + 1] != NULL)
+            new_content.AppendString(&new_content, ",");
     }
+    
+    new_content.AppendString(&new_content, "}}");
+
+    return new_content;
 }

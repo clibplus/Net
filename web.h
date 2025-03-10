@@ -199,10 +199,8 @@ typedef struct Control {
     char                **CSS;          // CSS Function Generator for the tag <div style="CSS FUNCTION"></div>
     long                CSSCount;
     char                *Data;          // For Any Other Data In the Opening Tag <div Data... > </div>
-    long                OnClick;        // Enable this to 1 and Use FormID and DisplayID
-    char                *OnClickJS; 
-    char                *FormID;
-    char                *DisplayID;
+    char                *Script;
+    int                 InlineJS;
     void                **SubControls;
     long                SubControlCount;
 
@@ -210,7 +208,7 @@ typedef struct Control {
     int                 (*Append)       (struct Control *c, struct Control *new_control);
     int                 (*AppendAt)       (struct Control *c, int pos, struct Control *new_control);
     int                 (*AppendCSS)    (struct Control *c, char *new_control);
-    String              (*Construct)    (struct Control *c, int sub);
+    String              (*Construct)    (struct Control *c, int sub, int oneline);
     int                 (*ToCHT)        (struct Control *c);
     int                 (*ToHTML)       (struct Control *c);
     void                (*Destruct)     (struct Control *c, int del_control, int del_styles);
@@ -231,7 +229,7 @@ typedef struct WebRoute {
     Control             **Controls;
     long                ControlCount;
 
-    char                *(*ConstructCHT)(Control **controls, CSS **styles);
+    char                *(*ConstructCHT)(Control **controls, CSS **styles,  int click, int hover, int mouse_track, int keyboard, int oneline);
     void                (*Destruct)     (struct WebRoute *r);
 } WebRoute;
 
@@ -352,7 +350,7 @@ int         RetrieveGetParameters(cWS *web, cWR *r);
 //
 //          | - > Send a response to client
 //
-void        SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map cookies, Map vars, const char *body);
+void        SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map cookies, const char *body);
 
 //
 //
@@ -467,13 +465,13 @@ ControlTag  FindTagType(const char *data);
 //
 //
 //
-char        *ConstructTemplate(Control **controls, CSS **styles);
+char        *ConstructTemplate(Control **controls, CSS **styles, int click, int hover, int mouse_track, int keyboard, int oneline);
 
 //
 //
 //
 //
-char        *ConstructCSS(CSS **styles);
+char        *ConstructCSS(CSS **styles, int oneline);
 
 //
 //
@@ -501,17 +499,18 @@ Control     **ParseHTMLContent(const char *data);
 
 // == [ WebJS Genetation ] ==
 
-//
-//
-//
-//
-String      ConstructOnClickForm(Control *p);
 
 //
 //
 //
 //
-String      ConstructJS(WJS *js);
+String      ConstructHandler(int click, int hover, int mouse_track, int keyboard);
+
+//
+//
+//
+//
+String      ChangeElement(int count, char **arr);
 
 // == [ Web_Route.c ] ==
 
@@ -593,7 +592,7 @@ char        *create_index_line(int len);
 //
 //
 //
-String      ConstructControl(Control *c, int sub);
+String      ConstructControl(Control *c, int sub, int oneline);
 
 //
 //
@@ -615,26 +614,4 @@ String      DumpControls(Control *controls, int nestingLevel);
 
 // == [ ws_css.c ] ==
 
-//
-//
-//
-//
-CSS         *css_stack_to_heap(CSS *stack_css);
-
-//
-//
-//
-//
-CSS         *CreateCSS(const char *class, int selector, const char **data);
-
-//
-//
-//
-//
-int         AppendDesign(CSS *style, const char *q);
-
-//
-//
-//
-//
-void        DestroyCSS(CSS *style);
+int AppendDesign(CSS *style, const char *q);

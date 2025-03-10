@@ -160,13 +160,8 @@ String control2str(Control *p) {
     if(p->Data)
         info.AppendString(&info, p->Data);
 
-    if(p->OnClick && p->FormID) {
-        String onclick_js = ConstructOnClickForm(p);
-        info.AppendArray(&info, (const char *[]){"onclick=\"", onclick_js.data, "\" ", NULL});
-    }
-
-    if(p->OnClickJS) {
-        info.AppendArray(&info, (const char *[]){"onclick=\"", p->OnClickJS, "\" ", NULL});
+    if(p->Script) {
+        info.AppendArray(&info, (const char *[]){"onclick=\"", p->Script, "\" ", NULL});
     }
     
     info.AppendString(&info, "}");

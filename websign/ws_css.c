@@ -4,10 +4,6 @@
 
 #include "../web.h"
 
-CSS *css_stack_to_heap(CSS *stack_css) {
-    return CreateCSS(stack_css->Class, stack_css->Selector, (const char **)stack_css->Data);
-}
-
 CSS *CreateCSS(const char *class, int selector, const char **data) {
     CSS *style = (CSS *)malloc(sizeof(CSS));
     *style = (CSS){
@@ -26,6 +22,10 @@ CSS *CreateCSS(const char *class, int selector, const char **data) {
     }
 
     return style;
+}
+
+CSS *css_stack_to_heap(CSS *stack_css) {
+    return CreateCSS(stack_css->Class, stack_css->Selector, (const char **)stack_css->Data);
 }
 
 int AppendDesign(CSS *style, const char *q) {

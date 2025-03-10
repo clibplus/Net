@@ -157,7 +157,7 @@ void ParseAndCheckRoute(void **args) {
     cWR *r = ParseRequest(BUFFER);
     free(BUFFER);
     if(!r || !r->Route.data) {
-        SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), ((Map){0}), "Error");
+        SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "Error");
         close(request_socket);
         pthread_exit(NULL);
         return;
@@ -167,7 +167,7 @@ void ParseAndCheckRoute(void **args) {
     printf("[ NEW REQUEST ATTEMPT ] %s\n", r->Route.data);
     int chk = SearchRoute(web, r->Route.data);
     if(chk == -1) {
-        (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((void *)web->CFG.Err404_Handler))(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), ((Map){0}), "ERROR\n\n\n"));
+        (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((void *)web->CFG.Err404_Handler))(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
         close(request_socket);
         r->Destruct(r);
         pthread_exit(NULL);
@@ -191,7 +191,7 @@ void ParseAndCheckRoute(void **args) {
     }
 
     if(web->CFG.Routes[chk]->ReadOnly == 1) {
-        SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), ((Map){0}), web->CFG.Routes[chk]->Template);
+        SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), web->CFG.Routes[chk]->Template);
         sleep(1);
         close(request_socket);
         r->Destruct(r);
@@ -199,7 +199,7 @@ void ParseAndCheckRoute(void **args) {
         return;
     }
 
-    (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), ((Map){0}), "ERROR\n\n\n"));
+    (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
 
     close(request_socket);
     r->Destruct(r);
@@ -372,12 +372,23 @@ int RetrieveGetParameters(cWS *web, cWR *r) {
     return 1;
 }
 
-void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map cookies, Map vars, const char *body) {
-    String resp = NewString("HTTP/1.1 ");
+void Send_HTML_File(cWS *web, int sock, Map headers, Map cookies, Map vars, const char *filepath) {
+    File html = Openfile(filepath, FILE_READ);
+    if(!html.fd)
+        return;
+
+    char *data = html.Read(&html);
+    String body = web_body_var_replacement(vars, data);
+    SendResponse(web, sock, OK, headers, cookies, body.data);
+    body.Destruct(&body);
+}
+
+void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map cookies, const char *body) {
+    String resp = NewString("HTTP/1.0 ");
     resp.AppendNum(&resp, (int)code);
     resp.AppendArray(&resp, (const char *[]){" ", statuscode_to_str(code), "\r\n", NULL});
 
-    String new_body = web_body_var_replacement(vars, body);
+    String new_body = web_body_var_replacement(((Map){0}), body);
     char *body_len = iString(new_body.idx);
 
     if(headers.idx > 0)
@@ -389,21 +400,6 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
     if(cookies.idx > 0)
         for(int i = 0; i < cookies.idx; i++)
             resp.AppendArray(&resp, ((const char *[]){(char *)((Key *)cookies.arr[i])->key, ": ", (char *)((Key *)cookies.arr[i])->value, "\r\n", NULL}));
-
-    if(body != NULL) {
-        String body_output = NewString(body);
-        if(vars.idx > 0)
-            for(int i = 0; i < vars.idx; i++)
-                body_output.Replace(&body_output, ((Key *)vars.arr[i])->key, ((Key *)vars.arr[i])->value);
-
-        if(body != NULL & vars.idx > 0) {
-            body_output.data[body_output.idx] = '\0';
-        }
-        
-
-        resp.AppendArray(&resp, ((const char *[]){"\r\n", body_output.data, NULL}));
-        body_output.Destruct(&body_output);
-    }
     
     if(new_body.idx > 0)
         resp.AppendArray(&resp, ((const char *[]){"\r\n", new_body.data, NULL}));
@@ -414,6 +410,7 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
     write(request_socket, resp.data, resp.idx - 1);
     
     resp.Destruct(&resp);
+    new_body.Destruct(&new_body);
 }
 
 String web_body_var_replacement(Map vars, const char *body) {

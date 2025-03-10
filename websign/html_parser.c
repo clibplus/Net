@@ -66,10 +66,7 @@ Control **process_html_line(const char *data) {
                 .href = NULL,
                 .CSS = NULL,
                 .Data = NULL,
-                .OnClick = 0,
-                .OnClickJS = NULL,
-                .FormID = NULL,
-                .DisplayID = NULL,
+                .Script = NULL,
                 .SubControls = malloc(sizeof(Control *) * 1),
                 .SubControlCount = 0,
                 .Parent = NULL

@@ -105,13 +105,10 @@ int Control__AppendStackControl(Control *c, Control new_control) {
     newc->Text              = (!new_control.Text ? NULL : strdup(new_control.Text));
     newc->Class             = (!new_control.Class ? NULL : strdup(new_control.Class));
     newc->href              = (!new_control.href ? NULL : strdup(new_control.href));
+    newc->Script            = (!new_control.Script ? NULL : strdup(new_control.Script));
     newc->CSS               = new_control.CSS;
     newc->CSSCount          = new_control.CSSCount;
     newc->Data              = (!new_control.Data ? NULL : strdup(new_control.Data));
-    newc->OnClick           = new_control.OnClick;
-    newc->OnClickJS         = (!new_control.OnClickJS ? NULL : strdup(new_control.OnClickJS));
-    newc->FormID            = (!new_control.FormID ? NULL : strdup(new_control.FormID));
-    newc->DisplayID         = (!new_control.DisplayID ? NULL : strdup(new_control.DisplayID));
     newc->SubControls       = new_control.SubControls;
     newc->SubControlCount   = new_control.SubControlCount;
 
@@ -162,7 +159,7 @@ char *create_index_line(int len) {
     return BUFF;
 }
 
-String ConstructControl(Control *c, int sub) {
+String ConstructControl(Control *c, int sub, int oneline) {
     if(!c)
         return ((String){});
 
@@ -202,17 +199,20 @@ String ConstructControl(Control *c, int sub) {
                 design.AppendString(&design, "\"");
             }
 
-            if(c->OnClick || c->FormID) {
-                String onclick_js = ConstructOnClickForm(c);
-                design.AppendArray(&design, (const char *[]){"onclick=\"", onclick_js.data, "\" ", NULL});
+            if(c->Script != NULL & c->InlineJS) {
+                design.AppendArray(&design, (const char *[]){" onclick=\"", c->Script, "\"", NULL});
             }
             
-            design.AppendString(&design, c->Tag == INPUT_TAG ? "/>\n" : ">\n");
+            design.AppendArray(&design, (const char *[]){(c->Tag == INPUT_TAG ? "/>" : ">"), (oneline ? "\n": NULL), NULL});
         }
     }
 
     if(c->Text)
         design.AppendString(&design, c->Text);
+    
+    if(c->Script != NULL && c->Tag == HEAD_TAG && !c->InlineJS) {
+        design.AppendArray(&design, (const char *[]){" <script>", c->Script, "</script>", (oneline ? "\n": NULL), NULL});
+    }
 
     /* Construct SubControls */
     char *sub_tag = NULL;
@@ -250,17 +250,16 @@ String ConstructControl(Control *c, int sub) {
                 design.AppendString(&design, "\"");
             }
 
-            if(subControl->OnClick && subControl->FormID) {
-                String onclick_js = ConstructOnClickForm(subControl);
-                design.AppendArray(&design, (const char *[]){" onclick=\"", onclick_js.data, "\" ", NULL});
+            if(subControl->Script != NULL & subControl->InlineJS) {
+                design.AppendArray(&design, (const char *[]){" onclick=\"", subControl->Script, "\"", NULL});
             }
 
-            design.AppendString(&design, subControl->Tag == INPUT_TAG ? "/>\n" : ">\n");
+            design.AppendArray(&design, (const char *[]){subControl->Tag == INPUT_TAG ? "/>" : ">", (oneline ? "\n": NULL), NULL});
 
             if (subControl->Text)
-                design.AppendArray(&design, (const char *[]){create_index_line(sub + 2), subControl->Text, "\n", create_index_line(sub + 1), "</", sub_tag, ">\n", NULL});
+                design.AppendArray(&design, (const char *[]){create_index_line(sub + 2), subControl->Text, (oneline ? "\n": " "), create_index_line(sub + 1), "</", sub_tag, ">", (oneline ? "\n": NULL), NULL});
             if (subControl->SubControlCount > 0) {
-                String n = ConstructControl(subControl, sub + 1);
+                String n = ConstructControl(subControl, sub + 1, oneline);
                 design.AppendArray(&design, (const char *[]){n.data, NULL});
                 n.Destruct(&n);
             }
@@ -268,7 +267,10 @@ String ConstructControl(Control *c, int sub) {
     }
 
     /* End Parent Control */
-    design.AppendArray(&design, (const char *[]){create_index_line(sub), "</", main_tag, ">\n", NULL});
+    if(sub > 0)
+        design.AppendArray(&design, (const char *[]){create_index_line(sub), "</", main_tag, ">", (oneline ? "\n": NULL), NULL});
+    else
+        design.AppendArray(&design, (const char *[]){"</", main_tag, ">", (oneline ? "\n": NULL), NULL});
 
     design.data[design.idx] = '\0';
     if(design.idx > 0)
@@ -302,14 +304,8 @@ void DestructControl(Control *c, int del_control, int del_styles) {
     if(c->Data)
         free(c->Data);
 
-    if(c->OnClickJS)
-        free(c->OnClickJS);
-
-    if(c->FormID)
-        free(c->FormID);
-
-    if(c->DisplayID)
-        free(c->DisplayID);
+    if(c->Script)
+        free(c->Script);
 
     if(del_styles && c->CSS) {
         for(int i = 0; i< c->CSSCount; i++) {
