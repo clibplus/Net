@@ -154,21 +154,6 @@ typedef enum ControlTag {
     TEMPLATE_TAG                        = 8603, // <template>
 } ControlTag;
 
-typedef enum WJS_Value_T {
-    FORM_ELEMENTS                       = 9040,     // Provide a form ID <form id=""></form>
-    ELEMENT_IDS                         = 9041      // Provide an array of element IDs
-} WJS_Value_T;
-
-typedef enum WJS_Action_T {
-    NO_ACTION                           = 10930,
-    REDIRECT                            = 10931,
-    MSG_BEFORE_REDIRECT                 = 10932,
-    GET_RESULTS                         = 10933,
-    SPIN_UNTIL_RESULTS                  = 10934,
-    VERTICAL_BOOMERANG_UNTIL_RESULT     = 10935,
-    HORIZONTAL_BOOMERANG_UNTIL_RESULT   = 10936,
-} WJS_Action_T;
-
 typedef struct CSS {
     char                *Class;
     char                **Data;
@@ -178,14 +163,6 @@ typedef struct CSS {
     char                **HoverData;
     char                **ClickData;
 } CSS;
-
-typedef struct WJS {
-    WJS_Value_T         ValueType;      // OnClick Action Type
-    void                **Elements;     // Grab value of other elements using IDs
-    WJS_Action_T        Action;         // IF USING ANIMATION TAGS, AnimationID must be set.
-    char                *AnimationID;   // Element ID to the element you want animated
-    char                *ChangeID;      // Element ID to the element you want its value changed  
-} WJS;
 
 typedef struct Control {
     void                *Parent;
@@ -204,12 +181,13 @@ typedef struct Control {
     void                **SubControls;
     long                SubControlCount;
 
-    int                 (*sAppend)      (struct Control *c, struct Control new_control);
-    int                 (*Append)       (struct Control *c, struct Control *new_control);
-    int                 (*AppendAt)       (struct Control *c, int pos, struct Control *new_control);
-    int                 (*AppendCSS)    (struct Control *c, char *new_control);
-    String              (*Construct)    (struct Control *c, int sub, int oneline);
-    int                 (*ToCHT)        (struct Control *c);
+    int                 (*sAppend)      (struct Control *c, struct Control new_control);                    // Convert stack control to heap and append to parent
+    int                 (*Append)       (struct Control *c, struct Control *new_control);                   // Append a control to a parent
+    int                 (*Insert)       (struct Control *c, int pos, struct Control *new_control);          // Insert a control at a specified position in the buffer
+    int                 (*AppendIn)     (struct Control *c, int pos, struct Control *new_c);                // Append a new control at the specified sub-control's subcontrol buffer
+    int                 (*AppendCSS)    (struct Control *c, char *new_control);                             // Append CSS to the Control
+    String              (*Construct)    (struct Control *c, int sub, int oneline);                          // Construct control to HTML plain-text
+    int                 (*ToCHT)        (struct Control *c);                                                // Construct control to CHT plain-text
     int                 (*ToHTML)       (struct Control *c);
     void                (*Destruct)     (struct Control *c, int del_control, int del_styles);
 } Control;
@@ -270,6 +248,7 @@ typedef struct cWR {
     String              Fullroute;
     String              RequestType;
     Map                 Headers;
+    Map                 Get;
     Map                 Queries;
     Map                 Cookies;
     String              Body;
@@ -545,6 +524,12 @@ Control     *CreateControl(ControlTag tag, const char *sclass, const char *id, c
 //
 //
 int         Control__AppendControlAt(Control *c, int pos, Control *new_control);
+
+//
+//
+//
+//
+int         Control__AppendControlIn(Control *c, int pos, Control *new_c);
 
 //
 //

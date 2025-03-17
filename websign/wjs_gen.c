@@ -8,6 +8,9 @@ char *JS_HANDLERS = ".forEach(eventType => document.addEventListener(eventType, 
 
 // [\"click\", \"mouseover\"]
 String ConstructHandler(int click, int hover, int mouse_track, int keyboard) {
+    if(!click && !hover && !mouse_track && !keyboard)
+        return ((String){0});
+
     String events = NewString("[\"");
 
     if(click) {

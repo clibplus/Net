@@ -9,10 +9,7 @@ void DestructControls(Control *c) {
         if(!c->SubControls[i])
             break;
 
-        if(c->SubControls[i] != NULL)
-            DestructControls((Control *)c->SubControls[i]);
-        
-        ((Control *)c->SubControls[i])->Destruct((Control *)c->SubControls[i], 0, 0);
+        DestructControls((Control *)c->SubControls[i]);   
     }
 
     c->Destruct(c, 0, 1);
@@ -26,6 +23,18 @@ Control *stack_to_heap(Control c) {
     parent->href = (!c.href ? NULL : strdup(c.href));
     parent->Data = (!c.Data ? NULL : strdup(c.Data));
     parent->Script = (!c.Script ? NULL : strdup(c.Script));
+
+    parent->sAppend            = Control__AppendStackControl;
+    parent->Append             = AppendControl;
+    parent->Insert             = Control__AppendControlAt;
+    parent->AppendIn           = Control__AppendControlIn;
+    parent->AppendCSS          = AppendCSS;
+    parent->Construct          = ConstructControl;
+    parent->Destruct           = DestructControl;
+
+    // if(!c.CSS)
+    //     for(int i = 0; c.CSS[i] != NULL; i++)
+    //         AppendCSS(parent, c.CSS[i]);
     
     for(int i = 0; i < c.SubControlCount; i++) {
         if(!c.SubControls[i])

@@ -154,6 +154,7 @@ void ParseAndCheckRoute(void **args) {
     int bytes = read(request_socket, BUFFER, 4096);
     BUFFER[strlen(BUFFER) - 1] = '\0';
 
+    // printf("%s\n", BUFFER);
     cWR *r = ParseRequest(BUFFER);
     free(BUFFER);
     if(!r || !r->Route.data) {
@@ -177,7 +178,7 @@ void ParseAndCheckRoute(void **args) {
     if(!strcmp(r->RequestType.data, "POST"))
         GetPostQueries(web, r);
 
-    if(strstr(r->Route.data, "?"))
+    if(strstr(r->Fullroute.data, "?"))
         RetrieveGetParameters(web, r);
 
     if(web->CFG.Middleware != NULL) {
@@ -213,7 +214,7 @@ cWR *ParseRequest(const char *data) {
     cWR *r = (cWR *)malloc(sizeof(cWR));
     *r = (cWR){
         .Headers = NewMap(),
-        .Cookies = NewMap(),
+        .Fullroute = NewString(NULL),
         .Body = NewString(NULL),
         .Destruct = DestroyReq
     };
@@ -234,6 +235,14 @@ cWR *ParseRequest(const char *data) {
 
     r->RequestType = NewString(argz.arr[0]);
     r->Route = NewString(argz.arr[1]);
+    r->Fullroute.AppendString(&r->Fullroute, r->Route.data);
+
+    int pos = -1;
+    if((pos = r->Fullroute.FindChar(&r->Fullroute, '?')) > -1) {
+        char *sub = r->Fullroute.GetSubstr(&r->Fullroute, 0, pos);
+        r->Route.Clear(&r->Route);
+        r->Route.Set(&r->Route, sub);
+    }
 
     argz.Destruct(&argz);
     request_type.Destruct(&request_type);
@@ -273,6 +282,7 @@ cWR *ParseRequest(const char *data) {
 
     traffic.Destruct(&traffic);
     lines.Destruct(&lines);
+    request_type.Destruct(&request_type);
 
     return r;
 }
@@ -281,6 +291,7 @@ int ParseCookies(cWR *req, String cookies) {
     if(!req || !cookies.data)
         return 0;
 
+    req->Cookies = NewMap();
     Array cookz = NewArray(NULL);
     cookz.Merge(&cookz, (void **)cookies.Split(&cookies, "; "));
 
@@ -320,7 +331,23 @@ void GetPostQueries(cWS *web, cWR *r) {
     
     args.Merge(&args, (void **)r->Body.Split(&r->Body, "&"));
     if(args.idx < 1)
+    {
+        Array argz = NewArray(NULL);
+        argz.Merge(&argz, (void **)r->Body.Split(&r->Body, "?"));
+
+        String para = NewString(argz.arr[1]);
+        Array arg = NewArray(NULL);
+        arg.Merge(&arg, (void **)para.Split(&para, "="));
+
+        Queries.Append(&Queries, (char *)arg.arr[0], (char *)arg.arr[1]);
+
+        args.Destruct(&args);
+        argz.Destruct(&args);
+        para.Destruct(&para);
+        r->Queries = Queries;
         return;
+
+    }
 
     for(int i = 0; i < args.idx; i++) {
         String query = NewString(args.arr[i]);
@@ -339,14 +366,23 @@ void GetPostQueries(cWS *web, cWR *r) {
 }
 
 int RetrieveGetParameters(cWS *web, cWR *r) {
-    if(!strstr(r->Route.data, "?"))
+    if(!strstr(r->Fullroute.data, "?"))
         return 0;
 
     Map queries = NewMap();
     Array link_args = NewArray(NULL);
-    link_args.Merge(&link_args, (void **)r->Route.Split(&r->Route, "?"));
+    link_args.Merge(&link_args, (void **)r->Fullroute.Split(&r->Fullroute, "?"));
 
     String parameters = NewString(link_args.arr[1]);
+    if(!parameters.Contains(&parameters, "&")) {
+        Array args = NewArray(NULL);
+        args.Merge(&args, (void **)parameters.Split(&parameters, "="));
+
+        queries.Append(&queries, (char *)args.arr[0], (char *)args.arr[1]);
+        r->Get = queries;
+        return 1;
+    }
+
     Array args = NewArray(NULL);
     args.Merge(&args, (void **)parameters.Split(&parameters, "&"));
 
@@ -364,11 +400,11 @@ int RetrieveGetParameters(cWS *web, cWR *r) {
         para_args.Destruct(&para_args);
     }
 
-    r->Queries = queries;
+    r->Get = queries;
 
     link_args.Destruct(&link_args);
     args.Destruct(&args);
-
+    parameters.Destruct(&parameters);
     return 1;
 }
 
@@ -395,14 +431,21 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
         for(int i = 0; i < headers.idx; i++)
             resp.AppendArray(&resp, ((const char *[]){(char *)((Key *)headers.arr[i])->key, ": ", (char *)((Key *)headers.arr[i])->value, "\r\n", NULL}));
 
-    resp.AppendArray(&resp, (const char *[]){"Content-length: ", body_len, "\r\n", NULL});
-    free(body_len);
-    if(cookies.idx > 0)
-        for(int i = 0; i < cookies.idx; i++)
-            resp.AppendArray(&resp, ((const char *[]){(char *)((Key *)cookies.arr[i])->key, ": ", (char *)((Key *)cookies.arr[i])->value, "\r\n", NULL}));
-    
     if(new_body.idx > 0)
+        resp.AppendArray(&resp, (const char *[]){"Content-length: ", body_len, "\r\n", NULL});
+
+    free(body_len);
+    if(cookies.idx > 0) {
+        for(int i = 0; i < cookies.idx; i++) {
+            printf("%s => %s\n", (char *)((Key *)cookies.arr[i])->key, (char *)((Key *)cookies.arr[i])->value);
+            resp.AppendArray(&resp, ((const char *[]){(char *)((Key *)cookies.arr[i])->key, ": ", (char *)((Key *)cookies.arr[i])->value, "\r\n", NULL}));
+        }
+    }
+    
+    if(new_body.idx > 0) {
         resp.AppendArray(&resp, ((const char *[]){"\r\n", new_body.data, NULL}));
+        new_body.Destruct(&new_body);
+    }
 
     resp.AppendString(&resp, "\r\n\r\n");
     resp.data[resp.idx] = '\0';
@@ -410,7 +453,6 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
     write(request_socket, resp.data, resp.idx - 1);
     
     resp.Destruct(&resp);
-    new_body.Destruct(&new_body);
 }
 
 String web_body_var_replacement(Map vars, const char *body) {
@@ -437,14 +479,17 @@ String web_body_var_replacement(Map vars, const char *body) {
 }
 
 void fetch_cf_post_data(cWS *server, cWR *req, int socket) {
-    char *BUFFER = (char *)calloc(1024, sizeof(char));
-    int bytes = read(socket, BUFFER, 1024);
+    int pos = req->Headers.InMap(&req->Headers, "Content-Length");
+    char *BUFFER = (char *)calloc(atoi(((Key *)req->Headers.arr[pos])->value), sizeof(char));
+    int bytes = read(socket, BUFFER, atoi(((Key *)req->Headers.arr[pos])->value));
     BUFFER[bytes] = '\0';
 
     req->Body.Clear(&req->Body);
     req->Body.Set(&req->Body, BUFFER);
+    req->Queries.Destruct(&req->Queries);
     GetPostQueries(server, req);
 
+    printf("Retrieve Data...!\n");
     free(BUFFER);
 }
 
@@ -529,6 +574,9 @@ void DestroyReq(cWR *req) {
 
     if(req->Queries.arr != NULL)
         req->Queries.Destruct(&req->Queries);
+
+    // if(req->Get.arr != NULL)
+    //     req->Get.Destruct(&req->Get);
 
     if(req->Body.data != NULL)
         req->Body.Destruct(&req->Body);

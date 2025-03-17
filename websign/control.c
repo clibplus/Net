@@ -33,7 +33,8 @@ Control *CreateControl(ControlTag tag, const char *sclass, const char *id, const
 
         .sAppend            = Control__AppendStackControl,
         .Append             = AppendControl,
-        .AppendAt           = Control__AppendControlAt,
+        .Insert             = Control__AppendControlAt,
+        .AppendIn           = Control__AppendControlIn,
         .AppendCSS          = AppendCSS,
         .Construct          = ConstructControl,
         .Destruct           = DestructControl
@@ -44,8 +45,11 @@ Control *CreateControl(ControlTag tag, const char *sclass, const char *id, const
     if(!subcontrols)
         return c;
 
-    while(subcontrols[c->SubControlCount] != NULL)
-        AppendControl(c, subcontrols[c->SubControlCount]);
+    int i = 0;
+    while(subcontrols[i] != NULL) {
+        AppendControl(c, subcontrols[i]);
+        i++;
+    }
 
     return c;
 }
@@ -94,40 +98,24 @@ int Control__AppendStackControl(Control *c, Control new_control) {
     if(!c)
         return 0;
 
-    Control *newc = (Control *)malloc(sizeof(Control));
-    memset(newc, '\0', sizeof(Control));
-
-    newc->Parent            = new_control.Parent;
-    newc->Tag               = new_control.Tag;
-    newc->ID                = (!new_control.ID ? NULL : strdup(new_control.ID));
-    newc->Name              = (!new_control.Name ? NULL : strdup(new_control.Name));
-    newc->Type              = (!new_control.Type ? NULL : strdup(new_control.Type));
-    newc->Text              = (!new_control.Text ? NULL : strdup(new_control.Text));
-    newc->Class             = (!new_control.Class ? NULL : strdup(new_control.Class));
-    newc->href              = (!new_control.href ? NULL : strdup(new_control.href));
-    newc->Script            = (!new_control.Script ? NULL : strdup(new_control.Script));
-    newc->CSS               = new_control.CSS;
-    newc->CSSCount          = new_control.CSSCount;
-    newc->Data              = (!new_control.Data ? NULL : strdup(new_control.Data));
-    newc->SubControls       = new_control.SubControls;
-    newc->SubControlCount   = new_control.SubControlCount;
-
+    Control *newc = stack_to_heap(new_control);
     AppendControl(c, newc);
     return 1;
 }
 
 int Control__AppendControlAt(Control *c, int pos, Control *new_control) {
     Control **arr = (Control **)malloc(sizeof(Control *) * 1);
-    int idx = 0;
+    int idx = 0, in = 0;
 
     for(int i = 0; i < c->SubControlCount; i++) {
         if(!c->SubControls[i])
             break;
 
-        if(i == pos) {
+        if(i == pos && !in) {
             arr[idx] = new_control;
             idx++;
             arr = (Control **)realloc(arr, sizeof(Control *) * (idx + 1));
+            in++;
         }
 
         arr[idx] = c->SubControls[i];
@@ -141,6 +129,21 @@ int Control__AppendControlAt(Control *c, int pos, Control *new_control) {
         
     c->SubControls = (void **)arr;
     c->SubControlCount = idx;
+
+    return 1;
+}
+
+int Control__AppendControlIn(Control *c, int pos, Control *new_c) {
+    if(!c || !new_c)
+        return 0;
+
+    for(int i = 0; i < c->SubControlCount; i++) {
+        if(!c->SubControls[i])
+            break;
+
+        if(i == 2)
+            AppendControl(c->SubControls[i], new_c);
+    }
 
     return 1;
 }
@@ -203,15 +206,15 @@ String ConstructControl(Control *c, int sub, int oneline) {
                 design.AppendArray(&design, (const char *[]){" onclick=\"", c->Script, "\"", NULL});
             }
             
-            design.AppendArray(&design, (const char *[]){(c->Tag == INPUT_TAG ? "/>" : ">"), (oneline ? "\n": NULL), NULL});
+            design.AppendArray(&design, (const char *[]){(c->Tag == INPUT_TAG ? "/>" : ">"), (!oneline ? "\n": NULL), NULL});
         }
     }
 
     if(c->Text)
         design.AppendString(&design, c->Text);
     
-    if(c->Script != NULL && c->Tag == HEAD_TAG && !c->InlineJS) {
-        design.AppendArray(&design, (const char *[]){" <script>", c->Script, "</script>", (oneline ? "\n": NULL), NULL});
+    if(c->Script != NULL && (c->Tag == HEAD_TAG || c->Tag == BODY_TAG) && !c->InlineJS) {
+        design.AppendArray(&design, (const char *[]){" <script>", c->Script, "</script>", (!oneline ? "\n": NULL), NULL});
     }
 
     /* Construct SubControls */
@@ -250,14 +253,13 @@ String ConstructControl(Control *c, int sub, int oneline) {
                 design.AppendString(&design, "\"");
             }
 
-            if(subControl->Script != NULL & subControl->InlineJS) {
+            if(subControl->Script != NULL & subControl->InlineJS)
                 design.AppendArray(&design, (const char *[]){" onclick=\"", subControl->Script, "\"", NULL});
-            }
 
-            design.AppendArray(&design, (const char *[]){subControl->Tag == INPUT_TAG ? "/>" : ">", (oneline ? "\n": NULL), NULL});
+            design.AppendArray(&design, (const char *[]){subControl->Tag == INPUT_TAG ? "/>" : ">", (!oneline ? "\n": NULL), NULL});
 
             if (subControl->Text)
-                design.AppendArray(&design, (const char *[]){create_index_line(sub + 2), subControl->Text, (oneline ? "\n": " "), create_index_line(sub + 1), "</", sub_tag, ">", (oneline ? "\n": NULL), NULL});
+                design.AppendArray(&design, (const char *[]){create_index_line(sub + 2), subControl->Text, (!oneline ? "\n": " "), create_index_line(sub + 1), "</", sub_tag, ">", (!oneline ? "\n": NULL), NULL});
             if (subControl->SubControlCount > 0) {
                 String n = ConstructControl(subControl, sub + 1, oneline);
                 design.AppendArray(&design, (const char *[]){n.data, NULL});
@@ -268,9 +270,9 @@ String ConstructControl(Control *c, int sub, int oneline) {
 
     /* End Parent Control */
     if(sub > 0)
-        design.AppendArray(&design, (const char *[]){create_index_line(sub), "</", main_tag, ">", (oneline ? "\n": NULL), NULL});
+        design.AppendArray(&design, (const char *[]){create_index_line(sub), "</", main_tag, ">", (!oneline ? "\n": NULL), NULL});
     else
-        design.AppendArray(&design, (const char *[]){"</", main_tag, ">", (oneline ? "\n": NULL), NULL});
+        design.AppendArray(&design, (const char *[]){"</", main_tag, ">", (!oneline ? "\n": NULL), NULL});
 
     design.data[design.idx] = '\0';
     if(design.idx > 0)

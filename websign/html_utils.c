@@ -184,7 +184,9 @@ ControlTag FindTagType(const char *data) {
 }
 
 char *ConstructTemplate(Control **controls, CSS **styles, int click, int hover, int mouse_track, int keyboard, int oneline) {
-    String template = NewString("<!--\nGenerated Using Websign: https://github.com/clibplus/Net\n@author: @algo1337\n-->\n<html>\n");
+    String template = NewString("<!--\nGenerated Using Websign: https://github.com/clibplus/Net\n@author: @algo1337\n-->\n<html>");
+    if(!oneline)
+        template.AppendString(&template, "\n");
 
     int i = 0;
     if(!controls || !controls[0])
@@ -196,11 +198,11 @@ char *ConstructTemplate(Control **controls, CSS **styles, int click, int hover, 
             controls[0]->Script = strdup(handler.data);
 
         String header = ConstructControl(controls[0], 0, oneline);
-        template.AppendArray(&template, (const char *[]){header.data, (oneline ? "\n\n" : NULL), NULL});
+        template.AppendArray(&template, (const char *[]){header.data, (!oneline ? "\n\n" : NULL), NULL});
         header.Destruct(&header);
         
         char *data = ConstructCSS(styles, oneline);
-        template.AppendArray(&template, (const char *[]){data, (oneline ? "\n\n" : NULL), NULL});
+        template.AppendArray(&template, (const char *[]){data, (!oneline ? "\n\n" : NULL), NULL});
         free(data);
 
         i = 1;
@@ -208,7 +210,7 @@ char *ConstructTemplate(Control **controls, CSS **styles, int click, int hover, 
 
     for(;controls[i] != NULL; i++) {
         String new = ConstructControl(controls[i], 0, oneline);
-        template.AppendArray(&template, (const char *[]){new.data, (oneline ? "\n\n" : NULL), NULL});
+        template.AppendArray(&template, (const char *[]){new.data, (!oneline ? "\n\n" : NULL), NULL});
         new.Destruct(&new);
     }
     
@@ -229,26 +231,26 @@ char *ConstructCSS(CSS **styles, int oneline) {
         return NULL;
 
     String BUFFER = NewString("<style>");
-    (oneline ? BUFFER.AppendString(&BUFFER, "\n") : 0);
+    (!oneline ? BUFFER.AppendString(&BUFFER, "\n") : 0);
     int i = 0, css_idx = 0;
 
     for(int i = 0; styles[i] != NULL; i++) {
         if(styles[i]->Selector)
             BUFFER.AppendString(&BUFFER, ".");
 
-        BUFFER.AppendArray(&BUFFER, (const char *[]){styles[i]->Class, " {", (oneline ? "\n\n" : NULL), NULL});
+        BUFFER.AppendArray(&BUFFER, (const char *[]){styles[i]->Class, " {", (!oneline ? "\n\n" : NULL), NULL});
 
         for(int css_idx = 0; (const char **)styles[i]->Data[css_idx] != NULL; css_idx++) {
             BUFFER.AppendArray(&BUFFER, (const char *[]){styles[i]->Data[css_idx], ";", NULL});;
         }
         
-        (oneline ? BUFFER.AppendString(&BUFFER, "\n") : 0);
+        (!oneline ? BUFFER.AppendString(&BUFFER, "\n") : 0);
         BUFFER.AppendString(&BUFFER, "}");
-        (oneline ? BUFFER.AppendString(&BUFFER, "\n") : 0);
+        (!oneline ? BUFFER.AppendString(&BUFFER, "\n") : 0);
     }
 
     BUFFER.AppendString(&BUFFER, "</style>");
-    (oneline ? BUFFER.AppendString(&BUFFER, "\n") : 0);
+    (!oneline ? BUFFER.AppendString(&BUFFER, "\n") : 0);
     BUFFER.data[BUFFER.idx] = '\0';
     
     char *BUFF = strdup(BUFFER.data);
