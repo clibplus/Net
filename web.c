@@ -154,7 +154,6 @@ void ParseAndCheckRoute(void **args) {
     int bytes = read(request_socket, BUFFER, 4096);
     BUFFER[strlen(BUFFER) - 1] = '\0';
 
-    // printf("%s\n", BUFFER);
     cWR *r = ParseRequest(BUFFER);
     free(BUFFER);
     if(!r || !r->Route.data) {
@@ -214,7 +213,6 @@ cWR *ParseRequest(const char *data) {
     cWR *r = (cWR *)malloc(sizeof(cWR));
     *r = (cWR){
         .Headers = NewMap(),
-        .Fullroute = NewString(NULL),
         .Body = NewString(NULL),
         .Destruct = DestroyReq
     };
@@ -234,14 +232,15 @@ cWR *ParseRequest(const char *data) {
     argz.Merge(&argz, (void **)request_type.Split(&request_type, " "));
 
     r->RequestType = NewString(argz.arr[0]);
-    r->Route = NewString(argz.arr[1]);
-    r->Fullroute.AppendString(&r->Fullroute, r->Route.data);
+    r->Fullroute = NewString(argz.arr[1]);
 
     int pos = -1;
     if((pos = r->Fullroute.FindChar(&r->Fullroute, '?')) > -1) {
         char *sub = r->Fullroute.GetSubstr(&r->Fullroute, 0, pos);
-        r->Route.Clear(&r->Route);
-        r->Route.Set(&r->Route, sub);
+        r->Route = NewString(sub);
+        r->Route.data[r->Route.idx] = '\0';
+    } else {
+        r->Route = NewString(argz.arr[1]);
     }
 
     argz.Destruct(&argz);
@@ -253,6 +252,7 @@ cWR *ParseRequest(const char *data) {
             break;
 
         String line = NewString(lines.arr[i]);
+        line.data[line.idx] = '\0';
         if(line.isEmpty(&line) || line.Is(&line, " ")) {
             if(READ_BODY) break;
             READ_BODY = 1;
@@ -306,6 +306,20 @@ int ParseCookies(cWR *req, String cookies) {
 
         if(args.idx != 2)
             break;
+
+        // String n = NewString((char *)args.arr[0]);
+        // for(int c = 0; c < 2; c++)
+        //     n.TrimAt(&n, n.idx);
+
+        // n.data[n.idx] = '\0';
+
+        // String v = NewString((char *)args.arr[1]);
+        // for(int c = 0; c < 2; c++)
+        //     n.TrimAt(&n, n.idx);
+        
+        // v.data[v.idx - 1] = '\0';
+            
+        // req->Cookies.Append(&req->Cookies, n.data, v.data);
 
         if((char)((char *)args.arr[0])[0] == ' ') {
             String n = NewString((char *)args.arr[0]);
@@ -374,12 +388,19 @@ int RetrieveGetParameters(cWS *web, cWR *r) {
     link_args.Merge(&link_args, (void **)r->Fullroute.Split(&r->Fullroute, "?"));
 
     String parameters = NewString(link_args.arr[1]);
+    parameters.data[parameters.idx] = '\0';
     if(!parameters.Contains(&parameters, "&")) {
         Array args = NewArray(NULL);
         args.Merge(&args, (void **)parameters.Split(&parameters, "="));
 
-        queries.Append(&queries, (char *)args.arr[0], (char *)args.arr[1]);
+        int len = strlen(args.arr[0]) + 1;
+        char *value = parameters.GetSubstr(&parameters, len, parameters.idx);
+
+        queries.Append(&queries, (char *)args.arr[0], value);
         r->Get = queries;
+
+        link_args.Destruct(&link_args);
+        args.Destruct(&args);
         return 1;
     }
 
@@ -394,7 +415,11 @@ int RetrieveGetParameters(cWS *web, cWR *r) {
         Array para_args = NewArray(NULL);
         para_args.Merge(&para_args, (void **)para.Split(&para, "="));
 
-        queries.Append(&queries, para_args.arr[0], para_args.arr[1]);
+        int len = strlen(para_args.arr[0]);
+        for(int c = 0; c < len; c++)
+            para.TrimAt(&para, 0);
+
+        queries.Append(&queries, para_args.arr[0], para.data);
 
         para.Destruct(&para);
         para_args.Destruct(&para_args);
@@ -435,12 +460,9 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
         resp.AppendArray(&resp, (const char *[]){"Content-length: ", body_len, "\r\n", NULL});
 
     free(body_len);
-    if(cookies.idx > 0) {
-        for(int i = 0; i < cookies.idx; i++) {
-            printf("%s => %s\n", (char *)((Key *)cookies.arr[i])->key, (char *)((Key *)cookies.arr[i])->value);
+    if(cookies.idx > 0)
+        for(int i = 0; i < cookies.idx; i++)
             resp.AppendArray(&resp, ((const char *[]){(char *)((Key *)cookies.arr[i])->key, ": ", (char *)((Key *)cookies.arr[i])->value, "\r\n", NULL}));
-        }
-    }
     
     if(new_body.idx > 0) {
         resp.AppendArray(&resp, ((const char *[]){"\r\n", new_body.data, NULL}));
@@ -575,8 +597,8 @@ void DestroyReq(cWR *req) {
     if(req->Queries.arr != NULL)
         req->Queries.Destruct(&req->Queries);
 
-    // if(req->Get.arr != NULL)
-    //     req->Get.Destruct(&req->Get);
+    if(req->Get.arr != NULL)
+        req->Get.Destruct(&req->Get);
 
     if(req->Body.data != NULL)
         req->Body.Destruct(&req->Body);
