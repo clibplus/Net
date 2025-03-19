@@ -354,7 +354,7 @@ void GetPostQueries(cWS *web, cWR *r) {
         Queries.Append(&Queries, (char *)arg.arr[0], (char *)arg.arr[1]);
 
         args.Destruct(&args);
-        argz.Destruct(&args);
+        argz.Destruct(&argz);
         para.Destruct(&para);
         r->Queries = Queries;
         return;
@@ -533,15 +533,24 @@ char *GetSocketIP(int sock) {
 }
 
 char *GetRfcTime(int seconds) {
-	char current_time[100] = {0};
+	char *current_time = (char *)malloc(150);
+    memset(current_time, '\0', 150);
 	time_t now = time(NULL);
 	now += seconds;
 
 	struct tm *gmt = gmtime(&now);
-	strftime(current_time, sizeof(current_time), "%a, %d %b %Y %H:%M:%S GMT", gmt);
-	current_time[99] = '\0';
+    if(!gmt) {
+        printf("[ - ] Failed to get current time!");
+        return "";
+    }
 
-	return strdup(current_time);
+	strftime(current_time, sizeof(current_time), "%a, %d %b %Y %H:%M:%S GMT", gmt);
+
+    if(strlen(current_time) > 0)
+        return current_time;
+
+    free(current_time);
+	return NULL;
 }
 
 Map CreateCookies(Cookie **arr) {
@@ -549,6 +558,7 @@ Map CreateCookies(Cookie **arr) {
 
 	for(int i = 0; arr[i] != NULL; i++)
 	{
+        char *current_time = GetRfcTime(60 * arr[i]->expires);
 		String value = NewString(arr[i]->name);
 		value.AppendArray(&value, (const char *[]){"=", arr[i]->value, NULL});
 
@@ -556,7 +566,7 @@ Map CreateCookies(Cookie **arr) {
 			value.AppendArray(&value, (const char *[]){";Path=", arr[i]->path, NULL});
 
 		if(arr[i]->expires)
-			value.AppendArray(&value, (const char *[]){";Expires=", GetRfcTime(60 * arr[i]->expires), NULL});
+			value.AppendArray(&value, (const char *[]){";Expires=", current_time, NULL});
 
 		if(arr[i]->maxage) {
 			value.AppendString(&value, ";MaxAge=");
@@ -569,6 +579,7 @@ Map CreateCookies(Cookie **arr) {
         value.data[value.idx] = '\0';
 		cookies.Append(&cookies, "Set-Cookie", value.data);
 		value.Destruct(&value);
+        free(current_time);
 	}
 
 	return cookies;
