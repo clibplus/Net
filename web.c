@@ -505,8 +505,10 @@ String web_body_var_replacement(Map vars, const char *body) {
 
 void fetch_cf_post_data(cWS *server, cWR *req, int socket) {
     int pos = req->Headers.InMap(&req->Headers, "Content-Length");
-    char *BUFFER = (char *)calloc(atoi(((Key *)req->Headers.arr[pos])->value), sizeof(char));
-    int bytes = read(socket, BUFFER, atoi(((Key *)req->Headers.arr[pos])->value));
+    int len = pos == -1 ? 1024 : atoi(((Key *)req->Headers.arr[pos])->value);
+    char *BUFFER = (char *)calloc(len, sizeof(char));
+
+    int bytes = read(socket, BUFFER, len);
     BUFFER[bytes] = '\0';
 
     req->Body.Clear(&req->Body);
@@ -533,24 +535,30 @@ char *GetSocketIP(int sock) {
 }
 
 char *GetRfcTime(int seconds) {
-	char *current_time = (char *)malloc(150);
+    char *current_time = (char *)malloc(150);
+    if (!current_time) {
+        perror("malloc failed");
+        return NULL;
+    }
     memset(current_time, '\0', 150);
-	time_t now = time(NULL);
-	now += seconds;
 
-	struct tm *gmt = gmtime(&now);
-    if(!gmt) {
-        printf("[ - ] Failed to get current time!");
-        return "";
+    time_t now = time(NULL);
+    if (now == ((time_t)-1)) {
+        free(current_time);
+        return NULL;
+    }
+    now += seconds;
+
+    struct tm *gmt = gmtime(&now);
+    if (!gmt) {
+        fprintf(stderr, "[ - ] Failed to get current time!\n");
+        free(current_time);
+        return NULL;
     }
 
-	strftime(current_time, sizeof(current_time), "%a, %d %b %Y %H:%M:%S GMT", gmt);
+    strftime(current_time, 150, "%a, %d %b %Y %H:%M:%S GMT", gmt);
 
-    if(strlen(current_time) > 0)
-        return current_time;
-
-    free(current_time);
-	return NULL;
+    return current_time;
 }
 
 Map CreateCookies(Cookie **arr) {
@@ -627,6 +635,7 @@ void DestroyServer(cWS *web) {
 
     if(web->CFG.Routes)
         web->CFG.Destruct(&web->CFG);
-        
+    
+    close(web->Socket);
     free(web);
 }
