@@ -37,21 +37,54 @@ char *WS_JS_HANDLER = "const parseForm = (formId) => Array.from(document.getElem
         }
            
 */
-int AddDynamicHandler(cWS *web) {
+
+void LiveEventHandler(cWS *server, cWR *req, WebRoute *route, int sock) {
+    if(req->RequestType.Is(&req->RequestType, "POST")) {
+        if(FindKey(&req->Headers, "CF-Connecting-IP") || FindKey(&req->Headers, "cf-connecting-ip") || FindKey(&req->Headers, "x-forwarded-for"))
+            fetch_cf_post_data(server, req, sock);
+        
+        printf("%s\n", req->Body.data);
+        Map json = Decode_OneLine_JSON(req->Body.data);
+        printf("%ld\n", json.idx);
+
+        for(int i = 0; i < json.idx; i++) {
+            printf("%s\n", ((jKey *)json.arr[i])->key);
+        }
+        char *route = ((jKey *)json.arr[0])->value;
+        if(!route) {
+            printf("Error\n");
+            return;
+        }
+
+        printf("%s\n", route);
+        int chk = SearchRoute(server, route);
+        if(chk > -1)
+        {
+            (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)server->CFG.Routes[chk])->Handler)(server, req, server->CFG.Routes[chk], sock) : SendResponse(server, sock, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
+            return;
+        }
+
+        SendResponse(server, sock, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n");
+        json.Destruct(&json);
+    }
+}
+
+
+// Enable Websign's Event Handler for events in real-time
+int EnableLiveHandler(cWS *web) {
     if(!web)
         return 0;
 
     AddRoute(web, (WebRoute){
         .Name = "Websign's Event Handler",
-        .Path = "/ws_js_handler.js",
-        .Template = WS_JS_HANDLER,
-        .ReadOnly = 1
+        .Path = "/ws_js_handler",
+        .Handler = LiveEventHandler,
     });
 
     return 1;
 }
 
-int SearchRoute(cWS *web, const char *data) {
+int SearchRoute(cWS *web, char *data) {
     if(!data)
         return -1;
 

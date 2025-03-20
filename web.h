@@ -11,8 +11,8 @@
 *   everything a browser takes
 *
 *   Compile:
-*       gcc -c web.c web_config.c web_route.c websign/*.c -lstr -larr -lmap -lpthread -g -g1
-*       ar rcs websign.a *.o; rm *.o; mv websign.a /usr/local/lib/libwebsign.a
+*       sudo gcc -c web.c web_config.c web_route.c websign/*.c -lstr -larr -lmap -lpthread -g -g1
+*       sudo ar rcs websign.a *.o;sudo rm *.o; sudo mv websign.a /usr/local/lib/libwebsign.a
 *
 *   Use:
 *       -lwebsign -lstr -larr -lmap -lpthread
@@ -230,8 +230,6 @@ typedef struct cWS {
     int                 Port;
     int                 Socket;
     struct sockaddr_in  Address;
-    SSL                 *SSL;
-    SSL_CTX             *CTX;
     WebServerConfig     CFG;
     char                *Logs;
     void                *Last;
@@ -332,20 +330,19 @@ int         RetrieveGetParameters(cWS *web, cWR *r);
 void        SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map cookies, const char *body);
 
 //
-//
-//
+//          | - > Replace special symbolized variables within HTML files with a new value
+//          | - > Returns string with data upon success or empty string struct upon failure
 //
 String      web_body_var_replacement(Map vars, const char *body);
 
 //
-//
-//
+//          | - > Receive the remaining POST response from Cloudflare
 //
 void        fetch_cf_post_data(cWS *server, cWR *req, int socket);
 
 //
-//
-//
+//          | - > Retrieve client IP
+//          | - > Returns a string with the IP upon success or NULL upon failure
 //
 char        *GetSocketIP(int sock);
 
@@ -379,13 +376,13 @@ void        DestroyReq(cWR *req);
 //
 //
 //
-int         AddDynamicHandler(cWS *web);
+int         EnableLiveHandler(cWS *web);
 
 //
 //
 //
 //
-int         SearchRoute(cWS *web, const char *data);
+int         SearchRoute(cWS *web, char *data);
 
 //
 //
