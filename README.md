@@ -158,3 +158,7 @@ This library is written for modern C and has been tested on AMD 64-bit Ubuntu. M
 Official versions are released in the repository on the release tab and are not intended for development purposes.
 
 If you encounter a bug in a released version, please report it here!
+
+# Discord 
+
+Join our discord community! https://discord.gg/8Xzc4tKUe9
