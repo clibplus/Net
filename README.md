@@ -89,6 +89,7 @@ void (*Run) (struct cWS *web, int concurrents, const, char *search_path);
 ```
 
 <details><summary>Example Snippet</summary>
+
 ```c
 my_app->Run(server, 99, 0); // Adjust concurrents to your needs!
 ```
