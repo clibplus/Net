@@ -108,6 +108,8 @@ my_app->Destruct(my_app);
 
 ### Complete Example
 
+<details><summary>Full Example Snippet</summary>
+
 ```c
 #include <stdio.h>
 #include <string.h>
@@ -147,3 +149,12 @@ int main() {
     return 0;
 }
 ```
+</details>
+
+# Memory Management, Undefined Behavior, and Vulnerabilities
+
+This library is written for modern C and has been tested on AMD 64-bit Ubuntu. Most bugs arise due to testing new features. While I try to cover as many issues as possible, the repository is updated frequently, and some updates may or may not be stable.
+
+Official versions are released in the repository on the release tab and are not intended for development purposes.
+
+If you encounter a bug in a released version, please report it here!
