@@ -21,16 +21,13 @@
             });
 
             const rawText = await response.text();
-            console.log("Server Response: " + rawText);
+            if(rawText == "fetched") return;
 
             if (!response.ok) {
-                console.error("Server error:", response.status, rawText);
                 return;
             }
 
             const data = JSON.parse(rawText);
-            console.log("Received response:", data);
-
             if (data) {
                 if (data.new_head_content) {
                     document.head.innerHTML = data.new_head_content;
@@ -64,11 +61,7 @@
                 if (data.replace_elements) {
                     Object.entries(data.replace_elements).forEach(([id, content]) => {
                         let el = document.getElementById(id);
-                        if (el) {
-                            el.innerHTML = content;
-                        } else {
-                            console.warn(`Element with id "${id}" not found.`);
-                        }
+                        if (el) { el.innerHTML = content; }
                     });
                 }
 

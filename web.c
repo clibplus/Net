@@ -307,27 +307,15 @@ int ParseCookies(cWR *req, String cookies) {
         if(args.idx != 2)
             break;
 
-        String n = NewString((char *)args.arr[0]);
-        n.TrimAt(&n, n.idx);
-
-        n.data[n.idx] = '\0';
-
-        String v = NewString((char *)args.arr[1]);
-        n.TrimAt(&n, n.idx);
-        
-        v.data[v.idx - 1] = '\0';
-            
-        req->Cookies.Append(&req->Cookies, n.data, v.data);
-
-        // if((char)((char *)args.arr[0])[0] == ' ') {
-        //     String n = NewString((char *)args.arr[0]);
-        //     n.TrimAt(&n, 0);
+        if((char)((char *)args.arr[0])[0] == ' ') {
+            String n = NewString((char *)args.arr[0]);
+            n.TrimAt(&n, 0);
                 
-        //     req->Cookies.Append(&req->Cookies, n.data, args.arr[1]);
-        //     n.Destruct(&n);
-        // } else {
-        //     req->Cookies.Append(&req->Cookies, args.arr[0], args.arr[1]);
-        // }
+            req->Cookies.Append(&req->Cookies, n.data, args.arr[1]);
+            n.Destruct(&n);
+        } else {
+            req->Cookies.Append(&req->Cookies, args.arr[0], args.arr[1]);
+        }
 
         cookie.Destruct(&cookie);
         args.Destruct(&args);

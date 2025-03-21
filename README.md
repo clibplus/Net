@@ -5,7 +5,7 @@
 
 # Documentation
 
-A HTTP/S library that include Websign Framework which is a generates HTML/CSS written in C for production use!
+A HTTP/S library that include Websign, which is a HTML/CSS/JS toolchain framework written in C for production use!
 
 This library is the C version of React.JS, or at-least the starting point.
 
