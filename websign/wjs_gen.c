@@ -4,7 +4,7 @@
 
 #include "../web.h"
 
-char *JS_HANDLERS = ".forEach(eventType => document.addEventListener(eventType, async event => { try { const eventData = { Route: location.pathname, eventType: event.type, targetTag: event.target?.tagName || null, targetId: event.target?.id || null, targetClass: event.target?.className || null, timestamp: new Date().toISOString(), pageX: event.pageX ?? null, pageY: event.pageY ?? null }; const response = await fetch(\"/ws_js_handler\", { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify(eventData) }); const rawText = await response.text(); console.log(\"Server Response: \" + rawText); if (!response.ok) { console.error(\"Server error:\", response.status, rawText); return; } const data = JSON.parse(rawText); console.log(\"Received response:\", data); if (data) { if (data.new_head_content) document.head.innerHTML = data.new_head_content; if (data.new_body_content) document.body.innerHTML = data.new_body_content; if (data.new_script_content) { let scriptTag = document.querySelector(\"script[data-dynamic]\") || (() => { let s = document.createElement(\"script\"); s.setAttribute(\"data-dynamic\", \"true\"); document.body.appendChild(s); return s; })(); scriptTag.innerHTML = data.new_script_content; } if (data.new_header_content) { let header = document.querySelector(\"header\"); if (header) header.innerHTML = data.new_header_content; } if (data.new_footer_content) { let footer = document.querySelector(\"footer\"); if (footer) footer.innerHTML = data.new_footer_content; } if (data.replace_elements) { Object.entries(data.replace_elements).forEach(([id, content]) => { let el = document.getElementById(id); if (el) { el.innerHTML = content; } else { console.warn(`Element with id \"${id}\" not found.`); } }); } } } catch (err) { console.error(\"Error:\", err); console.log(\"Error: \" + err.message); } }))";
+char *JS_HANDLERS = ".forEach(e=>document.addEventListener(e,async t=>{try{let a={Route:location.pathname,eventType:t.type,targetTag:t.target?.tagName||null,targetId:t.target?.id||null,targetClass:t.target?.className||null,timestamp:new Date().toISOString(),pageX:t.pageX??null,pageY:t.pageY??null,window_width:innerWidth,window_height:innerHeight},n=await fetch(\"/ws_js_handler\",{method:\"POST\",headers:{\"Content-Type\":\"application/json\"},body:JSON.stringify(a)}),o=await n.text();if(console.log(\"Server Response: \"+o),!n.ok)return void console.error(\"Server error:\",n.status,o);let r=JSON.parse(o);if(console.log(\"Received response:\",r),r){if(r.new_head_content&&(document.head.innerHTML=r.new_head_content),r.new_body_content&&(document.body.innerHTML=r.new_body_content),r.new_script_content){let d=document.querySelector(\"script[data-dynamic]\")||(()=>{let c=document.createElement(\"script\");return c.setAttribute(\"data-dynamic\",\"true\"),document.body.appendChild(c),c})();d.innerHTML=r.new_script_content}r.new_header_content&&(document.querySelector(\"header\").innerHTML=r.new_header_content),r.new_footer_content&&(document.querySelector(\"footer\").innerHTML=r.new_footer_content),r.replace_elements&&Object.entries(r.replace_elements).forEach(([d,c])=>{let s=document.getElementById(d);s?s.innerHTML=c:console.warn(`Element with id \"${d}\" not found.`)}),r.resize_window&&(innerWidth=r.resize_window[0],innerHeight=r.resize_window[1]),r.update_styles&&Object.entries(r.update_styles).forEach(([d,c])=>{document.querySelectorAll(d).forEach(s=>Object.assign(s.style,c))})}}catch(a){console.error(\"Error:\",a),console.log(\"Error: \"+a.message)}}));";
 
 // [\"click\", \"mouseover\"]
 String ConstructHandler(int click, int hover, int mouse_track, int keyboard) {
@@ -56,11 +56,12 @@ String ChangeElement(int count, char **arr) {
         if(arr[i][0] != NULL)
             new_content.AppendArray(&new_content, (const char *[]){"\"", (char *)arr[i][0], "\":\"", (char *)arr[i][1], "\"", NULL});
 
-        if(arr[i + 1] != NULL)
+        if(arr[i + 1][0] != NULL)
             new_content.AppendString(&new_content, ",");
     }
     
     new_content.AppendString(&new_content, "}}");
+    new_content.data[new_content.idx] = '\0';
 
     return new_content;
 }

@@ -251,6 +251,7 @@ typedef struct cWR {
     Map                 Cookies;
     String              Body;
     char                *ClientIP;
+    Map                 Event;
     
     clock_t             StartTime;
     clock_t             EndTime;

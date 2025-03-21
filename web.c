@@ -619,6 +619,9 @@ void DestroyReq(cWR *req) {
 
     if(req->Queries.arr != NULL)
         req->Queries.Destruct(&req->Queries);
+        
+    if(req->Event.arr != NULL)
+        req->Event.Destruct(&req->Event);
 
     if(req->Get.arr != NULL)
         req->Get.Destruct(&req->Get);

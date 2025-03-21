@@ -2,41 +2,44 @@
     document.addEventListener(eventType, async event => {
         try {
             const eventData = {
+                Route: location.pathname,
                 eventType: event.type,
-                targetTag: event.target.tagName,
-                Route: location.href,
-                targetId: event.target.id || null,
-                targetClass: event.target.className || null,
+                targetTag: event.target?.tagName || null,
+                targetId: event.target?.id || null,
+                targetClass: event.target?.className || null,
                 timestamp: new Date().toISOString(),
-                pageX: event.pageX,
-                pageY: event.pageY,
+                pageX: event.pageX ?? null,
+                pageY: event.pageY ?? null,
                 window_width: window.innerWidth,
-                window_height: window.innerWidth
+                window_height: window.innerHeight
             };
 
-            const response = await fetch("/event_handler", {
+            const response = await fetch("/ws_js_handler", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(eventData)
             });
 
+            const rawText = await response.text();
+            console.log("Server Response: " + rawText);
+
             if (!response.ok) {
-                return console.error("Server error:", response.status);
+                console.error("Server error:", response.status, rawText);
+                return;
             }
 
-            const data = await response.json();
+            const data = JSON.parse(rawText);
+            console.log("Received response:", data);
+
             if (data) {
-                // Update <head> content if provided
                 if (data.new_head_content) {
                     document.head.innerHTML = data.new_head_content;
                 }
 
-                // Update <body> content if provided
                 if (data.new_body_content) {
                     document.body.innerHTML = data.new_body_content;
                 }
 
-                // Inject new script content dynamically
                 if (data.new_script_content) {
                     let scriptTag = document.querySelector("script[data-dynamic]") || (() => {
                         let s = document.createElement("script");
@@ -44,26 +47,28 @@
                         document.body.appendChild(s);
                         return s;
                     })();
+
                     scriptTag.innerHTML = data.new_script_content;
                 }
 
-                // Update <header> content if provided
                 if (data.new_header_content) {
                     let header = document.querySelector("header");
                     if (header) header.innerHTML = data.new_header_content;
                 }
 
-                // Update <footer> content if provided
                 if (data.new_footer_content) {
                     let footer = document.querySelector("footer");
                     if (footer) footer.innerHTML = data.new_footer_content;
                 }
 
-                // Replace specific elements' content by ID
                 if (data.replace_elements) {
                     Object.entries(data.replace_elements).forEach(([id, content]) => {
                         let el = document.getElementById(id);
-                        if (el) el.innerHTML = content;
+                        if (el) {
+                            el.innerHTML = content;
+                        } else {
+                            console.warn(`Element with id "${id}" not found.`);
+                        }
                     });
                 }
 
@@ -71,9 +76,18 @@
                     window.innerWidth = data.resize_window[0];
                     window.innerHeight = data.resize_window[1];
                 }
+
+                if (data.update_styles) {
+                    Object.entries(data.update_styles).forEach(([selector, styles]) => {
+                        document.querySelectorAll(selector).forEach(el => {
+                            Object.assign(el.style, styles);
+                        });
+                    });
+                }
             }
         } catch (err) {
             console.error("Error:", err);
+            console.log("Error: " + err.message);
         }
     });
 });

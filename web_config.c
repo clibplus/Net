@@ -40,23 +40,19 @@ char *WS_JS_HANDLER = "const parseForm = (formId) => Array.from(document.getElem
 
 void LiveEventHandler(cWS *server, cWR *req, WebRoute *route, int sock) {
     if(req->RequestType.Is(&req->RequestType, "POST")) {
-        if(FindKey(&req->Headers, "CF-Connecting-IP") || FindKey(&req->Headers, "cf-connecting-ip") || FindKey(&req->Headers, "x-forwarded-for"))
+        if((FindKey(&req->Headers, "CF-Connecting-IP") || FindKey(&req->Headers, "cf")) && req->Queries.idx < 1)
             fetch_cf_post_data(server, req, sock);
         
-        printf("%s\n", req->Body.data);
-        Map json = Decode_OneLine_JSON(req->Body.data);
-        printf("%ld\n", json.idx);
+        req->Event = Decode_OneLine_JSON(req->Body.data);
+        if(req->Event.idx < 1)
+            return;
 
-        for(int i = 0; i < json.idx; i++) {
-            printf("%s\n", ((jKey *)json.arr[i])->key);
-        }
-        char *route = ((jKey *)json.arr[0])->value;
+        char *route = ((jKey *)req->Event.arr[0])->value;
         if(!route) {
             printf("Error\n");
             return;
         }
 
-        printf("%s\n", route);
         int chk = SearchRoute(server, route);
         if(chk > -1)
         {
@@ -65,7 +61,6 @@ void LiveEventHandler(cWS *server, cWR *req, WebRoute *route, int sock) {
         }
 
         SendResponse(server, sock, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n");
-        json.Destruct(&json);
     }
 }
 
