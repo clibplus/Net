@@ -3,211 +3,147 @@
     <p>A HTTP/S Library</p>
 </div>
 
-# Documentation
+# Introduction
 
-A HTTP/S library that include Websign, which is a HTML/CSS/JS toolchain framework written in C for production use!
+### What is Websign .? 
 
-This library is the C version of React.JS, or at-least the starting point.
+Websign is a web server and browser SDK toolchain that generates HTML, CSS, and JavaScript using structs, nesting them in a structure similar to traditional HTML.
 
-## Install From Source
+It is a hobbyist project but is built for production use with complete memory management!
 
-You can install websign directly on your system using 'git' command and 'make' to install dependencies
+The library aims to mimic or replace other web development libraries while pushing the boundaries of dynamic web generation.
 
+### Why Websign .? 
+
+Most web development frameworks rely on pre-made templating systems with limited modification capabilities, often restricting flexibility and adding unnecessary bloat.
+
+As programmers, we prefer dynamic solutions over hardcoded ones. Websign enables runtime page modifications, eliminating the need to manually create new files or templates. This approach allows for better dynamic event handling and greater automation in web applications **with back compatibility** for external files!
+
+### Websign's Web-server Standards
+
+Websign was designed to follow HTTP 1.0 for security reasons with one of them being 
+> **"A quick connection close is better than waiting for the idle delay to detect disconnection with ton of threads during an attack"**
+
+However, this does not prevent Websign from supporting HTTP 1.1. While the library is built with a low-level approach for maximum flexibility, HTTP 1.1 can be enabled by setting up headers and adjusting handler(s)
+
+PS. I might look into making some Websign functions to move connections to 1.1 and//or websocket!
+
+# A Minimal Hello-World-WebApp Startup
+
+### Initialize Websign's C Web-Server (cWS)
+Initialize your web-app using 
+
+```c
+cWS *StartWebServer(String IP, int port, int auto_search);
 ```
-sudo apt install make -y
-git clone https://github.com/clibplus/Net.git
-cd Net; make
+
+PS: You can provide an empty String to host for 127.0.0.1 (``NewString("")``)
+
+<details><summary>Example Snippet</summary>
+
+```c
+cWS *my_app = StartWebServer(NewString(""), 80, 0);
+```
+</details>
+
+### Add Routes
+
+Create your function handlers and add them using either one of the following function pointers from cWS struct with the route creation function and SendResponse function for responding to request(s)
+
+```c
+int (*AddRoute)  (cWS *server, WebRoute routes);
+int (*AddRoutes) (cWS *server, WebRoute **routes);
+
+WebRoute *CreateRoute(const char *n, const char *p, void *handler);
+
+void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map cookies, const char *body);
 ```
 
-## Getting Started with a Hello World web page
+<details><summary>Example Snippet</summary>
 
-A simple Hello World web page application can be just as easy as using a few functions, similar to high-level language NET modules/libs
+```c
 
+// Use 1.0 Default and basic headers
+void *index_handler(cWS *server, cWR *req, WebRoute *route, int socket) {
+    SendResponse(server, socket, OK, DefaultHeaders, ((Map){0}), "Hello World");
+}
+
+// AddRoute
+my_app->AddRoute(my_app, (WebRoute){ .Name = "index", .Path = "/", .Handler = index_handler });
+
+// AddRoutes
+WebRoute *Routes[1][] = {
+    CreateRoute("index", "/", index_handler),
+    NULL
+};
+my_app->AddRoutes(my_app, Routes);
 ```
+</details>
+
+### Run the Web-server
+
+You can start the web-server using the function pointer from cWS struct below
+
+```c
+void (*Run) (struct cWS *web, int concurrents, const, char *search_path);
+```
+
+<details><summary>Example Snippet</summary>
+```c
+my_app->Run(server, 99, 0); // Adjust concurrents to your needs!
+```
+</details>
+
+### Clean up the web-server and exit
+
+You can clean up the server and exit by using the destructor!
+
+```c
+void (*Destruct) (struct cWS *web);
+```
+
+```c
+my_app->Destruct(my_app);
+```
+
+### Complete Example
+
+```c
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include <str.h>
+#include <map.h>
 #include <Net/web.h>
 
+// Use 1.0 Default and basic headers
+void *index_handler(cWS *server, cWR *req, WebRoute *route, int socket) {
+    SendResponse(server, socket, OK, DefaultHeaders, ((Map){0}), "Hello World");
+}
+
 int main() {
-    cWS *server = StartWebServer(NewString(""), 80, 0);     // Start web server
-    if(!server)
+    // Initialize cWS
+    cWS *my_app = StartWebServer(NewString(""), 80, 0);
+    if(!my_app)
+    {
+        printf("[ - ] Error, Unable to start web server....");
         return 1;
+    }
 
-    server->AddRoute(server, (WebRoute){                    // Add a route using WebRoute struct
-        .Name = "index",
-        .Path = "/",
-        .Template = "Hello World"
-    });
+    
+    // AddRoute
+    int route_check = my_app->AddRoute(my_app, (WebRoute){ .Name = "index", .Path = "/", .Handler = index_handler });
+    if(!route_check) {
+        printf("[ x ] Error, Unable to add route...!\n");
+        return 1;
+    }
 
-    server->Run(server, 999, 0);                            // Threaded
+    // Run the web-server (Can be threaded if needed)
+    my_app->Run(my_app, 999, 0);
 
-    getch();                                                // Blocking state
+    // Clean up and exit
+    my_app->Destruct(my_app);
     return 0;
 }
 ```
-
-## Creating a Route Handler
-
-Create your handler function with 4 parameters for webserver cWS, incoming request cWR, WebRoute Route, and Socket's FD int then link it to the WebRoute's path struct using the route.Handler field
-
-```
-// You can handle incoming request to the specified path with this function
-void index_handler(cWS *server, cWR *req, WebRoute *route, int socket) {     
-    SendResponse(web, socket, OK, DefaultHeaders, ((Map){}), "Hello World!");
-}
-
-// Edit's your WebRoute struct to use a handler
-(WebRoute){
-    .Name = "index",
-    .Path = "/",
-    .Handler = index_handler
-};
-```
-
-## Create a template generator for specific paths
-
-You can easily use Control and CSS structs to declare what you want for the template, from HTML tags to in-tag attributes and CSS!
-
-```
-/* Controls using HTML Tags */
-typedef enum ControlTag {
-    NO_TAG                              = 8490,
-
-    HTML_TAG                            = 8491,
-    HEAD_TAG                            = 8492,
-    BODY_TAG                            = 8493,
-
-    TITLE_TAG                           = 8494,
-    H1_TAG                              = 8495,
-    H2_TAG                              = 8496,
-    H3_TAG                              = 8497,
-    INPUT_TAG                           = 8498,
-    P_TAG                               = 8499,
-    DIV_TAG                             = 8500,
-    A_TAG                               = 8501,
-    PRE_TAG                             = 8502,
-    BUTTON_TAG                          = 8503,
-    FORM_TAG                            = 8504
-} ControlTag;
-
-typedef struct CSS {
-    char                *Class;     // <name> {
-    char                **Data;     // (arr) }
-    int                 Selector;   // add a period (.) before the <name>
-} CSS;
-
-typedef struct Control {
-    void                *Parent;        // Do not use
-    ControlTag          Tag;            // ControlTag
-    char                *ID;
-    char                *Type;          // Type for <input> <button> <select> <script>
-    char                *Text;          // text for tags: <p> <h1> <h2> <h3>
-    char                *Class;         // class=""
-    char                *href;          // href for <a>
-    char                **CSS;          // CSS Function Generator for the tag <div style="CSS FUNCTION"></div>
-    long                CSSCount;
-    char                *Data;          // For Any Other Data In the Opening Tag <div Data... > </div>
-    long                OnClick;        // Enable this to 1 and Use FormID and DisplayID
-    char                *OnClickJS;     // use direct js (onclick="")
-    char                *FormID;        // TESTING FIELD
-    char                *DisplayID;     // TESTING FIELD
-    void                **SubControls;  // Add more controls
-    long                SubControlCount;
-
-    int                 (*ToCHT)        (struct Control *c);
-    int                 (*ToHTML)       (struct Control *c);
-    void                (*Destruct)     (struct Control *c);
-} Control;
-```
-
-
-(This enables special customization for whatever you want per site, user, rank/role, and//or any special site operation, unlike loading a specific template, Even randomize templates!)
-
-```
-void index_handler(cWS *server, cWR *req, WebRoute *route, int socket) { 
-        Control *Controls[] = {
-        &(Control){ .Tag = HEAD_TAG, .SubControls = (void *[]){
-            &(Control){ .Tag = TITLE_TAG, .Text = "Hello World Page" },
-            NULL
-        }},
-        NULL
-    };
-
-    CSS *Styles[] = {
-        &(CSS){ .Class = "body", .Data = (char *[]){ // use '.Selector = 1' to add '.' before the class name in CSS
-            "background-color: #000",
-            "color: #fff",
-            NULL
-        }},
-        NULL
-    };
-
-    char *template = ConstructTemplate(server, Controls, Styles);
-    if(!template)
-        printf("[ - ] Error, Unable to construct template....!\n");
-    
-    SendResponse(web, socket, OK, DefaultHeaders, ((Map){}), template);
-}
-```
-
-## Using a 3rd Party Template
-
-Yes, You read that right, Being able to use 3rd PARTY template is something that hasnt been done YET and we're glad to announce being able to use templates that arent locally installed wheather the template is empty and ready to use template or using a template being used!
-
-Yep, you are reading correctly! Websign can parse an entire site for its elements and styles document(s) and you can ship the template without saving/installing it, strip the element values and modify for shipment!
-
-[PSA//Note]: THIS FEATURE IS NOT COMPLETELY FINISH BUT HAS BEEN TESTED and NEEDS SOME WORK DONE! The code below is a TEST version of it last working. 
-
-```
-#include <Net/web.h>
-
-int main() {
-	File html_file = Openfile("t.txt", FILE_READ);
-	html_file.Read(&html_file);
-
-	Control **Controls = ParseHTMLContent(html_file.data);
-	html_file.Destruct(&html_file);
-
-	int i = 0;
-	while(Controls[i] != NULL) {
-		char *Tag = FindTag(Controls[i]);
-		if(!Tag)
-			printf("ERROR\n");
-
-		printf("Tag: %s\n", Tag);
-
-
-		free(Controls[i]->ID);
-		free(Controls[i]->Type);
-		free(Controls[i]->Text);
-		free(Controls[i]->Class);
-		free(Controls[i]->href);
-		free(Controls[i]->Data);
-		free(Controls[i]->OnClickJS);
-		free(Controls[i]);
-		i++;
-	}
-
-	return 0;
-}
-```
-
-## Plans
-
-- Currently looking for experimental and recreational developer to test and advance whats already implemented
-
-- Looking for an efficient Javascript developer for server-sided dynamic event handling.
-
-- Looking to advance event handling on both back-end code and Javascript's front-end. A general unversial render and post handler. Here's a snippet of the syntax im aimming for
-
-```
-// handle element with an ID
-if(isButtonClick(req, YOUR_CONTROL_STRUCT.ID)) {
-    printf("Button has been clicked...!\n");
-}
-```
-
-- Developers to bind and wrap the library for other languages
-
-
-### Notes
-
-Even though Websign is in development stage. Current symbols aren't to change in the future unless there a major update!
