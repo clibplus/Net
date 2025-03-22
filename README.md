@@ -4,11 +4,25 @@
 </div>
 
 <table>
-<h2>Info</h2>
-<tr><td>
-* [Info](#what-is-websign-)
+<tr><td width=33% valign=top>
+
+* [Information](#what-is-websign-)
+    * [Why](#why-websign-)
+    * [Standards](##why-websign-)
 </td>
-</tr>
+<td width=33% valign=top>
+
+* [Dev Set-Up](#a-minimal-hello-world-webapp-startup)
+    * [Minimal Web-app Start up](#initialize-websigns-c-web-server-cws)
+    * [Full Example](#complete-example)
+</td></tr>
+</table>
+
+<table align="center">
+<tr><td>
+
+* [Doc](#) (Coming soon)
+</td></tr>
 </table>
 
 # Introduction
