@@ -4,13 +4,13 @@
 </div>
 
 <table align="center">
-<tr><td width=33% valign=top>
+<tr><td valign=top>
 
 * [Information](#what-is-websign-)
     * [Why](#why-websign-)
     * [Standards](##why-websign-)
 </td>
-<td width=33% valign=top>
+<td valign=top>
 
 * [Dev Set-Up](#a-minimal-hello-world-webapp-startup)
     * [Minimal Web-app Start up](#initialize-websigns-c-web-server-cws)
