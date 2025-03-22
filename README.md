@@ -6,7 +6,7 @@
 <table align="center">
 <tr><td valign=top>
 
-<h3>About<h3>
+<p>About<p>
 
 * [Information](#what-is-websign-)
     * [Why](#why-websign-)
@@ -14,7 +14,7 @@
 </td>
 <td valign=top>
 
-<h3>Developers<h3>
+<p>Developers</p>
 
 * [Dev Set-Up](#a-minimal-hello-world-webapp-startup)
     * [Minimal Web-app Start up](#initialize-websigns-c-web-server-cws)
