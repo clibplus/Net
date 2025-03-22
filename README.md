@@ -3,7 +3,7 @@
     <p>A HTTP/S Library</p>
 </div>
 
-<table>
+<table align="center">
 <tr><td width=33% valign=top>
 
 * [Information](#what-is-websign-)
