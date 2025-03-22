@@ -45,6 +45,8 @@ Most web development frameworks rely on pre-made templating systems with limited
 
 As programmers, we prefer dynamic solutions over hardcoded ones. Websign enables runtime page modifications, eliminating the need to manually create new files or templates. This approach allows for better dynamic event handling and greater automation in web applications **with back compatibility** for external files!
 
+Another main reason is, If you have to load file per request (like Apache) or store a template for routes in memory, why not just load the components using programming features... Eliminating the need to navigate through a front-end file tree structure and the code!
+
 ### Websign's Web-server Standards
 
 Websign was designed to follow HTTP 1.0 for security reasons with one of them being 
