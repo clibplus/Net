@@ -196,7 +196,7 @@ String ConstructControl(Control *c, int sub, int oneline) {
             if(c->href)
                 design.AppendArray(&design, (const char *[]){" href=\"", c->href, "\"", NULL});
             
-            if(c->CSS) {
+            if(c->CSS && c->CSSCount > 0) {
                 design.AppendString(&design, " style=\"");
                 design.AppendArray(&design, (const char **)c->CSS);
                 design.AppendString(&design, "\"");
@@ -247,7 +247,7 @@ String ConstructControl(Control *c, int sub, int oneline) {
             if(subControl->href)
                 design.AppendArray(&design, (const char *[]){" href=\"", subControl->href, "\"", NULL});
 
-            if (subControl->CSS) {
+            if (subControl->CSS && subControl->CSSCount > 0) {
                 design.AppendString(&design, " style=\"");
                 design.AppendArray(&design, (const char **)subControl->CSS);
                 design.AppendString(&design, "\"");
