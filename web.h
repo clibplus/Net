@@ -17,8 +17,7 @@
 *   Use:
 *       -lwebsign -lstr -larr -lmap -lpthread
 *
-*   Current Update: 1.0-2.15.24-
-*   Last Update: 0.27-1.14.24.5f63294
+*   Current Update: 1.0-2.15.24
 */
 #pragma once
 

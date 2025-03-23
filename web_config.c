@@ -48,6 +48,7 @@ void LiveEventHandler(cWS *server, cWR *req, WebRoute *route, int sock) {
             return;
 
         char *route = ((jKey *)req->Event.arr[0])->value;
+        printf("[ + ] Event handler invoking %s....!", route);
         if(!route) {
             printf("Error\n");
             return;

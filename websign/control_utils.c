@@ -32,9 +32,9 @@ Control *stack_to_heap(Control c) {
     parent->Construct          = ConstructControl;
     parent->Destruct           = DestructControl;
 
-    // if(!c.CSS)
-    //     for(int i = 0; c.CSS[i] != NULL; i++)
-    //         AppendCSS(parent, c.CSS[i]);
+    if(c.CSS)
+        for(int i = 0; c.CSS[i] != NULL; i++)
+            AppendCSS(parent, c.CSS[i]);
     
     for(int i = 0; i < c.SubControlCount; i++) {
         if(!c.SubControls[i])
