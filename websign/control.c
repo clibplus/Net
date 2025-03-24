@@ -162,6 +162,17 @@ char *create_index_line(int len) {
     return BUFF;
 }
 
+int ControlClicked(Control *c, Map Event) {
+    if(!Event.arr) 
+        return 0;
+
+    if(!strcmp(Event.arr[1], "click") && !strcmp(targetId, c->ID)) {
+        return 1;
+    }
+
+    return 0;
+}
+
 String ConstructControl(Control *c, int sub, int oneline) {
     if(!c)
         return ((String){});

@@ -252,9 +252,7 @@ typedef struct cWR {
     char                *ClientIP;
     Map                 Event;
     
-    clock_t             StartTime;
-    clock_t             EndTime;
-    double              Elapsed;
+    int                 Socket;
     void                (*Destruct)     (struct cWR *r);
 } cWR;
 

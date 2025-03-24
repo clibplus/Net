@@ -41,8 +41,9 @@ It is a hobbyist project but is built for production use with complete memory ma
 The library aims to mimic or replace other web development libraries with a GUI-styled syntax library while pushing the boundaries of dynamic web generation.
 With Websign, We're looking to create a public community where everyone share components with each other to work on advancing web designing in programming features.
 
-<details><summary>An example of the syntactic design we're aiming for the use of Websign!</summary>
+<details><summary>An example of the syntactic design we're aiming for the use of Websign Usage!</summary>
 
+Instead of just having a pre-made template in-file, We're looking to make Web-designing as close as GUI-designing.
 ```c
 Control *parent = CreateControl(BODY_TAG, NULL, NULL, NULL, (Control *[]){
     CreateControl(P_TAG, NULL, NULL, "Click the button", NULL),
@@ -53,6 +54,7 @@ Control *parent = CreateControl(BODY_TAG, NULL, NULL, NULL, (Control *[]){
 void handler( args ... ) {
     if(parent->isClicked(req->Event)) {
         // handle button click
+        // UpdateControl(Control **Controls, CSS **Styles);
         // send response
         return; //exit 
     }

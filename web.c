@@ -156,6 +156,7 @@ void ParseAndCheckRoute(void **args) {
 
     cWR *r = ParseRequest(BUFFER);
     free(BUFFER);
+    r->Socket = request_socket;
     if(!r || !r->Route.data) {
         SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "Error");
         close(request_socket);
@@ -199,7 +200,7 @@ void ParseAndCheckRoute(void **args) {
         return;
     }
 
-    (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
+    (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk]) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
 
     close(request_socket);
     r->Destruct(r);
