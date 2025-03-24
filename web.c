@@ -339,6 +339,10 @@ void GetPostQueries(cWS *web, cWR *r) {
         Array arg = NewArray(NULL);
         arg.Merge(&arg, (void **)para.Split(&para, "="));
 
+        printf("%ld\n", arg.idx);
+        if(arg.idx < 2)
+            printf("[ - ] Corrupted POST data....!\n");
+
         Queries.Append(&Queries, (char *)arg.arr[0], (char *)arg.arr[1]);
 
         args.Destruct(&args);

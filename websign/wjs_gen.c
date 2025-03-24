@@ -12,6 +12,8 @@ String ConstructHandler(int click, int hover, int mouse_track, int keyboard) {
         return ((String){0});
 
     String events = NewString("[\"");
+    String current_js = NewString(JS_HANDLERS);
+    String js = NewString(NULL);
 
     if(click) {
         events.AppendString(&events, "click\"");
@@ -28,15 +30,33 @@ String ConstructHandler(int click, int hover, int mouse_track, int keyboard) {
     }
 
     if(keyboard) {
+        /* Add Keyboard Events */
         (events.idx > 2 ? events.AppendString(&events, ", "): 0);
         events.AppendString(&events, "\"keyup\"");
         events.AppendString(&events, ", ");
         events.AppendString(&events, "\"keydown\"");
-    }
 
-    events.AppendArray(&events, (const char *[]){"]", JS_HANDLERS, NULL});
+        /* Split the basic JS_HANDLER and Insert keyboard event info */
+        Array a = NewArray(NULL);
+        a.Merge(&a, (void **)current_js.Split(&current_js, " "));
+        int check = a.Insert(&a, 43, ", key: event.key, code: event.code, ctrlKey: event.ctrlKey, shiftKey: event.shiftKey, altKey: event.altKey, metaKey: event.metaKey");
+
+        /* Construct New Javascript code for keyboard event info */
+        for(int i = 0; i < a.idx; i++) {
+            if(!a.arr[i])
+                break;
+            
+            js.AppendString(&js, (char *)a.arr[i]);
+            (void)(i != 43 ? js.AppendString(&js, " ") : 0);
+        }
+    } else { js.AppendString(&js, current_js.data); }
+    js.data[js.idx] = '\0';
+
+    events.AppendArray(&events, (const char *[]){"]", js.data, NULL});
     events.data[events.idx] = '\0';
     
+    current_js.Destruct(&current_js);
+    js.Destruct(&js);
     return events;
 }
 

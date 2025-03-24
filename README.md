@@ -38,7 +38,29 @@ Websign is a web server and browser SDK toolchain that generates HTML, CSS, and 
 
 It is a hobbyist project but is built for production use with complete memory management!
 
-The library aims to mimic or replace other web development libraries while pushing the boundaries of dynamic web generation.
+The library aims to mimic or replace other web development libraries with a GUI-styled syntax library while pushing the boundaries of dynamic web generation.
+With Websign, We're looking to create a public community where everyone share components with each other to work on advancing web designing in programming features.
+
+<details><summary>An example of the syntactic design we're aiming for the use of Websign!</summary>
+
+```c
+Control *parent = CreateControl(BODY_TAG, NULL, NULL, NULL, (Control *[]){
+    CreateControl(P_TAG, NULL, NULL, "Click the button", NULL),
+    CreateButton(INPUT_TAG, "submit_btn", "green_huge_btn", "Click Me", NULL),
+    NULL
+});
+
+void handler( args ... ) {
+    if(parent->isClicked(req->Event)) {
+        // handle button click
+        // send response
+        return; //exit 
+    }
+
+    // send regular GET response
+}
+```
+</details>
 
 ### Why Websign .? 
 

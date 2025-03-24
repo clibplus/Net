@@ -43,12 +43,14 @@ void LiveEventHandler(cWS *server, cWR *req, WebRoute *route, int sock) {
         if((FindKey(&req->Headers, "CF-Connecting-IP") || FindKey(&req->Headers, "cf")) && req->Queries.idx < 1)
             fetch_cf_post_data(server, req, sock);
         
+        printf("%s\n", req->Body.data);
         req->Event = Decode_OneLine_JSON(req->Body.data);
+        printf("%ld\n", req->Event.idx);
         if(req->Event.idx < 1)
             return;
 
         char *route = ((jKey *)req->Event.arr[0])->value;
-        printf("[ + ] Event handler invoking %s....!", route);
+        printf("[ + ] Event handler invoking %s....!\n", route);
         if(!route) {
             printf("Error\n");
             return;

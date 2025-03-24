@@ -37,17 +37,6 @@
                     document.body.innerHTML = data.new_body_content;
                 }
 
-                if (data.new_script_content) {
-                    let scriptTag = document.querySelector("script[data-dynamic]") || (() => {
-                        let s = document.createElement("script");
-                        s.setAttribute("data-dynamic", "true");
-                        document.body.appendChild(s);
-                        return s;
-                    })();
-
-                    scriptTag.innerHTML = data.new_script_content;
-                }
-
                 if (data.new_header_content) {
                     let header = document.querySelector("header");
                     if (header) header.innerHTML = data.new_header_content;
