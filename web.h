@@ -159,8 +159,7 @@ typedef struct CSS {
     char                DataCount;
     int                 Selector;
 
-    char                **HoverData;
-    char                **ClickData;
+    int                 (*Append)   (struct CSS *css, const char *q);
 } CSS;
 
 typedef struct Control {
@@ -188,6 +187,7 @@ typedef struct Control {
     String              (*Construct)    (struct Control *c, int sub, int oneline);                          // Construct control to HTML plain-text
     int                 (*ToCHT)        (struct Control *c);                                                // Construct control to CHT plain-text
     int                 (*ToHTML)       (struct Control *c);
+    int                 (*isClicked)    (struct Control *c, Map Event);
     void                (*Destruct)     (struct Control *c, int del_control, int del_styles);
 } Control;
 
@@ -206,7 +206,7 @@ typedef struct WebRoute {
     Control             **Controls;
     long                ControlCount;
 
-    char                *(*ConstructCHT)(Control **controls, CSS **styles,  int click, int hover, int mouse_track, int keyboard, int oneline);
+    char                *(*ConstructCHT)(Control **controls, CSS **styles,  int click, int hover, int mouse_track, int keydown, int keyup, int oneline);
     void                (*Destruct)     (struct WebRoute *r);
 } WebRoute;
 
@@ -439,7 +439,7 @@ ControlTag  FindTagType(const char *data);
 //
 //
 //
-char        *ConstructTemplate(Control **controls, CSS **styles, int click, int hover, int mouse_track, int keyboard, int oneline);
+char        *ConstructTemplate(Control **controls, CSS **styles, int click, int hover, int mouse_track, int keydown, int keyup, int oneline);
 
 //
 //
@@ -478,7 +478,7 @@ Control     **ParseHTMLContent(const char *data);
 //
 //
 //
-String      ConstructHandler(int click, int hover, int mouse_track, int keyboard);
+String      ConstructHandler(int click, int hover, int mouse_track, int keydown, int keyup);
 
 //
 //
@@ -572,6 +572,12 @@ char        *create_index_line(int len);
 //
 //
 //
+int         ControlClicked(Control *c, Map Event);
+
+//
+//
+//
+//
 String      ConstructControl(Control *c, int sub, int oneline);
 
 //
@@ -594,4 +600,7 @@ String      DumpControls(Control *controls, int nestingLevel);
 
 // == [ ws_css.c ] ==
 
+CSS *CreateCSS(const char *class, int selector, const char **data);
+CSS *css_stack_to_heap(CSS *stack_css);
 int AppendDesign(CSS *style, const char *q);
+void DestroyCSS(CSS *style);

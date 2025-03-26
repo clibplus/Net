@@ -151,12 +151,18 @@ void ParseAndCheckRoute(void **args) {
     char *client_ip = GetSocketIP(request_socket);
 
     char *BUFFER = (char *)calloc(4096, sizeof(char));
-    int bytes = read(request_socket, BUFFER, 4096);
+    if(!BUFFER) {
+        printf("[ - ] Error, Failed to allocate memory....!\n");
+        pthread_exit(NULL);
+        close(request_socket);
+        return;
+    }
+
+    int bytes = read(request_socket, BUFFER, 4095);
     BUFFER[strlen(BUFFER) - 1] = '\0';
 
     cWR *r = ParseRequest(BUFFER);
     free(BUFFER);
-    r->Socket = request_socket;
     if(!r || !r->Route.data) {
         SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "Error");
         close(request_socket);
@@ -164,11 +170,12 @@ void ParseAndCheckRoute(void **args) {
         return;
     }
 
+    r->Socket = request_socket;
     r->ClientIP = client_ip;
     printf("[ NEW REQUEST ATTEMPT ] %s\n", (!strcmp(r->Route.data, "/ws_js_handler") ? "Event Handler" : r->Route.data));
     int chk = SearchRoute(web, r->Route.data);
     if(chk == -1) {
-        (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((void *)web->CFG.Err404_Handler))(web, r, web->CFG.Routes[chk], request_socket) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
+        (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *))((void *)web->CFG.Err404_Handler))(web, r, web->CFG.Routes[chk]) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
         close(request_socket);
         r->Destruct(r);
         pthread_exit(NULL);
@@ -200,7 +207,7 @@ void ParseAndCheckRoute(void **args) {
         return;
     }
 
-    (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk]) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
+    (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk]) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
 
     close(request_socket);
     r->Destruct(r);

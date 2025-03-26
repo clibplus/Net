@@ -4,11 +4,12 @@
 
 #include "../web.h"
 
-#define HTML_TAGS_COUNT 112
+#define HTML_TAGS_COUNT 113
 
 #define ENCODED_SYMBOL_COUNT 5
 
 void *HTML_TAGS[][2] = {
+    { (void *)NO_TAG,           "NULL" },
     { (void *)HTML_TAG,         "html" },
     { (void *)HEAD_TAG,         "head"},
     { (void *)TITLE_TAG,        "title" },
@@ -165,9 +166,13 @@ char *decode_input_symbols(const char *data) {
 }
 
 char *FindTag(Control *control) {
-    for(int i = 0; i < HTML_TAGS_COUNT; i++)
+    for(int i = 0; i < HTML_TAGS_COUNT; i++) {
+        if(!HTML_TAGS[i])
+            break;
+
         if((ControlTag)control->Tag == (ControlTag)HTML_TAGS[i][0])
             return HTML_TAGS[i][1];
+    }
 
     return NULL;
 }
@@ -183,7 +188,7 @@ ControlTag FindTagType(const char *data) {
     return 0;
 }
 
-char *ConstructTemplate(Control **controls, CSS **styles, int click, int hover, int mouse_track, int keyboard, int oneline) {
+char *ConstructTemplate(Control **controls, CSS **styles, int click, int hover, int mouse_track, int keydown, int keyup, int oneline) {
     String template = NewString("<!--\nGenerated Using Websign: https://github.com/clibplus/Net\n@author: @algo1337\n-->\n<html>");
     if(!oneline)
         template.AppendString(&template, "\n");
@@ -193,7 +198,7 @@ char *ConstructTemplate(Control **controls, CSS **styles, int click, int hover, 
         return NULL;
 
     if(controls[0]->Tag == HEAD_TAG && styles != NULL) {
-        String handler = ConstructHandler(click, hover, mouse_track, keyboard);
+        String handler = ConstructHandler(click, hover, mouse_track, keydown, keyup);
         if(handler.idx > 0)
             controls[0]->Script = strdup(handler.data);
 

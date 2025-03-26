@@ -4,11 +4,18 @@
 
 #include "../web.h"
 
-char *JS_HANDLERS = ".forEach(eventType => document.addEventListener(eventType, async event => { try { const eventData = { Route: location.pathname, eventType: event.type, targetTag: event.target?.tagName || null, targetId: event.target?.id || null, targetClass: event.target?.className || null, timestamp: new Date().toISOString(), pageX: event.pageX ?? null, pageY: event.pageY ?? null, window_width: window.innerWidth, window_height: window.innerHeight }; const response = await fetch(\"/ws_js_handler\", { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify(eventData) }); const rawText = await response.text(); if (rawText == \"fetched\") return; if (!response.ok) return; const data = JSON.parse(rawText); if (data) { if (data.new_head_content) document.head.innerHTML = data.new_head_content; if (data.new_body_content) document.body.innerHTML = data.new_body_content; if (data.new_script_content) { let scriptTag = document.querySelector(\"script[data-dynamic]\") || (() => { let s = document.createElement(\"script\"); s.setAttribute(\"data-dynamic\", \"true\"); document.body.appendChild(s); return s; })(); scriptTag.innerHTML = data.new_script_content; } if (data.new_header_content) { let header = document.querySelector(\"header\"); if (header) header.innerHTML = data.new_header_content; } if (data.new_footer_content) { let footer = document.querySelector(\"footer\"); if (footer) footer.innerHTML = data.new_footer_content; } if (data.replace_elements) Object.entries(data.replace_elements).forEach(([id, content]) => { let el = document.getElementById(id); if (el) el.innerHTML = content; }); if (data.resize_window) { window.innerWidth = data.resize_window[0]; window.innerHeight = data.resize_window[1]; } if (data.update_styles) Object.entries(data.update_styles).forEach(([selector, styles]) => { document.querySelectorAll(selector).forEach(el => Object.assign(el.style, styles)); }); } } catch (err) { console.error(\"Error:\", err); console.log(\"Error: \" + err.message); } }));";
+// char *JS_HANDLERS = ".forEach(eventType => document.addEventListener(eventType, async event => { try { const eventData = { Route: location.pathname, eventType: event.type, targetTag: event.target?.tagName || null, targetId: event.target?.id || null, targetClass: event.target?.className || null, timestamp: new Date().toISOString(), pageX: event.pageX ?? null, pageY: event.pageY ?? null, window_width: window.innerWidth, window_height: window.innerHeight }; const response = await fetch(\"/ws_js_handler\", { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify(eventData) }); const rawText = await response.text(); if (rawText == \"fetched\") return; if (!response.ok) return; const data = JSON.parse(rawText); if (data) { if (data.new_head_content) document.head.innerHTML = data.new_head_content; if (data.new_body_content) document.body.innerHTML = data.new_body_content; if (data.new_script_content) { let scriptTag = document.querySelector(\"script[data-dynamic]\") || (() => { let s = document.createElement(\"script\"); s.setAttribute(\"data-dynamic\", \"true\"); document.body.appendChild(s); return s; })(); scriptTag.innerHTML = data.new_script_content; } if (data.new_header_content) { let header = document.querySelector(\"header\"); if (header) header.innerHTML = data.new_header_content; } if (data.new_footer_content) { let footer = document.querySelector(\"footer\"); if (footer) footer.innerHTML = data.new_footer_content; } if (data.change_values) Object.entries(data.change_values).forEach(([id, content]) => { let el = document.getElementById(id); if (el) el.innerHTML = content; }); if (data.replace_elements) Object.entries(data.replace_elements).forEach(([id, content]) => { let el = document.getElementById(id); if (el) el.outerHTML = content; }); if (data.resize_window) { window.innerWidth = data.resize_window[0]; window.innerHeight = data.resize_window[1]; } if (data.update_styles) Object.entries(data.update_styles).forEach(([selector, styles]) => { document.querySelectorAll(selector).forEach(el => Object.assign(el.style, styles)); }); } } catch (err) { console.error(\"Error:\", err); console.log(\"Error: \" + err.message); } }));";
+// char *JS_HANDLERS = ".forEach(eventType => { document.addEventListener(eventType, async event => { try { const eventData = { Route: location.pathname, eventType: event.type, targetTag: event.target?.tagName || null, targetId: event.target?.id || null, targetClass: event.target?.className || null, timestamp: new Date().toISOString(), pageX: event.pageX ?? null, pageY: event.pageY ?? null, window_width: window.innerWidth, window_height: window.innerHeight }; if (event.target.id.includes(\"ws\")) { Object.assign(eventData, Object.fromEntries(new FormData(event.target.parentElement))); } const response = await fetch(\"/ws_js_handler\", { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify(eventData) }); const rawText = await response.text(); if (rawText === \"fetched\") return; if (!response.ok) return; const data = JSON.parse(rawText); if (data) { if (data.new_head_content) { document.head.innerHTML = data.new_head_content; } if (data.new_body_content) { document.body.innerHTML = data.new_body_content; } if (data.js_content) { eval(data.new_script_content); } if (data.new_header_content) { let header = document.querySelector(\"header\"); if (header) header.innerHTML = data.new_header_content; } if (data.new_footer_content) { let footer = document.querySelector(\"footer\"); if (footer) footer.innerHTML = data.new_footer_content; } if (data.change_values) { Object.entries(data.change_values).forEach(([id, content]) => { let el = document.getElementById(id); if (el) el.innerHTML = content; }); } if (data.replace_elements) { Object.entries(data.replace_elements).forEach(([id, content]) => { let el = document.getElementById(id); if (el) el.outerHTML = content; }); } if (data.resize_window) { window.innerWidth = data.resize_window[0]; window.innerHeight = data.resize_window[1]; } if (data.update_styles) { Object.entries(data.update_styles).forEach(([selector, styles]) => { document.querySelectorAll(selector).forEach(el => { Object.assign(el.style, styles); }); }); } } } catch (err) { console.error(\"Error:\", err); console.log(\"Error: \" + err.message); } }); });";
+char *JS_HANDLERS = ".forEach(eventType => { document.addEventListener(eventType, async event => { try { const eventData = { Route: location.pathname, eventType: event.type, targetTag: event.target?.tagName || null, targetId: event.target?.id || null, targetClass: event.target?.className || null, targetText: event.target?.innerText || event.target?.value || null, timestamp: new Date().toISOString(), pageX: event.pageX ?? null, pageY: event.pageY ?? null, window_width: window.innerWidth, window_height: window.innerHeight }; if (event.target.id.includes(\"ws\")) { Array.from(event.target.parentElement.children).forEach(child => child.id && (eventData[child.id] = child.innerText || child.value || null)); } const response = await fetch(\"/ws_js_handler\", { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify(eventData) }); const rawText = await response.text(); if (rawText === \"fetched\") return; if (!response.ok) return; const data = JSON.parse(rawText); if (data) { if (data.new_head_content) { document.head.innerHTML = data.new_head_content; } if (data.new_body_content) { document.body.innerHTML = data.new_body_content; } if (data.add_to_body) document.body.insertAdjacentHTML(\"beforeend\", data.add_to_body); if (data.js_content) { eval(data.new_script_content); } if (data.new_header_content) { let header = document.querySelector(\"header\"); if (header) header.innerHTML = data.new_header_content; } if (data.new_footer_content) { let footer = document.querySelector(\"footer\"); if (footer) footer.innerHTML = data.new_footer_content; } if (data.change_values) { Object.entries(data.change_values).forEach(([id, content]) => { let el = document.getElementById(id); if (el) el.innerHTML = content; }); } if (data.replace_elements) { Object.entries(data.replace_elements).forEach(([id, content]) => { let el = document.getElementById(id); if (el) el.outerHTML = content; }); } if (data.resize_window) { window.innerWidth = data.resize_window[0]; window.innerHeight = data.resize_window[1]; } if (data.update_styles) { Object.entries(data.update_styles).forEach(([selector, styles]) => { document.querySelectorAll(selector).forEach(el => { Object.assign(el.style, styles); }); }); } } } catch (err) { console.error(\"Error:\", err); console.log(\"Error: \" + err.message); } }); });";
+// char *JS_HANDLERS = ".forEach(eventType => { document.addEventListener(eventType, async event => { try { const eventData = { Route: location.pathname, eventType: event.type, targetTag: event.target?.tagName || null, targetId: event.target?.id || null, targetClass: event.target?.className || null, timestamp: new Date().toISOString(), pageX: event.pageX ?? null, pageY: event.pageY ?? null, window_width: window.innerWidth, window_height: window.innerHeight }; if (event.target.id.includes(\\"ws\\")) { Array.from(event.target.parentElement.children).forEach((child) => child.id && (json[child.id] = (child.textContent || child.value || '').trim() || null)); } const response = await fetch(\"/ws_js_handler\", { method: \"POST\", headers: { \"Content-Type\": \"application/json\" }, body: JSON.stringify(eventData) }); const rawText = await response.text(); if (rawText === \"fetched\") return; if (!response.ok) return; const data = JSON.parse(rawText); if (data) { if (data.new_head_content) { document.head.innerHTML = data.new_head_content; } if (data.new_body_content) { document.body.innerHTML = data.new_body_content; } if (data.js_content) { eval(data.new_script_content); } if (data.new_header_content) { let header = document.querySelector(\"header\"); if (header) header.innerHTML = data.new_header_content; } if (data.new_footer_content) { let footer = document.querySelector(\"footer\"); if (footer) footer.innerHTML = data.new_footer_content; } if (data.change_values) { Object.entries(data.change_values).forEach(([id, content]) => { let el = document.getElementById(id); if (el) el.innerHTML = content; }); } if (data.replace_elements) { Object.entries(data.replace_elements).forEach(([id, content]) => { let el = document.getElementById(id); if (el) el.outerHTML = content; }); } if (data.resize_window) { window.innerWidth = data.resize_window[0]; window.innerHeight = data.resize_window[1]; } if (data.update_styles) { Object.entries(data.update_styles).forEach(([selector, styles]) => { document.querySelectorAll(selector).forEach(el => { Object.assign(el.style, styles); }); }); } } } catch (err) { console.error(\"Error:\", err); console.log(\"Error: \" + err.message); } }); });";
+// char *JS_HANDLERS = ".forEach(eventType => { document.addEventListener(eventType, async event => { try { const eventData = { Route: location.pathname, eventType: event.type, targetTag: event.target?.tagName || null, targetId: event.target?.id || null, targetClass: event.target?.className || null, timestamp: new Date().toISOString(), pageX: event.pageX ?? null, pageY: event.pageY ?? null, window_width: window.innerWidth, window_height: window.innerHeight }; if (event.target.id.includes(\\"ws\\")) { Array.from(event.target.parentElement.children).forEach((child) => child.id && (json[child.id] = (child.textContent || child.value || '').trim() || null)); } const response = await fetch(\\"/ws_js_handler\\", { method: \\"POST\\", headers: { \\"Content-Type\\": \\"application/json\\" }, body: JSON.stringify(eventData) }); const rawText = await response.text(); if (rawText === \\"fetched\\") return; if (!response.ok) return; const data = JSON.parse(rawText); if (data) { if (data.new_head_content) { document.head.innerHTML = data.new_head_content; } if (data.new_body_content) { document.body.innerHTML = data.new_body_content; } if (data.js_content) { eval(data.new_script_content); } if (data.new_header_content) { let header = document.querySelector(\\"header\\"); if (header) header.innerHTML = data.new_header_content; } if (data.new_footer_content) { let footer = document.querySelector(\\"footer\\"); if (footer) footer.innerHTML = data.new_footer_content; } if (data.change_values) { Object.entries(data.change_values).forEach(([id, content]) => { let el = document.getElementById(id); if (el) el.innerHTML = content; }); } if (data.replace_elements) { Object.entries(data.replace_elements).forEach(([id, content]) => { let el = document.getElementById(id); if (el) el.outerHTML = content; }); } if (data.resize_window) { window.innerWidth = data.resize_window[0]; window.innerHeight = data.resize_window[1]; } if (data.update_styles) { Object.entries(data.update_styles).forEach(([selector, styles]) => { document.querySelectorAll(selector).forEach(el => { Object.assign(el.style, styles); }); }); } } } catch (err) { console.error(\\"Error:\\", err); console.log(\\"Error: \\" + err.message); } }); });";
+
+char *JS_FORM_HANDLER_1 = "document.addEventListener(\"DOMContentLoaded\", () => document.querySelectorAll(\"form[method='post']\").forEach(form => form.addEventListener(\"submit\", async e => { e.preventDefault(); try { const res = await fetch(\"/ws_js_handler\", { method: \"POST\", body: new FormData(form) }), rawText = await res.text(); if (rawText === \"fetched\" || !res.ok) return; const data = JSON.parse(rawText); if (!data) return; [\"new_head_content\", \"new_body_content\", \"new_header_content\", \"new_footer_content\"].forEach(k =";
+char *JS_FORM_HANDLER_2 = "> { const el = document.querySelector(k.replace(\"new_\", \"\")); if (data[k] && el) el.innerHTML = data[k]; }); if (data.replace_elements) Object.entries(data.replace_elements).forEach(([id, content]) => { const el = document.getElementById(id); if (el) el.outerHTML = content; }); if (data.update_styles) Object.entries(data.update_styles).forEach(([s, styles]) => document.querySelectorAll(s).forEach(el => Object.assign(el.style, styles))); if (data.resize_window) [window.innerWidth, window.innerHeight] = data.resize_window; } catch (err) { console.error(\"Form submission error:\", err); } })));";
 
 // [\"click\", \"mouseover\"]
-String ConstructHandler(int click, int hover, int mouse_track, int keyboard) {
-    if(!click && !hover && !mouse_track && !keyboard)
+String ConstructHandler(int click, int hover, int mouse_track, int keydown, int keyup) {
+    if(!click && !hover && !mouse_track && !keydown && !keyup)
         return ((String){0});
 
     String events = NewString("[\"");
@@ -28,18 +35,23 @@ String ConstructHandler(int click, int hover, int mouse_track, int keyboard) {
         (events.idx > 2 ? events.AppendString(&events, ", "): 0);
         events.AppendString(&events, "\"mousemove\"");
     }
+    
+    if(keydown) {
+        (events.idx > 2 ? events.AppendString(&events, ", "): 0);
+        events.AppendString(&events, "\"keydown\"");
+    }
 
-    if(keyboard) {
+    if(keyup) {
         /* Add Keyboard Events */
         (events.idx > 2 ? events.AppendString(&events, ", "): 0);
         events.AppendString(&events, "\"keyup\"");
-        events.AppendString(&events, ", ");
-        events.AppendString(&events, "\"keydown\"");
+    }
 
+    if(keyup || keydown) {
         /* Split the basic JS_HANDLER and Insert keyboard event info */
         Array a = NewArray(NULL);
         a.Merge(&a, (void **)current_js.Split(&current_js, " "));
-        int check = a.Insert(&a, 43, ", key: event.key, code: event.code, ctrlKey: event.ctrlKey, shiftKey: event.shiftKey, altKey: event.altKey, metaKey: event.metaKey");
+        int check = a.Insert(&a, 44, ", key: event.key, code: event.code, ctrlKey: event.ctrlKey, shiftKey: event.shiftKey, altKey: event.altKey, metaKey: event.metaKey");
 
         /* Construct New Javascript code for keyboard event info */
         for(int i = 0; i < a.idx; i++) {
@@ -65,23 +77,23 @@ String ConstructHandler(int click, int hover, int mouse_track, int keyboard) {
     {"element_id", "new_content"}
 }
 */
-String ChangeElement(int count, char **arr) {
-    String new_content = NewString("{\"replace_element\": {");
+// String ChangeElement(int count, char **arr) {
+//     String new_content = NewString("{\"replace_element\": {");
 
-    for(int i = 0; i < count; i++)
-    {
-        if(arr[i] == NULL)
-            break;
+//     for(int i = 0; i < count; i++)
+//     {
+//         if(arr[i] == NULL)
+//             break;
 
-        if(arr[i][0] != NULL)
-            new_content.AppendArray(&new_content, (const char *[]){"\"", (char *)arr[i][0], "\":\"", (char *)arr[i][1], "\"", NULL});
+//         if(arr[i][0] != NULL)
+//             new_content.AppendArray(&new_content, (const char *[]){"\"", (char *)arr[i][0], "\":\"", (char *)arr[i][1], "\"", NULL});
 
-        if(arr[i + 1][0] != NULL)
-            new_content.AppendString(&new_content, ",");
-    }
+//         if(arr[i + 1][0] != NULL)
+//             new_content.AppendString(&new_content, ",");
+//     }
     
-    new_content.AppendString(&new_content, "}}");
-    new_content.data[new_content.idx] = '\0';
+//     new_content.AppendString(&new_content, "}}");
+//     new_content.data[new_content.idx] = '\0';
 
-    return new_content;
-}
+//     return new_content;
+// }

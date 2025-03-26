@@ -10,7 +10,9 @@ CSS *CreateCSS(const char *class, int selector, const char **data) {
         .Class = strdup(class),
         .Data = (char **)malloc(sizeof(char *) * 1),
         .DataCount = 0,
-        .Selector = selector
+        .Selector = selector,
+        
+        .Append = AppendDesign
     };
 
     int i = 0;

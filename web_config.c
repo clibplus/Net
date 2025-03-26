@@ -43,11 +43,15 @@ void LiveEventHandler(cWS *server, cWR *req, WebRoute *route) {
         if((FindKey(&req->Headers, "CF-Connecting-IP") || FindKey(&req->Headers, "cf")) && req->Queries.idx < 1)
             fetch_cf_post_data(server, req, req->Socket);
         
-        printf("%s\n", req->Body.data);
+        // printf("%s\n", req->Body.data);
         req->Event = Decode_OneLine_JSON(req->Body.data);
-        printf("%ld\n", req->Event.idx);
-        if(req->Event.idx < 1)
+        if(req->Event.idx < 10)
             return;
+
+        /* Debug */
+        // for(int i = 0; i < req->Event.idx; i++) {
+        //     printf("%s => %s\n", ((jKey *)req->Event.arr[i])->key, ((jKey *)req->Event.arr[i])->value);
+        // }
 
         char *route = ((jKey *)req->Event.arr[0])->value;
         printf("[ + ] Event handler invoking %s....!\n", route);
@@ -59,7 +63,7 @@ void LiveEventHandler(cWS *server, cWR *req, WebRoute *route) {
         int chk = SearchRoute(server, route);
         if(chk > -1)
         {
-            (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *, int))((WebRoute *)server->CFG.Routes[chk])->Handler)(server, req, server->CFG.Routes[chk]) : SendResponse(server, req->Socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
+            (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *))((WebRoute *)server->CFG.Routes[chk])->Handler)(server, req, server->CFG.Routes[chk]) : SendResponse(server, req->Socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
             return;
         }
 

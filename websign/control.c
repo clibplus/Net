@@ -37,6 +37,7 @@ Control *CreateControl(ControlTag tag, const char *sclass, const char *id, const
         .AppendIn           = Control__AppendControlIn,
         .AppendCSS          = AppendCSS,
         .Construct          = ConstructControl,
+        .isClicked          = ControlClicked,
         .Destruct           = DestructControl
     };
 
@@ -166,11 +167,15 @@ int ControlClicked(Control *c, Map Event) {
     if(!Event.arr) 
         return 0;
 
-    if(!strcmp(Event.arr[1], "click") && !strcmp(targetId, c->ID)) {
+    if(!strcmp(Event.arr[1], "click") && !strcmp(Event.arr[3], c->ID)) {
         return 1;
     }
 
     return 0;
+}
+
+int MouseHovered(Control *c, Map Event) {
+
 }
 
 String ConstructControl(Control *c, int sub, int oneline) {
@@ -178,11 +183,12 @@ String ConstructControl(Control *c, int sub, int oneline) {
         return ((String){});
 
     /* Start w/ <html> and the main tag */
-    String design = (sub == 0 ? NewString(create_index_line(sub)) : NewString(NULL));
+    String design = (sub == 0 ? NewString( (!oneline ? create_index_line(sub) : NULL) ) : NewString(NULL));
     sub == 0 ? design.AppendString(&design, "<") : 0;
 
     /* Main Tag */
     char *main_tag = FindTag(c);
+    printf("%s\n", main_tag);
 
     /* Construct Parent Control */
     if(sub == 0) {
@@ -233,7 +239,7 @@ String ConstructControl(Control *c, int sub, int oneline) {
     if (c->SubControlCount > 0) {
         for (int i = 0; c->SubControls[i] != NULL; i++) {
             Control *subControl = (Control *)c->SubControls[i];
-            design.AppendString(&design, create_index_line(sub + 1));
+            (void)(!oneline ? design.AppendString(&design, create_index_line(sub + 1)) : 0);
             design.AppendString(&design, "<");
             sub_tag = FindTag(subControl);
             if (!sub_tag) break; 
@@ -270,7 +276,8 @@ String ConstructControl(Control *c, int sub, int oneline) {
             design.AppendArray(&design, (const char *[]){subControl->Tag == INPUT_TAG ? "/>" : ">", (!oneline ? "\n": NULL), NULL});
 
             if (subControl->Text)
-                design.AppendArray(&design, (const char *[]){create_index_line(sub + 2), subControl->Text, (!oneline ? "\n": " "), create_index_line(sub + 1), "</", sub_tag, ">", (!oneline ? "\n": NULL), NULL});
+                (void)(!oneline ? design.AppendString(&design, create_index_line(sub + 2)) : 0);
+                design.AppendArray(&design, (const char *[]){subControl->Text, (!oneline ? "\n": " "), create_index_line(sub + 1), "</", sub_tag, ">", (!oneline ? "\n": NULL), NULL});
             if (subControl->SubControlCount > 0) {
                 String n = ConstructControl(subControl, sub + 1, oneline);
                 design.AppendArray(&design, (const char *[]){n.data, NULL});
@@ -280,10 +287,12 @@ String ConstructControl(Control *c, int sub, int oneline) {
     }
 
     /* End Parent Control */
-    if(sub > 0)
-        design.AppendArray(&design, (const char *[]){create_index_line(sub), "</", main_tag, ">", (!oneline ? "\n": NULL), NULL});
-    else
+    if(sub > 0) {
+        (void)(!oneline ? design.AppendString(&design, create_index_line(sub)) : 0);
         design.AppendArray(&design, (const char *[]){"</", main_tag, ">", (!oneline ? "\n": NULL), NULL});
+    } else {
+        design.AppendArray(&design, (const char *[]){"</", main_tag, ">", (!oneline ? "\n": NULL), NULL});
+    }
 
     design.data[design.idx] = '\0';
     if(design.idx > 0)

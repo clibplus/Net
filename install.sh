@@ -11,15 +11,15 @@ cd ..
 
 git clone https://github.com/clibplus/arr.git
 cd arr
-gcc -c arr.c -g -g3 -ggdb
-ar rcs arr.a *.o; mv arr.a /usr/local/lib/libarr.a; rm *.o
+sudo gcc -c arr.c -g -g3 -ggdb
+sudo ar rcs arr.a *.o;sudo  mv arr.a /usr/local/lib/libarr.a; sudo  rm *.o
 cp arr.h /usr/local/include
 cd ..
 
 git clone https://github.com/clibplus/map.git
 cd map
-gcc -c map.c json.c -g -g3 -ggdb
-ar rcs map.a *.o; mv map.a /usr/local/lib/libmap.a; rm *.o
+sudo gcc -c map.c json.c -g -g3 -ggdb
+sudo ar rcs map.a *.o; sudo mv map.a /usr/local/lib/libmap.a; sudo rm *.o
 cp map.h /usr/local/include
 cd ..
 

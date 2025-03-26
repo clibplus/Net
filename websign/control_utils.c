@@ -36,13 +36,15 @@ Control *stack_to_heap(Control c) {
         for(int i = 0; c.CSS[i] != NULL; i++)
             AppendCSS(parent, c.CSS[i]);
     
-    for(int i = 0; i < c.SubControlCount; i++) {
-        if(!c.SubControls[i])
-            break;
+    if(c.SubControls) {
+        for(int i = 0; c.SubControls[i] != NULL; i++) {
+            if(!c.SubControls[i])
+                break;
 
-        parent->sAppend(parent, *(Control *)c.SubControls[i]);
-        if(c.SubControls != NULL)
-            stack_to_heap(*(Control *)c.SubControls[i]);
+            parent->sAppend(parent, *(Control *)c.SubControls[i]);
+            if(c.SubControls != NULL)
+                stack_to_heap(*(Control *)c.SubControls[i]);
+        }
     }
 
     return parent;
@@ -55,7 +57,11 @@ String DumpControls(Control *controls, int nestingLevel) {
     for (int tabs = 0; tabs < nestingLevel; tabs++) {
         ControlList.AppendString(&ControlList, "\t");
     }
-     
+    
+    printf("%s\n", FindTag(controls));
+    printf("%s\n", !controls->Text ? "NULL" : controls->Text);
+    printf("%s\n", !controls->ID ? "NULL" : controls->ID);
+    printf("%s\n", !controls->Class ? "NULL" : controls->Class);
     String info = control2str(controls);
     ControlList.AppendArray(&ControlList, (const char *[]){info.data, "\n", NULL});
     info.Destruct(&info);
