@@ -11,7 +11,7 @@
 *   everything a browser takes
 *
 *   Compile:
-*       sudo gcc -c web.c web_config.c web_route.c websign/*.c -lstr -larr -lmap -lpthread -g -g1
+*       sudo gcc -c web.c web_config.c web_route.c websign/*.c -lstr -larr -lmap -lpthread -g -g1 -ggdb
 *       sudo ar rcs websign.a *.o;sudo rm *.o; sudo mv websign.a /usr/local/lib/libwebsign.a
 *
 *   Use:

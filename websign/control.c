@@ -188,7 +188,6 @@ String ConstructControl(Control *c, int sub, int oneline) {
 
     /* Main Tag */
     char *main_tag = FindTag(c);
-    printf("%s\n", main_tag);
 
     /* Construct Parent Control */
     if(sub == 0) {

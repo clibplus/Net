@@ -366,8 +366,18 @@ void GetPostQueries(cWS *web, cWR *r) {
         Array query_args = NewArray(NULL);
         query_args.Merge(&query_args, (void **)query.Split(&query, "="));
 
-        if(query_args.idx > 1)
+        if(query_args.idx < 2)
+            continue;
+
+        if((char)((char *)query_args.arr[0])[0] == ' ') {
+            String n = NewString((char *)query_args.arr[0]);
+            n.TrimAt(&n, 0);
+                
+            Queries.Append(&Queries, n.data, query_args.arr[1]);
+            n.Destruct(&n);
+        } else {
             Queries.Append(&Queries, query_args.arr[0], query_args.arr[1]);
+        }
 
         query.Destruct(&query);
         query_args.Destruct(&query_args);
@@ -475,7 +485,12 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
     resp.AppendString(&resp, "\r\n\r\n");
     resp.data[resp.idx] = '\0';
 
-    write(request_socket, resp.data, resp.idx - 1);
+    int t = write(request_socket, resp.data, resp.idx - 1);
+    if(t != resp.idx - 1) {
+        printf("ERROR %d\n", t);
+    }
+
+    fsync(request_socket);
     
     resp.Destruct(&resp);
 }

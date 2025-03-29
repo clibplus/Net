@@ -6,7 +6,7 @@
 
 #define HTML_TAGS_COUNT 113
 
-#define ENCODED_SYMBOL_COUNT 5
+#define ENCODED_SYMBOL_COUNT 6
 
 void *HTML_TAGS[][2] = {
     { (void *)NO_TAG,           "NULL" },
@@ -131,6 +131,7 @@ void *EncodedSymbols[][2] = {
     {(void *)';',      "%3B"},
     {(void *)':',      "%3A"},
     {(void *)'#',      "%23"},
+    {(void *)'"',      "\\"},
     NULL
 };
 
@@ -155,6 +156,7 @@ char *decode_input_symbols(const char *data) {
         }
     }
 
+    n.data[n.idx] = '\0';
     char *output = strdup(n.data);
     n.Destruct(&n);
 
