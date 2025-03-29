@@ -69,12 +69,14 @@ Control *IndexPage[] = {
 ### Construct a template
 
 <details><summary>Doc</summary>
+
 ```c
 char *ConstructTemplate(Control **controls, CSS **styles, int click, int hover, int mouse_track, int keydown, int keyup, int oneline);
 ```
 </details>
 
 <details><summary>Example</summary>
+
 ```c
 char *template = ConstructTemplate(IndexPage, NULL, 0, 0, 0, 0, 0, 0);
 ```
