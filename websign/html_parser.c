@@ -127,7 +127,7 @@ Control **process_html_line(const char *data) {
 
     Controls[idx] = NULL;
     line.Destruct(&line);
-    args.Destruct(&args);
+    args.Destruct(&args, 1, 1);
     free(control_stack);
     return Controls;
 }
@@ -157,6 +157,6 @@ Control **ParseHTMLContent(const char *data) {
     controls[idx] = NULL;
 
     raw.Destruct(&raw);
-    lines.Destruct(&lines);
+    lines.Destruct(&lines, 1, 1);
     return controls;
 }

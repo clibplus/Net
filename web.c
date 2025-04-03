@@ -231,7 +231,7 @@ cWR *ParseRequest(const char *data) {
 
     if(lines.idx < 1) {
         traffic.Destruct(&traffic);
-        lines.Destruct(&lines);
+        lines.Destruct(&lines, 1, 1);
         return NULL;
     }
 
@@ -251,7 +251,7 @@ cWR *ParseRequest(const char *data) {
         r->Route = NewString(argz.arr[1]);
     }
 
-    argz.Destruct(&argz);
+    argz.Destruct(&argz, 1, 1);
     request_type.Destruct(&request_type);
 
     int READ_BODY = 0;
@@ -278,7 +278,7 @@ cWR *ParseRequest(const char *data) {
                 ParseCookies(r, line);
 
             r->Headers.Append(&r->Headers, args.arr[0], line.data);
-            args.Destruct(&args);
+            args.Destruct(&args, 1, 1);
         } else {
             r->Body.AppendString(&r->Body, line.data);
         }
@@ -289,7 +289,7 @@ cWR *ParseRequest(const char *data) {
     r->Body.data[r->Body.idx] = '\0';
 
     traffic.Destruct(&traffic);
-    lines.Destruct(&lines);
+    lines.Destruct(&lines, 1, 1);
     request_type.Destruct(&request_type);
 
     return r;
@@ -326,10 +326,10 @@ int ParseCookies(cWR *req, String cookies) {
         }
 
         cookie.Destruct(&cookie);
-        args.Destruct(&args);
+        args.Destruct(&args, 1, 1);
     }
 
-    cookz.Destruct(&cookz);
+    cookz.Destruct(&cookz, 1, 1);
     return req->Cookies.idx;
 }
 
@@ -353,8 +353,8 @@ void GetPostQueries(cWS *web, cWR *r) {
 
         Queries.Append(&Queries, (char *)arg.arr[0], (char *)arg.arr[1]);
 
-        args.Destruct(&args);
-        argz.Destruct(&argz);
+        args.Destruct(&args, 1, 1);
+        argz.Destruct(&argz, 1, 1);
         para.Destruct(&para);
         r->Queries = Queries;
         return;
@@ -380,11 +380,11 @@ void GetPostQueries(cWS *web, cWR *r) {
         }
 
         query.Destruct(&query);
-        query_args.Destruct(&query_args);
+        query_args.Destruct(&query_args, 1, 1);
     }
     
     r->Queries = Queries;
-    args.Destruct(&args);
+    args.Destruct(&args, 1, 1);
 }
 
 int RetrieveGetParameters(cWS *web, cWR *r) {
@@ -408,8 +408,8 @@ int RetrieveGetParameters(cWS *web, cWR *r) {
         queries.Append(&queries, (char *)args.arr[0], parameters.data);
         r->Get = queries;
 
-        link_args.Destruct(&link_args);
-        args.Destruct(&args);
+        link_args.Destruct(&link_args, 1, 1);
+        args.Destruct(&args, 1, 1);
         parameters.Destruct(&parameters);
         return 1;
     }
@@ -432,13 +432,13 @@ int RetrieveGetParameters(cWS *web, cWR *r) {
         queries.Append(&queries, para_args.arr[0], para.data);
 
         para.Destruct(&para);
-        para_args.Destruct(&para_args);
+        para_args.Destruct(&para_args, 1, 1);
     }
 
     r->Get = queries;
 
-    link_args.Destruct(&link_args);
-    args.Destruct(&args);
+    link_args.Destruct(&link_args, 1, 1);
+    args.Destruct(&args, 1, 1);
     parameters.Destruct(&parameters);
     return 1;
 }

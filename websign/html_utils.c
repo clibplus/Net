@@ -6,7 +6,7 @@
 
 #define HTML_TAGS_COUNT 113
 
-#define ENCODED_SYMBOL_COUNT 6
+#define ENCODED_SYMBOL_COUNT 9
 
 void *HTML_TAGS[][2] = {
     { (void *)NO_TAG,           "NULL" },
@@ -132,6 +132,9 @@ void *EncodedSymbols[][2] = {
     {(void *)':',      "%3A"},
     {(void *)'#',      "%23"},
     {(void *)'"',      "\\"},
+    {(void *)'/',      "%2F"},
+    {(void *)'?',      "%3F"},
+    {(void *)'=',      "%3D"},
     NULL
 };
 

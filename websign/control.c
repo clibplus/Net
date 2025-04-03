@@ -142,7 +142,7 @@ int Control__AppendControlIn(Control *c, int pos, Control *new_c) {
         if(!c->SubControls[i])
             break;
 
-        if(i == 2)
+        if(i == pos)
             AppendControl(c->SubControls[i], new_c);
     }
 
