@@ -33,15 +33,18 @@ Control *Template[] = {
 void live_updates(cWS *server, cWR *req, WebRoute *route) {
     printf("Event Checking: %ld Found\n", req->Event.idx);
 
-    if(req->Event.idx > 0) {
+    if(req->Event.idx == 13) {
         char *input_1 = ((jKey *)req->Event.arr[11])->value;
+        char *parent = ((jKey *)req->Event.arr[12])->value;
+        printf("%s: %s\n", parent, input_1);
+
         if(!input_1) {
             SendResponse(server, req->Socket, OK, DefaultHeaders, ((Map){0}), "fetched");
             return;
         }
 
         // use stack_to_heap() to convert a stack template to heap for HTML constructor
-        Control *input_1_form = stack_to_heap(*(Control *)Body.SubControls[0]);
+        Control *input_1_form = stack_to_heap((!strcmp(((jKey *)req->Event.arr[11])->key, "input_1") ? *(Control *)Body.SubControls[0] : *(Control *)Body.SubControls[1]));
         if(!input_1_form) {
             printf("[ - ] Error, Unable to create control....!\n");
         }
@@ -64,7 +67,7 @@ void live_updates(cWS *server, cWR *req, WebRoute *route) {
         return;
     }
 
-    char *template = ConstructTemplate(Template, NULL, 1, 0, 0, 0, 0, 1);
+    char *template = ConstructTemplate(Template, NULL, 1, 0, 0, 0, 0, 0);
     if(!template) {
         SendResponse(server, req->Socket, OK, DefaultHeaders, ((Map){0}), "Error, Unable to construct template...!\n");
         return;
