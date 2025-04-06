@@ -18,12 +18,22 @@ Control Body = (Control){ .Tag = BODY_TAG, .SubControlCount = 1, .SubControl = (
 }};
 
 Control *IndexTemplate[] = {
-    Head,
-    Body,
+    &Head,
+    &Body,
     NULL
 };
 
 // Demostrating template creation using Control struct with the readonly and ConstructTemplate()
+// char *ConstructTemplate(Control **controls, 
+//     CSS **styles, 
+//     int click, 
+//     int hover, 
+//     int mouse_track, 
+//     int keydown, 
+//     int keyup, 
+//     int oneline
+// );
+
 int main() {
     cWS *server = StartWebServer(NewString(""), 80, 0);
     if(!server)

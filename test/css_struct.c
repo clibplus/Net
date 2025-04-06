@@ -23,8 +23,8 @@ Control Body = (Control){ .Tag = BODY_TAG, .SubControlCount = 1, .SubControl = (
 }};
 
 Control *IndexTemplate[] = {
-    Head,
-    Body,
+    &Head,
+    &Body,
     NULL
 };
 
@@ -37,12 +37,12 @@ CSS BodyStyle = (CSS){ .Class = "body", .Selector = 0, .Data = (char *[]){
 }};
 
 CSS *IndexStyle[] = {
-    BodyStyle,
+    &BodyStyle,
     // .. the rest of your css selector(s)
     NULL
 };
 
-// Demostrating template creation using CSS struct with the readonly
+// Demostrating template creation using CSS struct with the readonly and ConstructTemplate()
 int main() {
     cWS *server = StartWebServer(NewString(""), 80, 0);
     if(!server)
