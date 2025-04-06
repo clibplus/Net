@@ -4,8 +4,8 @@ sudo apt update -y && apt upgrade -y
 
 git clone https://github.com/clibplus/str.git
 cd str
-gcc -c str.c utils.c -g -g3 -ggdb
-ar rcs str.a *.o; mv str.a /usr/local/lib/libstr.a; rm *.o
+sudo gcc -c str.c utils.c -g -g3 -ggdb
+sudo ar rcs str.a *.o; sudo mv str.a /usr/local/lib/libstr.a; sudo rm *.o
 cp str.h /usr/local/include
 cd ..
 
@@ -50,6 +50,6 @@ gcc -c request.c -lssl -lcrypto -lstr -larr
 ar rcs request.a *.o; rm *.o; mv request.a /usr/local/lib/librequest.a
 cp request.h /usr/local/include/Net
 
-gcc -c web.c web_config.c web_route.c websign/*.c -lstr -larr -lmap -lpthread -g -g1
-ar rcs websign.a *.o; rm *.o; mv websign.a /usr/local/lib/libwebsign.a
+sudo gcc -c web.c web_config.c web_route.c websign/*.c -lstr -larr -lmap -lpthread -g -g1
+sudo ar rcs websign.a *.o; sudo rm *.o; sudo mv websign.a /usr/local/lib/libwebsign.a
 cp web.h /usr/local/include/Net
