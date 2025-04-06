@@ -199,8 +199,8 @@ void ParseAndCheckRoute(void **args) {
     }
 
     if(web->CFG.Routes[chk]->ReadOnly == 1) {
+        printf("HERE %d\n", chk);
         SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), web->CFG.Routes[chk]->Template);
-        sleep(1);
         close(request_socket);
         r->Destruct(r);
         pthread_exit(NULL);
@@ -487,7 +487,7 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
 
     int t = write(request_socket, resp.data, resp.idx - 1);
     if(t != resp.idx - 1) {
-        printf("ERROR %d\n", t);
+        printf("[Web-Server Client Response]: ERROR %d\n", t);
     }
 
     fsync(request_socket);
