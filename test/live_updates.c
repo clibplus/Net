@@ -18,7 +18,7 @@ Control Body = (Control){ .Tag = BODY_TAG, .SubControlCount = 1, .SubControls = 
     }},
     &(Control){ .Tag = DIV_TAG, .ID = "custom_input_form2", .SubControlCount = 2, .SubControls = (void *[]){
         &(Control){ .Tag = INPUT_TAG, .Type = "text", .ID = "input_2", .Data = "placeholder=\"input 2\"" },
-        &(Control){ .Tag = BUTTON_TAG, .ID = "ws_submit_btn_2", .Data = "value=\"submit button 2\"" },
+        &(Control){ .Tag = INPUT_TAG, .Type = "submit", .ID = "ws_submit_btn_2", .Data = "value=\"submit button 2\"" },
         NULL
     }},
     NULL

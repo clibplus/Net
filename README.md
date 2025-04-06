@@ -17,7 +17,7 @@
 
 <p>Developers</p>
 
-* [Dev Set-Up](#a-minimal-hello-world-webapp-startup)
+* [Dev Set-Up](#Installation)
     * [Minimal Web-app Start up](#initialize-websigns-c-web-server-cws)
     * [Full Example](#complete-example)
 </td></tr>
@@ -54,8 +54,7 @@ Control *parent = CreateControl(BODY_TAG, NULL, NULL, NULL, (Control *[]){
 void handler( args ... ) {
     if(parent->isClicked(req->Event)) {
         // handle button click
-        // UpdateControl(Control **Controls, CSS **Styles);
-        // send response
+        // UpdateUI(Control **Controls, CSS **Styles);
         return; //exit 
     }
 
@@ -80,6 +79,15 @@ Websign was designed to follow HTTP 1.0 for security reasons with one of them be
 However, this does not prevent Websign from supporting HTTP 1.1. While the library is built with a low-level approach for maximum flexibility, HTTP 1.1 can be enabled by setting up headers and adjusting handler(s)
 
 PS. I might look into making some Websign functions to move connections to 1.1 and//or websocket!
+
+# Installation 
+
+We currently have an un-official installation script for maintainers, testers and experimental devs.
+You can install Websign as quick in 2 commands listed below
+```
+git clone https://github.com/clibplus/Net.git
+cd Net; sh install.sh
+```
 
 # A Minimal Hello-World-WebApp Startup
 
