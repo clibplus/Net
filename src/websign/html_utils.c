@@ -202,7 +202,7 @@ char *ConstructTemplate(Control **controls, CSS **styles, int click, int hover, 
     if(!controls || !controls[0])
         return NULL;
 
-    if(controls[0]->Tag == HEAD_TAG && styles != NULL) {
+    if(controls[0]->Tag == HEAD_TAG) {
         String handler = ConstructHandler(click, hover, mouse_track, keydown, keyup);
         if(handler.idx > 0)
             controls[0]->Script = strdup(handler.data);
@@ -211,9 +211,11 @@ char *ConstructTemplate(Control **controls, CSS **styles, int click, int hover, 
         template.AppendArray(&template, (const char *[]){header.data, (!oneline ? "\n\n" : NULL), NULL});
         header.Destruct(&header);
         
-        char *data = ConstructCSS(styles, oneline);
-        template.AppendArray(&template, (const char *[]){data, (!oneline ? "\n\n" : NULL), NULL});
-        free(data);
+        if(styles != NULL) {
+            char *data = ConstructCSS(styles, oneline);
+            template.AppendArray(&template, (const char *[]){data, (!oneline ? "\n\n" : NULL), NULL});
+            free(data);
+        }
 
         i = 1;
     }
@@ -267,4 +269,79 @@ char *ConstructCSS(CSS **styles, int oneline) {
     BUFFER.Destruct(&BUFFER);
 
     return BUFF;
+}
+
+/*
+*/
+void UpdateUI(cWS *server, cWR *req, Control *new_content, Control **controls, CSS **style) {
+    String resp = NewString("{");
+
+    if(new_content) {
+        resp.AppendString(&resp, "\"new_body_content\": \"");
+        String element = new_content->Construct(new_content, 0, 1);
+
+        String__ReplaceChar(&element, '"', "'");
+        while(element.FindChar(&element, '\t') != -1)
+            element.Trim(&element, '\t');
+
+        element.data[element.idx] = '\0';
+        resp.AppendArray(&resp, (const char *[]){element.data, "\"", NULL});
+        element.Destruct(&element);
+    }
+
+    if(controls) {
+        if(new_content) resp.AppendString(&resp, ",");
+        resp.AppendString(&resp, "\"replace_elements\": {");
+        for(int i = 0; controls[i] != NULL; i++) {
+            if(!controls[i])
+                break;
+
+            String element = controls[i]->Construct(controls[i], 0, 1);
+            String__ReplaceChar(&element, '"', "'");
+
+            element.data[element.idx] = '\0';
+            resp.AppendArray(&resp, (const char *[]){"\"", controls[i]->ID, "\": \"", element.data, "\"", NULL});
+            element.Destruct(&element);
+
+            if(controls[i + 1])
+                resp.AppendString(&resp, ",");
+        }
+        resp.AppendString(&resp, "}");
+    }
+
+    if(style) {
+        if(controls) resp.AppendString(&resp, ",");
+        resp.AppendString(&resp, "\"update_styles\": {");
+        for(int i = 0; style[i] != NULL; i++) {
+            resp.AppendArray(&resp, (const char *[]){"\"", (style[i]->Selector ? "." : NULL), NULL});
+            resp.AppendArray(&resp, (const char *[]){style[i]->Class, "\": {", NULL});
+            for(int c = 0; style[i]->Data[c] != NULL; c++) {
+                String buff = NewString(style[i]->Data[c]);
+                Array a = NewArray(NULL);
+                a.Merge(&a, (void **)buff.Split(&buff, ":"));
+                if(a.idx < 2)
+                    break;
+
+                buff.Set(&buff, a.arr[1]);
+                buff.TrimAt(&buff, 0);
+                resp.AppendArray(&resp, (const char *[]){"\"", a.arr[0], "\": \"", buff.data, "\"", NULL});
+                if(style[i]->Data[c + 1])
+                    resp.AppendString(&resp, ",");
+
+                buff.Destruct(&buff);
+                a.Destruct(&a, 1, 1);
+            }
+            
+            resp.AppendString(&resp, "}");
+            if(style[i + 1])
+                resp.AppendString(&resp, ",");
+        }
+        resp.AppendString(&resp, "}");
+    }
+
+    resp.AppendString(&resp, "}");
+    resp.data[resp.idx] = '\0';
+    printf("%s\n", resp.data);
+    SendResponse(server, req->Socket, OK, DefaultHeaders, ((Map){}), resp.data);
+    resp.Destruct(&resp);
 }

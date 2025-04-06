@@ -170,6 +170,13 @@ void ParseAndCheckRoute(void **args) {
         return;
     }
 
+    int pos = r->Headers.InMap(&r->Headers, "Content-Length");
+    if(pos != -1 && bytes != pos) {
+        int leftover;
+        if((leftover = read(request_socket, BUFFER + bytes, pos - bytes)) <= 0)
+            bytes += leftover;
+    }
+
     r->Socket = request_socket;
     r->ClientIP = client_ip;
     printf("[ NEW REQUEST ATTEMPT ] %s\n", (!strcmp(r->Route.data, "/ws_js_handler") ? "Event Handler" : r->Route.data));
@@ -519,19 +526,26 @@ String web_body_var_replacement(Map vars, const char *body) {
 }
 
 void fetch_cf_post_data(cWS *server, cWR *req, int socket) {
+    // for(int i = 0; i < req->Headers.idx; i++) {
+    //     printf("%s => %s\n", ((Key *)req->Headers.arr[i])->key, ((Key *)req->Headers.arr[i])->value);
+    // }
     int pos = req->Headers.InMap(&req->Headers, "Content-Length");
     int len = pos == -1 ? 1024 : atoi(((Key *)req->Headers.arr[pos])->value);
+    printf("[ + ] Attempting to recieve Cloudflare POST data [%d]....!\n", len);
     char *BUFFER = (char *)calloc(len, sizeof(char));
 
     int bytes = read(socket, BUFFER, len);
     BUFFER[bytes] = '\0';
+    if(bytes != len) {
+        printf("[ - ] Error, Fetching the remaining data...!\n");
+    }
 
     req->Body.Clear(&req->Body);
     req->Body.Set(&req->Body, BUFFER);
     req->Queries.Destruct(&req->Queries);
     GetPostQueries(server, req);
 
-    printf("Retrieve Data...!\n");
+    printf("[ + ] Recieved...!\n");
     free(BUFFER);
 }
 

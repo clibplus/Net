@@ -40,13 +40,14 @@ char *WS_JS_HANDLER = "const parseForm = (formId) => Array.from(document.getElem
 
 void LiveEventHandler(cWS *server, cWR *req, WebRoute *route) {
     if(req->RequestType.Is(&req->RequestType, "POST")) {
-        if((req->Headers.InMap(&req->Headers, "CF-Connecting-IP") > -1 || req->Headers.InMap(&req->Headers, "cf")) > -1 && req->Queries.idx < 1)
-            fetch_cf_post_data(server, req, req->Socket);
+        // if((req->Headers.InMap(&req->Headers, "CF") > -1 || req->Headers.InMap(&req->Headers, "cf")) > -1 && req->Queries.idx < 1)
+        //     fetch_cf_post_data(server, req, req->Socket);
         
-        // printf("%s\n", req->Body.data);
         req->Event = Decode_OneLine_JSON(req->Body.data);
-        if(req->Event.idx < 10)
+        if(req->Event.idx < 10) {
+            printf("[ - ] Error, Corrupted Events: %ld\n", req->Event.idx);
             return;
+        }
 
         /* Debug */
         // for(int i = 0; i < req->Event.idx; i++) {

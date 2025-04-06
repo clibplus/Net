@@ -445,6 +445,12 @@ char        *ConstructTemplate(Control **controls, CSS **styles, int click, int 
 //
 //
 //
+void        UpdateUI(cWS *server, cWR *req, Control *new_content, Control **controls, CSS **style);
+
+//
+//
+//
+//
 char        *ConstructCSS(CSS **styles, int oneline);
 
 //
