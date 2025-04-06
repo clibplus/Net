@@ -64,6 +64,8 @@ void live_updates(cWS *server, cWR *req, WebRoute *route) {
 
         printf("Sending UI update....!\n");
         UpdateUI(server, req, NULL, (Control *[]){input_1_form, NULL}, NULL);
+        DestructControls(input_1_form);
+        free(output);
         return;
     }
 
