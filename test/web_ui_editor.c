@@ -427,6 +427,7 @@ void test_page(cWS *server, cWR *req, WebRoute *route) {
             if(!((Control *)route->Args[3])->Append((Control *)route->Args[3], newc)) {
                 printf("[ - ] Error, Unable to add control to the body list....!\n");
             }
+            
             ((Control *)((Control *)MainBody->SubControls[0])->SubControls[9])->Append(((Control *)((Control *)MainBody->SubControls[0])->SubControls[9]), SetupTableRow(!strcmp(new_ctrl_tag, "null") ? "N/A" : new_ctrl_tag));
             ((Control *)((Control *)MainBody->SubControls[0])->SubControls[9])->Append(((Control *)((Control *)MainBody->SubControls[0])->SubControls[9]), SetupTableRow(!strcmp(new_ctrl_class, "null") ? "N/A" : new_ctrl_class));
             ((Control *)((Control *)MainBody->SubControls[0])->SubControls[9])->Append(((Control *)((Control *)MainBody->SubControls[0])->SubControls[9]), SetupTableRow(!strcmp(new_ctrl_id, "null") ? "N/A" : new_ctrl_id));
