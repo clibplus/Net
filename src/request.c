@@ -71,7 +71,7 @@ HTTPClientResponse RequestURL(const String URL, const Map h, const Req_T reqt, c
 		c.Hostname.Set(&c.Hostname, args.arr[0]);
 		c.Port = NewString(args.arr[1]);
 
-		args.Destruct(&args);
+		args.Destruct(&args, 1, 1);
 	}
 
 	printf("%s\n", hostname.arr[0]);
@@ -264,7 +264,7 @@ int ExtractRawTraffic(HTTPClient *c, HTTPClientResponse *r) {
 
 	r->StatusCode = atoi(status.arr[1]);
 	version.Destruct(&version);
-	status.Destruct(&status);
+	status.Destruct(&status, 1, 1);
 
 	/* Grab all headers */
 	int stop = 0;
@@ -297,7 +297,7 @@ int ExtractRawTraffic(HTTPClient *c, HTTPClientResponse *r) {
 		}
 
 		line.Destruct(&line);
-		args.Destruct(&args);
+		args.Destruct(&args, 1, 1);
 	}
 
 	copy.Destruct(&copy);

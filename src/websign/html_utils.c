@@ -194,7 +194,7 @@ ControlTag FindTagType(const char *data) {
 }
 
 char *ConstructTemplate(Control **controls, CSS **styles, int click, int hover, int mouse_track, int keydown, int keyup, int oneline) {
-    String template = NewString("<!--\nGenerated Using Websign: https://github.com/clibplus/Net\n@author: @algo1337\n-->\n<html>");
+    String template = NewString(strdup("<!--\nGenerated Using Websign: https://github.com/clibplus/Net\n@author: @algo1337\n-->\n<html>"));
     if(!oneline)
         template.AppendString(&template, "\n");
 
@@ -242,7 +242,7 @@ char *ConstructCSS(CSS **styles, int oneline) {
     if(!styles)
         return NULL;
 
-    String BUFFER = NewString("<style>");
+    String BUFFER = NewString(strdup("<style>"));
     (!oneline ? BUFFER.AppendString(&BUFFER, "\n") : 0);
     int i = 0, css_idx = 0;
 
@@ -341,7 +341,6 @@ void UpdateUI(cWS *server, cWR *req, Control *new_content, Control **controls, C
 
     resp.AppendString(&resp, "}");
     resp.data[resp.idx] = '\0';
-    printf("%s\n", resp.data);
     SendResponse(server, req->Socket, OK, DefaultHeaders, ((Map){}), resp.data);
     resp.Destruct(&resp);
 }

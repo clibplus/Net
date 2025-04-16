@@ -100,12 +100,16 @@ cWS *StartWebServer(String ip, int port, int auto_search) {
 
     if(web->Socket <= 0)
         return NULL;
-
+    
+    web->Address.sin_family = AF_INET;
     web->Address.sin_port = htons(port);
-    if(ip.idx == 0) {
-        web->Address.sin_addr.s_addr = INADDR_ANY;
+    if(ip.idx < 3) {
+        // web->Address.sin_addr.s_addr = INADDR_ANY;
+        if(!inet_aton("127.0.0.1", &web->Address.sin_addr))
+            printf("[ - ] Error, Unable to set web-server IP...!\n");
     } else {
-        inet_aton(ip.data, &web->Address.sin_addr);
+        if(!inet_aton(ip.data, &web->Address.sin_addr))
+            printf("[ - ] Error, Unable to set web-server IP...!\n");
     }
 
     int reuse = 1;
@@ -153,8 +157,10 @@ void ParseAndCheckRoute(void **args) {
     char *BUFFER = (char *)calloc(4096, sizeof(char));
     if(!BUFFER) {
         printf("[ - ] Error, Failed to allocate memory....!\n");
-        pthread_exit(NULL);
         close(request_socket);
+        free(BUFFER);
+        free(client_ip);
+        pthread_exit(NULL);
         return;
     }
 
@@ -206,7 +212,6 @@ void ParseAndCheckRoute(void **args) {
     }
 
     if(web->CFG.Routes[chk]->ReadOnly == 1) {
-        printf("HERE %d\n", chk);
         SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), web->CFG.Routes[chk]->Template);
         close(request_socket);
         r->Destruct(r);
@@ -232,22 +237,34 @@ cWR *ParseRequest(const char *data) {
         .Destruct = DestroyReq
     };
 
-    String traffic = NewString(data);
+    String traffic = NewString(strdup(data));
     Array lines = NewArray(NULL);
     lines.Merge(&lines, (void **)traffic.Split(&traffic, "\n"));
 
     if(lines.idx < 1) {
         traffic.Destruct(&traffic);
         lines.Destruct(&lines, 1, 1);
+        DestroyReq(r);
         return NULL;
     }
 
-    String request_type = NewString(lines.arr[0]);
+    String request_type = NewString(strdup(lines.arr[0]));
     Array argz = NewArray(NULL);
     argz.Merge(&argz, (void **)request_type.Split(&request_type, " "));
 
-    r->RequestType = NewString(argz.arr[0]);
-    r->Fullroute = NewString(argz.arr[1]);
+    if(argz.idx < 1) {
+        printf("[ - ] Error, Malformed Data....\n");
+        traffic.Destruct(&traffic);
+        lines.Destruct(&lines, 1, 1);
+        request_type.Destruct(&request_type);
+        argz.Destruct(&argz, 1, 1);
+        DestroyReq(r);
+        return NULL;
+    }
+
+    r->RequestType = NewString(strdup(argz.arr[0]));
+    r->Fullroute = NewString(strdup(argz.arr[1]));
+    r->Fullroute.data[r->Fullroute.idx] - '\0';
 
     int pos = -1;
     if((pos = r->Fullroute.FindChar(&r->Fullroute, '?')) > -1) {
@@ -255,7 +272,8 @@ cWR *ParseRequest(const char *data) {
         r->Route = NewString(sub);
         r->Route.data[r->Route.idx] = '\0';
     } else {
-        r->Route = NewString(argz.arr[1]);
+        r->Route = NewString(strdup(argz.arr[1]));
+        r->Route.data[r->Route.idx] - '\0';
     }
 
     argz.Destruct(&argz, 1, 1);
@@ -266,7 +284,7 @@ cWR *ParseRequest(const char *data) {
         if(!lines.arr[i])
             break;
 
-        String line = NewString(lines.arr[i]);
+        String line = NewString(strdup(lines.arr[i]));
         line.data[line.idx] = '\0';
         if(line.isEmpty(&line) || line.Is(&line, " ")) {
             if(READ_BODY) break;
@@ -350,11 +368,10 @@ void GetPostQueries(cWS *web, cWR *r) {
         Array argz = NewArray(NULL);
         argz.Merge(&argz, (void **)r->Body.Split(&r->Body, "?"));
 
-        String para = NewString(argz.arr[1]);
+        String para = NewString(strdup(argz.arr[1]));
         Array arg = NewArray(NULL);
         arg.Merge(&arg, (void **)para.Split(&para, "="));
 
-        printf("%ld\n", arg.idx);
         if(arg.idx < 2)
             printf("[ - ] Corrupted POST data....!\n");
 
@@ -369,7 +386,7 @@ void GetPostQueries(cWS *web, cWR *r) {
     }
 
     for(int i = 0; i < args.idx; i++) {
-        String query = NewString(args.arr[i]);
+        String query = NewString(strdup(args.arr[i]));
         Array query_args = NewArray(NULL);
         query_args.Merge(&query_args, (void **)query.Split(&query, "="));
 
@@ -377,7 +394,7 @@ void GetPostQueries(cWS *web, cWR *r) {
             continue;
 
         if((char)((char *)query_args.arr[0])[0] == ' ') {
-            String n = NewString((char *)query_args.arr[0]);
+            String n = NewString(strdup((char *)query_args.arr[0]));
             n.TrimAt(&n, 0);
                 
             Queries.Append(&Queries, n.data, query_args.arr[1]);
@@ -402,7 +419,7 @@ int RetrieveGetParameters(cWS *web, cWR *r) {
     Array link_args = NewArray(NULL);
     link_args.Merge(&link_args, (void **)r->Fullroute.Split(&r->Fullroute, "?"));
 
-    String parameters = NewString(link_args.arr[1]);
+    String parameters = NewString(strdup(link_args.arr[1]));
     parameters.data[parameters.idx] = '\0';
     if(!parameters.Contains(&parameters, "&")) {
         Array args = NewArray(NULL);
@@ -428,7 +445,7 @@ int RetrieveGetParameters(cWS *web, cWR *r) {
         return 0;
 
     for(int i = 0; i < args.idx; i++) {
-        String para = NewString(args.arr[i]);
+        String para = NewString(strdup(args.arr[i]));
         Array para_args = NewArray(NULL);
         para_args.Merge(&para_args, (void **)para.Split(&para, "="));
 
@@ -462,7 +479,8 @@ void Send_HTML_File(cWS *web, int sock, Map headers, Map cookies, Map vars, cons
 }
 
 void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map cookies, const char *body) {
-    String resp = NewString("HTTP/1.0 ");
+    String resp = NewString(NULL);
+    resp.AppendString(&resp, "HTTP/1.0 ");
     resp.AppendNum(&resp, (int)code);
     resp.AppendArray(&resp, (const char *[]){" ", statuscode_to_str(code), "\r\n", NULL});
 
@@ -479,7 +497,6 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
     free(body_len);
     if(cookies.idx > 0) {
         for(int i = 0; i < cookies.idx; i++) {
-            printf("%s => %s\n", (char *)((Key *)cookies.arr[i])->key, (char *)((Key *)cookies.arr[i])->value);
             resp.AppendArray(&resp, ((const char *[]){(char *)((Key *)cookies.arr[i])->key, ": ", (char *)((Key *)cookies.arr[i])->value, "\r\n", NULL}));
         }
     }
@@ -495,10 +512,10 @@ void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Ma
     int t = write(request_socket, resp.data, resp.idx - 1);
     if(t != resp.idx - 1) {
         printf("[Web-Server Client Response]: ERROR %d\n", t);
+        return;
     }
 
     fsync(request_socket);
-    
     resp.Destruct(&resp);
 }
 
@@ -596,7 +613,7 @@ Map CreateCookies(Cookie **arr) {
 	for(int i = 0; arr[i] != NULL; i++)
 	{
         char *current_time = GetRfcTime(60 * arr[i]->expires);
-		String value = NewString(arr[i]->name);
+		String value = NewString(strdup(arr[i]->name));
 		value.AppendArray(&value, (const char *[]){"=", arr[i]->value, NULL});
 
 		if(arr[i]->path)
