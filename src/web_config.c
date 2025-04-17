@@ -104,14 +104,15 @@ int SearchRoute(cWS *web, char *data) {
     return -1;
 }
 
-int AddRoutes(cWS *web, WebRoute **routes) {
+int AddRoutes(cWS *web, WebRoute **routes, int c) {
     if(!web || !routes)
         return 0;
 
-    int i = 0;
-    while(routes[i] != NULL) {
+    for(int i = 0; i < c; i++) {
+        if(!routes[i])
+            break;
+
         AddRoute(web, *routes[i]);
-        i++;
     }
 
     return 1;

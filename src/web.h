@@ -31,6 +31,7 @@
 #include <str.h>
 #include <arr.h>
 #include <map.h>
+#include <currency.h>
 #include <OS/file.h>
 #include <Net/request.h>
 
@@ -232,8 +233,10 @@ typedef struct cWS {
     WebServerConfig     CFG;
     char                *Logs;
     void                *Last;
+    ConcurrencyThread   *ThreadPool;
+    long                ThreadCount;
 
-    int                 (*AddRoutes)    (struct cWS *web, WebRoute **routes);
+    int                 (*AddRoutes)    (struct cWS *web, WebRoute **routes, int c);
     int                 (*AddRoute)     (struct cWS *web, WebRoute r);
     void                (*Run)          (struct cWS *web, int concurrents, const char *search_path);
     void                (*Destruct)     (struct cWS *web);
@@ -257,12 +260,12 @@ typedef struct cWR {
 } cWR;
 
 typedef struct Cookie {
-	char *name;
-	char *value;
-	char *path;
-	int  expires;
-	int  maxage;
-	int  HTTPOnly;
+	char                *name;
+	char                *value;
+	char                *path;
+	int                 expires;
+	int                 maxage;
+	int                 HTTPOnly;
 } Cookie;
 
 typedef Control Textbox;
@@ -386,7 +389,7 @@ int         SearchRoute(cWS *web, char *data);
 //
 //
 //
-int         AddRoutes(cWS *web, WebRoute **routes);
+int         AddRoutes(cWS *web, WebRoute **routes, int c);
 
 //
 //

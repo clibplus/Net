@@ -7,8 +7,8 @@
 WebRoute *CreateRoute(const char *n, const char *p, void *handler) {
     WebRoute *w = (WebRoute *)malloc(sizeof(WebRoute));
     *w = (WebRoute){
-        .Name = (char *)n,
-        .Path = (char *)p,
+        .Name = strdup((char *)n),
+        .Path = strdup((char *)p),
         .Handler = handler,
         .Controls = (Control **)malloc(sizeof(Control *) * 1),
         .ControlCount = 0,

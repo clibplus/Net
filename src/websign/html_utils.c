@@ -154,7 +154,7 @@ char *decode_input_symbols(const char *data) {
             for(int b = 0; b < rm_len; b++)
                 n.TrimAt(&n, pos);
                 
-            n.InsertAtIdx(&n, pos - 1, ((char)((char *)EncodedSymbols[i][0])));
+            n.InsertAtIdx(&n, pos - 1, ((char)((char *)EncodedSymbols[i])[0]));
             pos = -1;
         }
     }

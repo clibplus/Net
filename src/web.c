@@ -92,11 +92,15 @@ cWS *StartWebServer(String ip, int port, int auto_search) {
             .Routes             = (WebRoute **)malloc(sizeof(WebRoute *) * 1),
             .Destruct           = DestroyCfg
         },
+        .ThreadPool = CreatePool(70),
+        .ThreadCount = 0,
         .AddRoute   = AddRoute,
         .AddRoutes  = AddRoutes,
         .Run        = RunServer,
         .Destruct   = DestroyServer
     };
+    if(!web->CFG.Routes)
+        printf("[ - ] Error, Unable to allocate Config Routes....!\n");
 
     if(web->Socket <= 0)
         return NULL;
@@ -139,19 +143,50 @@ void RunServer(cWS *web, int concurrents, const char *search_path) {
         if((request_socket = accept(web->Socket, (struct sockaddr *)&web->Address, (socklen_t *)&addrlen)) < 0)
             continue;
 
-        pthread_t tid;
         void **arr = (void **)malloc(sizeof(void *) * 2);
         arr[0] = (void *)web;
         arr[1] = (void *)&request_socket;
 
-        pthread_create(&tid, NULL, (void *)ParseAndCheckRoute, (void *)arr);
+        AppendThread(web->ThreadPool, StartThread(ParseAndCheckRoute, arr));
+        if(web->ThreadPool->ThreadCount > 0)
+            pthread_create(&web->ThreadPool->PoolThread, NULL, (void *)StartPool, (void *)web->ThreadPool);
+
     }
 }
 
+// void segfault_handler(int sig, siginfo_t *si, void *unused) {
+//     void *bt[20];
+//     int bt_size;
+//     pthread_t tid = pthread_self();
+
+//     fprintf(stderr, "[Segfault] Signal %d received by thread %lu\n", sig, (unsigned long)tid);
+//     fprintf(stderr, "Fault address: %p\n", si->si_addr);
+
+//     bt_size = backtrace(bt, 20);
+//     backtrace_symbols_fd(bt, bt_size, STDERR_FILENO);
+
+//     _exit(1);  // Exit immediately to avoid undefined behavior
+// }
+
+// void setup_segfault_handler() {
+//     struct sigaction sa;
+//     sa.sa_sigaction = segfault_handler;
+//     sigemptyset(&sa.sa_mask);
+//     sa.sa_flags = SA_SIGINFO;
+
+//     if (sigaction(SIGSEGV, &sa, NULL) == -1) {
+//         perror("sigaction");
+//         exit(EXIT_FAILURE);
+//     }
+// }
+
 void ParseAndCheckRoute(void **args) {
-    cWS *web = (cWS *)args[0];
-    int request_socket = *(int *)args[1];
-    free(args);
+    // setup_segfault_handler();
+    cThread *c = (cThread *)args;
+
+    cWS *web = (cWS *)c->args[0];
+    int request_socket = *(int *)c->args[1];
+
     char *client_ip = GetSocketIP(request_socket);
 
     char *BUFFER = (char *)calloc(4096, sizeof(char));
@@ -160,6 +195,7 @@ void ParseAndCheckRoute(void **args) {
         close(request_socket);
         free(BUFFER);
         free(client_ip);
+        ToggleThread(c);
         pthread_exit(NULL);
         return;
     }
@@ -170,8 +206,8 @@ void ParseAndCheckRoute(void **args) {
     cWR *r = ParseRequest(BUFFER);
     free(BUFFER);
     if(!r || !r->Route.data) {
-        SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "Error");
         close(request_socket);
+        ToggleThread(c);
         pthread_exit(NULL);
         return;
     }
@@ -191,6 +227,7 @@ void ParseAndCheckRoute(void **args) {
         (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *))((void *)web->CFG.Err404_Handler))(web, r, web->CFG.Routes[chk]) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
         close(request_socket);
         r->Destruct(r);
+        ToggleThread(c);
         pthread_exit(NULL);
         return;
     }
@@ -206,6 +243,7 @@ void ParseAndCheckRoute(void **args) {
         if(!check) {
             close(request_socket);
             r->Destruct(r);
+            ToggleThread(c);
             pthread_exit(NULL);
             return;
         }
@@ -215,6 +253,7 @@ void ParseAndCheckRoute(void **args) {
         SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), web->CFG.Routes[chk]->Template);
         close(request_socket);
         r->Destruct(r);
+        ToggleThread(c);
         pthread_exit(NULL);
         return;
     }
@@ -223,6 +262,7 @@ void ParseAndCheckRoute(void **args) {
 
     close(request_socket);
     r->Destruct(r);
+    ToggleThread(c);
     pthread_exit(NULL);
 }
 
@@ -249,10 +289,19 @@ cWR *ParseRequest(const char *data) {
     }
 
     String request_type = NewString(strdup(lines.arr[0]));
+    if(!strstr(request_type.data, " ")) {
+        printf("[ - ] Error, Malformed Data....\n");
+        traffic.Destruct(&traffic);
+        lines.Destruct(&lines, 1, 1);
+        request_type.Destruct(&request_type);
+        DestroyReq(r);
+        return NULL;
+    }
+
     Array argz = NewArray(NULL);
     argz.Merge(&argz, (void **)request_type.Split(&request_type, " "));
 
-    if(argz.idx < 1) {
+    if(argz.idx < 2) {
         printf("[ - ] Error, Malformed Data....\n");
         traffic.Destruct(&traffic);
         lines.Destruct(&lines, 1, 1);
@@ -449,7 +498,7 @@ int RetrieveGetParameters(cWS *web, cWR *r) {
         Array para_args = NewArray(NULL);
         para_args.Merge(&para_args, (void **)para.Split(&para, "="));
 
-        int len = strlen(para_args.arr[0]);
+        int len = strlen(para_args.arr[0]) + 1;
         for(int c = 0; c < len; c++)
             para.TrimAt(&para, 0);
 
