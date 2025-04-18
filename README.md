@@ -11,7 +11,7 @@
 
 * [Information](#what-is-websign-)
     * [Why](#why-websign-)
-    * [Standards](##why-websign-)
+    * [Standards](#why-websign-)
 </td>
 <td valign=top>
 
@@ -26,7 +26,7 @@
 <table align="center">
 <tr><td>
 
-* [Doc](https://github.com/clibplus/Net/blob/main/websign.md) (Coming soon)
+* [Doc](https://github.com/clibplus/Net/blob/main/websign.md)
 </td></tr>
 </table>
 

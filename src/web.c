@@ -148,7 +148,7 @@ void RunServer(cWS *web, int concurrents, const char *search_path) {
         arr[1] = (void *)&request_socket;
 
         AppendThread(web->ThreadPool, StartThread(ParseAndCheckRoute, arr));
-        if(web->ThreadPool->ThreadCount > 0)
+        if(web->ThreadPool->ThreadCount > 0 && !web->ThreadPool->PoolRunning)
             pthread_create(&web->ThreadPool->PoolThread, NULL, (void *)StartPool, (void *)web->ThreadPool);
 
     }
@@ -195,7 +195,7 @@ void ParseAndCheckRoute(void **args) {
         close(request_socket);
         free(BUFFER);
         free(client_ip);
-        ToggleThread(c);
+        ToggleComplete(c);
         pthread_exit(NULL);
         return;
     }
@@ -207,7 +207,7 @@ void ParseAndCheckRoute(void **args) {
     free(BUFFER);
     if(!r || !r->Route.data) {
         close(request_socket);
-        ToggleThread(c);
+        ToggleComplete(c);
         pthread_exit(NULL);
         return;
     }
@@ -227,7 +227,7 @@ void ParseAndCheckRoute(void **args) {
         (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *))((void *)web->CFG.Err404_Handler))(web, r, web->CFG.Routes[chk]) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
         close(request_socket);
         r->Destruct(r);
-        ToggleThread(c);
+        ToggleComplete(c);
         pthread_exit(NULL);
         return;
     }
@@ -243,7 +243,7 @@ void ParseAndCheckRoute(void **args) {
         if(!check) {
             close(request_socket);
             r->Destruct(r);
-            ToggleThread(c);
+            ToggleComplete(c);
             pthread_exit(NULL);
             return;
         }
@@ -253,7 +253,7 @@ void ParseAndCheckRoute(void **args) {
         SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), web->CFG.Routes[chk]->Template);
         close(request_socket);
         r->Destruct(r);
-        ToggleThread(c);
+        ToggleComplete(c);
         pthread_exit(NULL);
         return;
     }
@@ -262,7 +262,7 @@ void ParseAndCheckRoute(void **args) {
 
     close(request_socket);
     r->Destruct(r);
-    ToggleThread(c);
+    ToggleComplete(c);
     pthread_exit(NULL);
 }
 
