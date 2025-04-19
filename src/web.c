@@ -142,6 +142,11 @@ void RunServer(cWS *web, int concurrents, const char *search_path) {
     while(1) {
         if((request_socket = accept(web->Socket, (struct sockaddr *)&web->Address, (socklen_t *)&addrlen)) < 0)
             continue;
+           
+        if(web->ThreadPool->ThreadCount >= web->ThreadPool->MAX_THREADS) {
+            close(request_socket);
+            continue;
+        }
 
         void **arr = (void **)malloc(sizeof(void *) * 2);
         arr[0] = (void *)web;
@@ -154,34 +159,31 @@ void RunServer(cWS *web, int concurrents, const char *search_path) {
     }
 }
 
-// void segfault_handler(int sig, siginfo_t *si, void *unused) {
-//     void *bt[20];
-//     int bt_size;
-//     pthread_t tid = pthread_self();
+void SegfaultHandler(int sig, siginfo_t *si, void *unused) {
+    void *bt[20];
+    int bt_size;
+    pthread_t tid = pthread_self();
 
-//     fprintf(stderr, "[Segfault] Signal %d received by thread %lu\n", sig, (unsigned long)tid);
-//     fprintf(stderr, "Fault address: %p\n", si->si_addr);
+    fprintf(stderr, "[Segfault] Signal %d received by thread %lu\nFault address: %p\n", sig, (unsigned long)tid, si->si_addr);
 
-//     bt_size = backtrace(bt, 20);
-//     backtrace_symbols_fd(bt, bt_size, STDERR_FILENO);
+    bt_size = backtrace(bt, 20);
+    backtrace_symbols_fd(bt, bt_size, STDERR_FILENO);
 
-//     _exit(1);  // Exit immediately to avoid undefined behavior
-// }
+    _exit(1);
+}
 
-// void setup_segfault_handler() {
-//     struct sigaction sa;
-//     sa.sa_sigaction = segfault_handler;
-//     sigemptyset(&sa.sa_mask);
-//     sa.sa_flags = SA_SIGINFO;
+void SetupSegfaultHandler() {
+    struct sigaction sa;
+    sa.sa_sigaction = SegfaultHandler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_SIGINFO;
 
-//     if (sigaction(SIGSEGV, &sa, NULL) == -1) {
-//         perror("sigaction");
-//         exit(EXIT_FAILURE);
-//     }
-// }
+    if (sigaction(SIGSEGV, &sa, NULL) == -1)
+        exit(EXIT_FAILURE);
+}
 
 void ParseAndCheckRoute(void **args) {
-    // setup_segfault_handler();
+    SetupSegfaultHandler();
     cThread *c = (cThread *)args;
 
     cWS *web = (cWS *)c->args[0];
@@ -528,8 +530,7 @@ void Send_HTML_File(cWS *web, int sock, Map headers, Map cookies, Map vars, cons
 }
 
 void SendResponse(cWS *web, int request_socket, StatusCode code, Map headers, Map cookies, const char *body) {
-    String resp = NewString(NULL);
-    resp.AppendString(&resp, "HTTP/1.0 ");
+    String resp = NewString(strdup("HTTP/1.1 "));
     resp.AppendNum(&resp, (int)code);
     resp.AppendArray(&resp, (const char *[]){" ", statuscode_to_str(code), "\r\n", NULL});
 

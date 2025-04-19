@@ -24,6 +24,8 @@
 #include <time.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <signal.h>
+#include <execinfo.h>
 #include <arpa/inet.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
