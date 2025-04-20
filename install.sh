@@ -1,6 +1,8 @@
 #!/usr/sh
 
 sudo apt update -y && apt upgrade -y
+sudo apt install make git gcc -y
+sudo apt install libssl-dev -y
 
 git clone https://github.com/clibplus/str.git
 cd str
