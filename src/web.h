@@ -220,6 +220,7 @@ typedef struct WebServerConfig {
     long                RouteCount;
 
     WebRoute            *Index;
+    void                *OnConnect;
     void                *Middleware;
     void                *Err404_Handler;
     int                 (*Set404Handle) (struct WebServerConfig *cfg, void *handle);
@@ -238,10 +239,12 @@ typedef struct cWS {
     ConcurrencyThread   *ThreadPool;
     long                ThreadCount;
 
-    int                 (*AddRoutes)    (struct cWS *web, WebRoute **routes, int c);
-    int                 (*AddRoute)     (struct cWS *web, WebRoute r);
-    void                (*Run)          (struct cWS *web, int concurrents, const char *search_path);
-    void                (*Destruct)     (struct cWS *web);
+
+    int                 (*AddRoutes)        (struct cWS *web, WebRoute **routes, int c);
+    int                 (*AddRoute)         (struct cWS *web, WebRoute r);
+    int                 (*AddRoutePointer)  (struct cWS *web, WebRoute *r);
+    void                (*Run)              (struct cWS *web, const char *search_path);
+    void                (*Destruct)         (struct cWS *web);
 } cWS;
 
 /* C Web Reqest */
@@ -286,7 +289,7 @@ extern void *EncodedSymbols[][2];
 //          | - > Initalize a web server struct
 //          | - > Returns struct with info upon success or empty struct upon failure
 //
-cWS         *StartWebServer(const String IP, int port, int auto_search);
+cWS         *StartWebServer(const String IP, int port, int auto_search, int thread_count);
 
 
 //
@@ -297,7 +300,7 @@ void        SetDefaultHeaders();
 //
 //          | - > Start listening for connections
 //
-void        RunServer(cWS *web, int concurrents, const char *search_path);
+void        RunServer(cWS *web, const char *search_path);
 
 //
 //          | - > Check and route the request

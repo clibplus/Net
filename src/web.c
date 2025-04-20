@@ -77,27 +77,28 @@ void *StatusCodeDef[][2] = {
     NULL
 };
 
-cWS *StartWebServer(String ip, int port, int auto_search) {
+cWS *StartWebServer(String ip, int port, int auto_search, int thread_count) {
     SetDefaultHeaders();
     if(!ip.data || port <= 0)
         return NULL;
 
     cWS *web = (cWS *)malloc(sizeof(cWS));
     *web = (cWS){
-        .IP         = NewString(ip.data),
-        .Port       = port,
-        .Socket     = socket(AF_INET, SOCK_STREAM, 0),
-        .CFG        = (WebServerConfig){
+        .IP                 = NewString(ip.data),
+        .Port               = port,
+        .Socket             = socket(AF_INET, SOCK_STREAM, 0),
+        .CFG                = (WebServerConfig){
             .DirRouteSearch     = auto_search,
             .Routes             = (WebRoute **)malloc(sizeof(WebRoute *) * 1),
             .Destruct           = DestroyCfg
         },
-        .ThreadPool = CreatePool(70),
-        .ThreadCount = 0,
-        .AddRoute   = AddRoute,
-        .AddRoutes  = AddRoutes,
-        .Run        = RunServer,
-        .Destruct   = DestroyServer
+        .ThreadPool         = CreatePool(thread_count),
+        .ThreadCount        = 0,
+        .AddRoute           = AddRoute,
+        .AddRoutes          = AddRoutes,
+        .AddRoutePointer    = AddRoutePtr,
+        .Run                = RunServer,
+        .Destruct           = DestroyServer
     };
     if(!web->CFG.Routes)
         printf("[ - ] Error, Unable to allocate Config Routes....!\n");
@@ -120,6 +121,10 @@ cWS *StartWebServer(String ip, int port, int auto_search) {
     if(setsockopt(web->Socket, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse, sizeof(reuse)) < 0)
         return NULL;
 
+    if (setsockopt(web->Socket, SOL_SOCKET, SO_REUSEPORT, (const char *)&reuse, sizeof(reuse)) < 0) {
+        return NULL;
+    }
+    
     if(bind(web->Socket, (struct sockaddr *)&web->Address, sizeof(web->Address)) < 0)
         return NULL;
 
@@ -132,8 +137,8 @@ void SetDefaultHeaders() {
 	DefaultHeaders.Append(&DefaultHeaders, "Connection", "close");
 }
 
-void RunServer(cWS *web, int concurrents, const char *search_path) {
-    if(listen(web->Socket, concurrents) < 0)
+void RunServer(cWS *web, const char *search_path) {
+    if(listen(web->Socket, web->ThreadCount) < 0)
         return;
 
     printf("[ cWS ] Web server is now listening on %s:%d\n", web->IP.data, web->Port);
@@ -142,20 +147,29 @@ void RunServer(cWS *web, int concurrents, const char *search_path) {
     while(1) {
         if((request_socket = accept(web->Socket, (struct sockaddr *)&web->Address, (socklen_t *)&addrlen)) < 0)
             continue;
-           
+
+        char *client_ip = GetSocketIP(request_socket);
+        if(web->CFG.OnConnect != NULL) {
+            if(!(int)((int (*)(cWS *, int))(void *)web->CFG.OnConnect)(web, request_socket)) {
+                close(request_socket);
+                continue;
+            }
+        }
+
         if(web->ThreadPool->ThreadCount >= web->ThreadPool->MAX_THREADS) {
+            SendResponse(web, request_socket, UNAUTHORIZED, DefaultHeaders, ((Map){0}), "You are blocked from using this web-server....!\n");
             close(request_socket);
             continue;
         }
 
-        void **arr = (void **)malloc(sizeof(void *) * 2);
+        void **arr = (void **)malloc(sizeof(void *) * 3);
         arr[0] = (void *)web;
         arr[1] = (void *)&request_socket;
+        arr[2] = (void *)client_ip;
 
         AppendThread(web->ThreadPool, StartThread(ParseAndCheckRoute, arr));
         if(web->ThreadPool->ThreadCount > 0 && !web->ThreadPool->PoolRunning)
             pthread_create(&web->ThreadPool->PoolThread, NULL, (void *)StartPool, (void *)web->ThreadPool);
-
     }
 }
 
@@ -189,7 +203,7 @@ void ParseAndCheckRoute(void **args) {
     cWS *web = (cWS *)c->args[0];
     int request_socket = *(int *)c->args[1];
 
-    char *client_ip = GetSocketIP(request_socket);
+    char *client_ip = (char *)c->args[2];
 
     char *BUFFER = (char *)calloc(4096, sizeof(char));
     if(!BUFFER) {
@@ -223,7 +237,7 @@ void ParseAndCheckRoute(void **args) {
 
     r->Socket = request_socket;
     r->ClientIP = client_ip;
-    printf("[ NEW REQUEST ATTEMPT ] %s\n", (!strcmp(r->Route.data, "/ws_js_handler") ? "Event Handler" : r->Route.data));
+    printf("[ WEBSIGN: ROUTE ] %s\n", (!strcmp(r->Route.data, "/ws_js_handler") ? "Event Handler" : r->Route.data));
     int chk = SearchRoute(web, r->Route.data);
     if(chk == -1) {
         (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *))((void *)web->CFG.Err404_Handler))(web, r, web->CFG.Routes[chk]) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
