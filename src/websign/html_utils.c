@@ -273,8 +273,8 @@ char *ConstructCSS(CSS **styles, int oneline) {
 
 /*
 */
-void UpdateUI(cWS *server, cWR *req, Control *new_content, Control **controls, CSS **style) {
-    String resp = NewString("{");
+void UpdateUI(cWS *server, cWR *req, StatusCode code, Map Headers, Map Cookies, Control *new_content, Control **controls, CSS **style) {
+    String resp = NewString(strdup("{"));
 
     if(new_content) {
         resp.AppendString(&resp, "\"new_body_content\": \"");
@@ -341,6 +341,6 @@ void UpdateUI(cWS *server, cWR *req, Control *new_content, Control **controls, C
 
     resp.AppendString(&resp, "}");
     resp.data[resp.idx] = '\0';
-    SendResponse(server, req->Socket, OK, DefaultHeaders, ((Map){}), resp.data);
+    SendResponse(server, req->Socket, code, Headers, Cookies, resp.data);
     resp.Destruct(&resp);
 }

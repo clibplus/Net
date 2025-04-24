@@ -283,6 +283,8 @@ extern void *HTML_TAGS[][2];        // List of all HTML Tag enums w/ a string de
 extern void *StatusCodeDef[][2];    // List of all status code enums w/ a string definition
 extern void *EncodedSymbols[][2];
 
+extern cWS *ServerPointer;
+
 // == [ Web Server Operation ] ==
 
 //
@@ -301,6 +303,16 @@ void        SetDefaultHeaders();
 //          | - > Start listening for connections
 //
 void        RunServer(cWS *web, const char *search_path);
+
+//
+//
+//
+void        SegfaultHandler(int sig, siginfo_t *si, void *unused);
+
+//
+//
+//
+void        SetupSegfaultHandler();
 
 //
 //          | - > Check and route the request
@@ -453,7 +465,7 @@ char        *ConstructTemplate(Control **controls, CSS **styles, int click, int 
 //
 //
 //
-void        UpdateUI(cWS *server, cWR *req, Control *new_content, Control **controls, CSS **style);
+void        UpdateUI(cWS *server, cWR *req, StatusCode code, Map Headers, Map Cookies, Control *new_content, Control **controls, CSS **style);
 
 //
 //

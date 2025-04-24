@@ -7,6 +7,7 @@
 #include "web.h"
 
 Map DefaultHeaders = {0};
+cWS *ServerPointer;
 #define STATUS_CODE_COUNT 63
 
 void *StatusCodeDef[][2] = {
@@ -100,6 +101,7 @@ cWS *StartWebServer(String ip, int port, int auto_search, int thread_count) {
         .Run                = RunServer,
         .Destruct           = DestroyServer
     };
+    ServerPointer = web;
     if(!web->CFG.Routes)
         printf("[ - ] Error, Unable to allocate Config Routes....!\n");
 
@@ -178,12 +180,24 @@ void SegfaultHandler(int sig, siginfo_t *si, void *unused) {
     int bt_size;
     pthread_t tid = pthread_self();
 
+    int found = 0;
+    if(ServerPointer != NULL) {
+        for(int i = 0; i < ServerPointer->ThreadPool->ThreadCount; i++) {
+            if(ServerPointer->ThreadPool->Threads[i]->id == tid) {
+                ToggleComplete(ServerPointer->ThreadPool->Threads[i]);
+                found = 1;
+            }
+        }
+    }
+
+    if(!found)
+        printf("[ - ] Error, Unable to find corrupted thread in the thread pool to remove....!\n");
+
     fprintf(stderr, "[Segfault] Signal %d received by thread %lu\nFault address: %p\n", sig, (unsigned long)tid, si->si_addr);
 
     bt_size = backtrace(bt, 20);
     backtrace_symbols_fd(bt, bt_size, STDERR_FILENO);
-
-    _exit(1);
+    pthread_exit(NULL);
 }
 
 void SetupSegfaultHandler() {
@@ -197,7 +211,7 @@ void SetupSegfaultHandler() {
 }
 
 void ParseAndCheckRoute(void **args) {
-    SetupSegfaultHandler();
+    // SetupSegfaultHandler();
     cThread *c = (cThread *)args;
 
     cWS *web = (cWS *)c->args[0];

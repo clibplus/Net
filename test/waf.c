@@ -156,6 +156,7 @@ void Detection() {
             Blocked.Destruct(&Blocked, 1, 1);
             Blocked = NewArray(NULL);
             ExecuteCmd("sudo iptables -F; sudo ip6tables -F");
+            sleep(10);
         }
         sleep(1);
     }
@@ -199,9 +200,9 @@ int WS_Middleware(cWS *web, cWR *req, WebRoute *route) {
 }
 
 int main() {
-    String IP = NewString(strdup("IP_ADDRESS"));
+    String IP = NewString(strdup("188.64.142.115"));
     Blocked = NewArray(NULL);
-    server = StartWebServer(IP, 80, 0, 40);
+    server = StartWebServer(IP, 80, 0, 20);
     if(!server)
     {
         printf("[ - ] Error, Unable to start web-server....!\n");

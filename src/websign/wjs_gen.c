@@ -12,8 +12,8 @@ String ConstructHandler(int click, int hover, int mouse_track, int keydown, int 
     if(!click && !hover && !mouse_track && !keydown && !keyup)
         return ((String){0});
 
-    String events = NewString("[\"");
-    String current_js = NewString(JS_HANDLERS);
+    String events = NewString(strdup("[\""));
+    String current_js = NewString(strdup(JS_HANDLERS));
     String js = NewString(NULL);
 
     if(click) {
