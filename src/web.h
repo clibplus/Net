@@ -236,6 +236,7 @@ typedef struct cWS {
     WebServerConfig     CFG;
     char                *Logs;
     void                *Last;
+    ConcurrencyThread   *ServerThreadPool;
     ConcurrencyThread   *ThreadPool;
     long                ThreadCount;
 
@@ -260,6 +261,7 @@ typedef struct cWR {
     char                *ClientIP;
     Map                 Event;
     
+    WebRoute            *wRoute;
     int                 Socket;
     void                (*Destruct)     (struct cWR *r);
 } cWR;
@@ -465,7 +467,7 @@ char        *ConstructTemplate(Control **controls, CSS **styles, int click, int 
 //
 //
 //
-void        UpdateUI(cWS *server, cWR *req, StatusCode code, Map Headers, Map Cookies, Control *new_content, Control **controls, CSS **style);
+void        UpdateUI(cWS *server, cWR *req, StatusCode code, Map Headers, Map Cookies, Control *new_content, Control **controls, CSS **style, char *redirect);
 
 //
 //

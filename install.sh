@@ -27,30 +27,30 @@ cd ..
 
 git clone https://github.com/clibplus/OS.git
 cd OS
-gcc -c file.c -g -g3 -ggdb
-ar rcs file.a *.o; mv file.a /usr/local/lib/libfile.a; rm *.o
-mkdir -p /usr/local/include/OS
-cp file.h /usr/local/include
+sudo gcc -c file.c -g -g3 -ggdb
+sudo ar rcs file.a *.o; sudo mv file.a /usr/local/lib/libfile.a; sudo rm *.o
+sudo mkdir -p /usr/local/include/OS
+sudo cp file.h /usr/local/include
 
-gcc -c utils.c -g -g3 -ggdb
-ar rcs utils.a *.o; mv utils.a /usr/local/lib/libutils.a; rm *.o
-cp utils.h /usr/local/include
+sudo gcc -c utils.c -g -g3 -ggdb
+sudo ar rcs utils.a *.o; sudo mv utils.a /usr/local/lib/libutils.a; sudo rm *.o
+sudo cp utils.h /usr/local/include
 cd ..
 
 git clone https://github.com/clibplus/Net.git
 cd Net
-gcc -c socket.c -lpthread
-ar rcs socket.a *.o; rm *.o; mv socket.a /usr/local/lib/libsocket.a
-mkdir -p /usr/local/include/Net
-cp socket.h /usr/local/include/Net
+sudo gcc -c socket.c -lpthread
+sudo ar rcs socket.a *.o; sudo rm *.o; sudo mv socket.a /usr/local/lib/libsocket.a
+sudo mkdir -p /usr/local/include/Net
+sudo cp socket.h /usr/local/include/Net
 
-gcc -c ssl.c -lssl -lcrypto
-ar rcs ssl.a *.o; rm *.o; mv ssl.a /usr/local/lib/libssl.a
-cp ssl.h /usr/local/include/Net
+sudo gcc -c ssl.c -lssl -lcrypto
+sudo ar rcs ssl.a *.o; sudo rm *.o; sudo mv ssl.a /usr/local/lib/libssl.a
+sudo cp ssl.h /usr/local/include/Net
 
-gcc -c request.c -lssl -lcrypto -lstr -larr
-ar rcs request.a *.o; rm *.o; mv request.a /usr/local/lib/librequest.a
-cp request.h /usr/local/include/Net
+sudo gcc -c request.c -lssl -lcrypto -lstr -larr
+sudo ar rcs request.a *.o; sudo rm *.o; sudo mv request.a /usr/local/lib/librequest.a
+sudo cp request.h /usr/local/include/Net
 
 sudo gcc -c web.c web_config.c web_route.c websign/*.c -lstr -larr -lmap -lpthread -g -g1
 sudo ar rcs websign.a *.o; sudo rm *.o; sudo mv websign.a /usr/local/lib/libwebsign.a

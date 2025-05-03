@@ -54,6 +54,7 @@
             let footer = document.querySelector("footer");
             if (footer) footer.innerHTML = data.new_footer_content;
           }
+
   
           if (data.change_values) {
             Object.entries(data.change_values).forEach(([id, content]) => {

@@ -182,6 +182,18 @@ char *FindTag(Control *control) {
     return NULL;
 }
 
+// char *FindExternalTag(void **arr, int MAX_COUNT, void Control *c) {
+//     for(int i = 0; i < MAX_COUNT; i++) {
+//         if(!arr[i])
+//             break;
+
+//         if(c->Tag == (int)((void *)arr[i])[0])
+//             return (char *)((void **)arr[i])[1];
+//     }
+
+//     return NULL;
+// }
+
 ControlTag FindTagType(const char *data) {
     if(!data)
         return 0;
@@ -273,7 +285,7 @@ char *ConstructCSS(CSS **styles, int oneline) {
 
 /*
 */
-void UpdateUI(cWS *server, cWR *req, StatusCode code, Map Headers, Map Cookies, Control *new_content, Control **controls, CSS **style) {
+void UpdateUI(cWS *server, cWR *req, StatusCode code, Map Headers, Map Cookies, Control *new_content, Control **controls, CSS **style, char *redirect) {
     String resp = NewString(strdup("{"));
 
     if(new_content) {
@@ -310,7 +322,7 @@ void UpdateUI(cWS *server, cWR *req, StatusCode code, Map Headers, Map Cookies, 
     }
 
     if(style) {
-        if(controls) resp.AppendString(&resp, ",");
+        if(new_content || controls) resp.AppendString(&resp, ",");
         resp.AppendString(&resp, "\"update_styles\": {");
         for(int i = 0; style[i] != NULL; i++) {
             resp.AppendArray(&resp, (const char *[]){"\"", (style[i]->Selector ? "." : NULL), NULL});
@@ -337,6 +349,11 @@ void UpdateUI(cWS *server, cWR *req, StatusCode code, Map Headers, Map Cookies, 
                 resp.AppendString(&resp, ",");
         }
         resp.AppendString(&resp, "}");
+    }
+
+    if(redirect) {
+        if(new_content || controls || style) resp.AppendString(&resp, ",");
+        resp.AppendArray(&resp, (const char *[]){"\"redirect\": \"", redirect, "\"", NULL});
     }
 
     resp.AppendString(&resp, "}");

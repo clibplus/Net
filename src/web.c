@@ -95,6 +95,7 @@ cWS *StartWebServer(String ip, int port, int auto_search, int thread_count) {
         },
         .ThreadPool         = CreatePool(thread_count),
         .ThreadCount        = 0,
+        .ServerThreadPool   = CreatePool(1),
         .AddRoute           = AddRoute,
         .AddRoutes          = AddRoutes,
         .AddRoutePointer    = AddRoutePtr,
@@ -159,7 +160,7 @@ void RunServer(cWS *web, const char *search_path) {
         }
 
         if(web->ThreadPool->ThreadCount >= web->ThreadPool->MAX_THREADS) {
-            SendResponse(web, request_socket, UNAUTHORIZED, DefaultHeaders, ((Map){0}), "You are blocked from using this web-server....!\n");
+            SendResponse(web, request_socket, UNAUTHORIZED, DefaultHeaders, ((Map){0}), "The server is under heavy load...!\n");
             close(request_socket);
             continue;
         }
@@ -169,7 +170,7 @@ void RunServer(cWS *web, const char *search_path) {
         arr[1] = (void *)&request_socket;
         arr[2] = (void *)client_ip;
 
-        AppendThread(web->ThreadPool, StartThread(ParseAndCheckRoute, arr));
+        AppendThread(web->ThreadPool, StartThread(ParseAndCheckRoute, arr, 0));
         if(web->ThreadPool->ThreadCount > 0 && !web->ThreadPool->PoolRunning)
             pthread_create(&web->ThreadPool->PoolThread, NULL, (void *)StartPool, (void *)web->ThreadPool);
     }
@@ -179,6 +180,9 @@ void SegfaultHandler(int sig, siginfo_t *si, void *unused) {
     void *bt[20];
     int bt_size;
     pthread_t tid = pthread_self();
+
+    if(ServerPointer == tid)
+        return;
 
     int found = 0;
     if(ServerPointer != NULL) {
@@ -211,7 +215,7 @@ void SetupSegfaultHandler() {
 }
 
 void ParseAndCheckRoute(void **args) {
-    // SetupSegfaultHandler();
+    SetupSegfaultHandler();
     cThread *c = (cThread *)args;
 
     cWS *web = (cWS *)c->args[0];
@@ -231,6 +235,15 @@ void ParseAndCheckRoute(void **args) {
     }
 
     int bytes = read(request_socket, BUFFER, 4095);
+    if(bytes == -1) {
+        close(request_socket);
+        free(BUFFER);
+        free(client_ip);
+        ToggleComplete(c);
+        pthread_exit(NULL);
+        return;
+    }
+
     BUFFER[strlen(BUFFER) - 1] = '\0';
 
     cWR *r = ParseRequest(BUFFER);
@@ -254,7 +267,7 @@ void ParseAndCheckRoute(void **args) {
     printf("[ WEBSIGN: ROUTE ] %s\n", (!strcmp(r->Route.data, "/ws_js_handler") ? "Event Handler" : r->Route.data));
     int chk = SearchRoute(web, r->Route.data);
     if(chk == -1) {
-        (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *))((void *)web->CFG.Err404_Handler))(web, r, web->CFG.Routes[chk]) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
+        (void)(chk > -1 ? ((void (*)(cWR *))((void *)web->CFG.Err404_Handler))(r) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
         close(request_socket);
         r->Destruct(r);
         ToggleComplete(c);
@@ -262,6 +275,7 @@ void ParseAndCheckRoute(void **args) {
         return;
     }
 
+    r->wRoute = web->CFG.Routes[chk];
     if(!strcmp(r->RequestType.data, "POST"))
         GetPostQueries(web, r);
 
@@ -269,7 +283,7 @@ void ParseAndCheckRoute(void **args) {
         RetrieveGetParameters(web, r);
 
     if(web->CFG.Middleware != NULL) {
-        int check = (int)((int (*)(cWS *, cWR *, int))(void *)web->CFG.Middleware)(web, r, request_socket);
+        int check = (int)((int (*)(cWR *, int))(void *)web->CFG.Middleware)(r, request_socket);
         if(!check) {
             close(request_socket);
             r->Destruct(r);
@@ -288,7 +302,7 @@ void ParseAndCheckRoute(void **args) {
         return;
     }
 
-    (void)(chk > -1 ? ((void (*)(cWS *, cWR *, WebRoute *))((WebRoute *)web->CFG.Routes[chk])->Handler)(web, r, web->CFG.Routes[chk]) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
+    (void)(chk > -1 ? ((void (*)(cWR *))((WebRoute *)web->CFG.Routes[chk])->Handler)(r) : SendResponse(web, request_socket, OK, DefaultHeaders, ((Map){0}), "ERROR\n\n\n"));
 
     close(request_socket);
     r->Destruct(r);
@@ -348,7 +362,7 @@ cWR *ParseRequest(const char *data) {
     int pos = -1;
     if((pos = r->Fullroute.FindChar(&r->Fullroute, '?')) > -1) {
         char *sub = r->Fullroute.GetSubstr(&r->Fullroute, 0, pos);
-        r->Route = NewString(sub);
+        r->Route = NewString(strdup(sub));
         r->Route.data[r->Route.idx] = '\0';
     } else {
         r->Route = NewString(strdup(argz.arr[1]));
