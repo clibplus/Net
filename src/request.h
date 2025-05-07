@@ -14,7 +14,8 @@
 
 typedef enum Req_T {
 	__GET__			= 0x023001,
-	__POST__		= 0x023002
+	__POST__		= 0x023002,
+	__HEAD__		= 0x023003
 } Req_T;
 
 typedef enum StatusCode {

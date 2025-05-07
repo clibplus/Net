@@ -159,7 +159,7 @@ void RunServer(cWS *web, const char *search_path) {
             }
         }
 
-        if(web->ThreadPool->ThreadCount >= web->ThreadPool->MAX_THREADS) {
+        if(web->ThreadPool->ThreadCount >= web->ThreadPool->MAX_THREADS && web->StopQuene) {
             SendResponse(web, request_socket, UNAUTHORIZED, DefaultHeaders, ((Map){0}), "The server is under heavy load...!\n");
             close(request_socket);
             continue;
@@ -276,7 +276,7 @@ void ParseAndCheckRoute(void **args) {
     }
 
     r->wRoute = web->CFG.Routes[chk];
-    if(!strcmp(r->RequestType.data, "POST"))
+    if(r->RequestType == __POST__)
         GetPostQueries(web, r);
 
     if(strstr(r->Fullroute.data, "?"))
@@ -355,7 +355,7 @@ cWR *ParseRequest(const char *data) {
         return NULL;
     }
 
-    r->RequestType = NewString(strdup(argz.arr[0]));
+    r->RequestType = (!strcmp(argz.arr[0], "POST") ? __POST__ : (!strcmp(argz.arr[0], "GET") ? __GET__ : __HEAD__ ));
     r->Fullroute = NewString(strdup(argz.arr[1]));
     r->Fullroute.data[r->Fullroute.idx] - '\0';
 
@@ -748,9 +748,6 @@ void DestroyReq(cWR *req) {
 
     if(req->Fullroute.data != NULL)
         req->Fullroute.Destruct(&req->Fullroute);
-
-    if(req->RequestType.data != NULL)
-        req->RequestType.Destruct(&req->RequestType);
 
     if(req->Headers.arr != NULL)
         req->Headers.Destruct(&req->Headers);

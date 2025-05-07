@@ -37,6 +37,13 @@
 #include <OS/file.h>
 #include <Net/request.h>
 
+
+typedef enum HTTP_VERSIONS {
+    HTTP_1_0,
+    HTTP_1_1,
+    HTTP_2_0,
+} HTTP_VERSIONS;
+
 /* Controls using HTML Tags */
 typedef enum ControlTag {
     NO_TAG                              = 8490,
@@ -239,6 +246,7 @@ typedef struct cWS {
     ConcurrencyThread   *ServerThreadPool;
     ConcurrencyThread   *ThreadPool;
     long                ThreadCount;
+    int                 StopQuene;
 
 
     int                 (*AddRoutes)        (struct cWS *web, WebRoute **routes, int c);
@@ -250,9 +258,10 @@ typedef struct cWS {
 
 /* C Web Reqest */
 typedef struct cWR {
+    HTTP_VERSIONS       Version;
     String              Route;
     String              Fullroute;
-    String              RequestType;
+    Req_T               RequestType;
     Map                 Headers;
     Map                 Get;
     Map                 Queries;

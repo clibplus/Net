@@ -39,20 +39,12 @@ char *WS_JS_HANDLER = "const parseForm = (formId) => Array.from(document.getElem
 */
 
 void LiveEventHandler(cWR *req) {
-    if(req->RequestType.Is(&req->RequestType, "POST")) {
-        // if((req->Headers.InMap(&req->Headers, "CF") > -1 || req->Headers.InMap(&req->Headers, "cf")) > -1 && req->Queries.idx < 1)
-        //     fetch_cf_post_data(server, req, req->Socket);
-
+    if(req->RequestType == __POST__) {
         req->Event = Decode_OneLine_JSON(req->Body.data);
         if(req->Event.idx < 10) {
             printf("[ - ] Error, Corrupted Events: %ld\n", req->Event.idx);
             return;
         }
-
-        /* Debug */
-        // for(int i = 0; i < req->Event.idx; i++) {
-        //     printf("%s => %s\n", ((jKey *)req->Event.arr[i])->key, ((jKey *)req->Event.arr[i])->value);
-        // }
 
         char *route = ((jKey *)req->Event.arr[0])->value;
         printf("[ + ] Event handler invoking %s....!\n", route);
