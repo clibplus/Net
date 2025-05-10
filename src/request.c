@@ -210,18 +210,17 @@ HTTPClientResponse RetrieveHTTPResponse(HTTPClient *c) {
 	int max_length;
 	if(!strcmp(c->Port.data, "443")) {
 		while((bytes = SSL_read(c->SSL, BUFFER, sizeof(BUFFER) - 1)) != 0) {
-			{
-				if(strstr((char *)&BUFFER, "Content-Length:")) {
-					String chk = NewString(BUFFER);
-					char **arr = chk.Split(&chk, ":");
+			if(strstr(BUFFER, "Content-Length")) {
+				String chk = NewString(BUFFER);
+				char **arr = chk.Split(&chk, ":");
 
-					String val = NewString(arr[1]);
-					if(val.isNumber(&val)) {
-						max_length = atoi(val.data);
-					}
-
-					val.Destruct(&val);
+				String val = NewString(arr[1]);
+				if(atoi(val.data) > 0) {
+					printf("\x1b[31m[ + ]\x1b[0m Got max length.....!\n");
+					max_length = atoi(val.data);
 				}
+
+				val.Destruct(&val);
 			}
 			
 			r.Body.AppendString(&r.Body, (const char *)&BUFFER);
@@ -237,6 +236,26 @@ HTTPClientResponse RetrieveHTTPResponse(HTTPClient *c) {
 	
 	bytes = read(c->ServerFD, BUFFER, 4095);
 	r.Body.AppendString(&r.Body, (const char *)&BUFFER);
+	
+	if(r.Body.Contains(&r.Body, "Content-Length")) {
+		Array lines = NewArray((const void **)r.Body.Split(&r.Body, "\n"));
+		for(int i = 0; i < lines.idx; i++) {
+			if(strstr(lines.arr[i], "Content-Length")) {
+				String chk = NewString(lines.arr[i]);
+				char **arr = chk.Split(&chk, ":");
+
+				String val = NewString(arr[1]);
+				val.TrimAt(&val, 0);
+				if(atoi(val.data) > 0) {
+					max_length = atoi(val.data);
+				}
+
+				val.Destruct(&val);
+				if(bytes != max_length)
+					bytes = read(c->ServerFD, BUFFER + bytes, max_length - bytes);
+			}
+		}
+	}
 	r.Body.data[r.Body.idx - 1] = '\0';
 
 	return r;
